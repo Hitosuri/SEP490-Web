@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind variants;
+
+@layer components {
+	.input {
+		@apply bg-white border-surface-500/40 !bg-opacity-30;
+	}
+}
+
+:root {
+	scrollbar-width: unset;
+	scrollbar-color: unset;
+}
+
+html,
+body {
+	@apply h-full;
+	-webkit-tap-highlight-color: transparent;
+	background-color: white;
+}
+
+:focus-visible {
+	outline: none;
+}
+
+@font-face {
+	font-family: 'Inter';
+	src: url('/fonts/Inter.ttf');
+	font-display: swap;
+}
+
+::-webkit-scrollbar {
+	@apply bg-surface-50/70 w-2 h-2;
+}
+
+::-webkit-scrollbar-thumb {
+	@apply bg-surface-300 rounded-full;
+}
+
+[data-fs-field-error] {
+	@apply text-error-400 text-sm font-semibold;
+}
