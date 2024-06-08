@@ -1,10 +1,11 @@
 import { filterRoles, Role } from '$lib/authorization';
 import endpoints from '$lib/endpoints';
 import { editProfileSchema } from '$lib/form-schemas/edit-profile-schema';
-import { message, superValidate } from 'sveltekit-superforms';
+import { message, setError, superValidate } from 'sveltekit-superforms';
 import type { Actions, PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import { fail } from '@sveltejs/kit';
+import { changePasswordSchema } from '$lib/form-schemas/change-password-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, Role.All);
@@ -44,6 +45,40 @@ export const actions: Actions = {
 				return fail(response.status, { form });
 			} else {
 				return message(form, 'Cập nhật profile thành công');
+			}
+		} catch (error) {
+			console.log(error);
+			return fail(500, { error: 'Đã có lỗi xảy ra' });
+		}
+	},
+	changePassword: async ({ request, cookies }) => {
+		const form = await superValidate(request, zod(changePasswordSchema));
+
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+
+		try {
+			const response = await fetch(endpoints.profile.changePassword, {
+				method: 'PUT',
+				headers: {
+					'content-type': 'application/json',
+					Authorization: `Bearer ${cookies.get('access-token')}`
+				},
+				body: JSON.stringify(form.data)
+			});
+
+			if (!response.ok) {
+				const text = await response.text();
+				const feedback = JSON.parse(text);
+				if (Array.isArray(feedback) && feedback[0] === 'Old password is incorrect') {
+					form.message = 'Mật khẩu cũ không đúng';
+					return setError(form, 'oldPassword', 'Mật khẩu cũ không đúng');
+				}
+				form.message = result || response.statusText;
+				return fail(response.status, { form });
+			} else {
+				return message(form, 'Cập nhật mật khẩu thành công');
 			}
 		} catch (error) {
 			console.log(error);

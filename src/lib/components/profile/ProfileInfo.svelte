@@ -4,7 +4,7 @@
 	export let profile: Profile;
 </script>
 
-<div class="grid grid-cols-2 gap-y-6 py-4 px-6">
+<div class="grid grid-cols-2 gap-y-6 py-4 px-6 gap-x-8">
 	<div class="flex gap-4">
 		<div
 			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"

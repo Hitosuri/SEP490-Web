@@ -6,7 +6,8 @@
 </script>
 
 <div
-	class="h-full flex items-center bg-[url(https://interlakemecalux.cdnwm.com/img/blog/international-logistics.1.12.jpg)] bg-cover p-4"
+	class="h-full flex items-center bg-cover p-4"
+	style="background-image: url(/images/login-bg.jpg);"
 >
 	<LoginForm loginForm={data.loginForm} />
 </div>

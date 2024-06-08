@@ -45,7 +45,7 @@
 			<div>
 				<Field name="userName" {form}>
 					<Control let:attrs>
-						<Label class="font-medium">Tên đăng nhập</Label>
+						<Label class="font-medium mb-1">Tên đăng nhập</Label>
 						<input
 							class="input rounded-container-token data-[fs-error]:input-error"
 							type="text"
@@ -59,7 +59,7 @@
 			<div>
 				<Field name="password" {form}>
 					<Control let:attrs>
-						<Label class="font-medium">Mật khẩu</Label>
+						<Label class="font-medium mb-1">Mật khẩu</Label>
 						<div class="relative">
 							<input
 								class="input pr-12 peer rounded-container-token data-[fs-error]:input-error"

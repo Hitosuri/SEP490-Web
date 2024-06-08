@@ -50,7 +50,7 @@
 	action="/profile?/editProfile"
 	use:enhance
 	method="post"
-	class="grid grid-cols-2 gap-y-6 py-4 px-6"
+	class="grid grid-cols-2 gap-y-6 py-4 px-6 gap-x-8"
 >
 	<div class="flex gap-4">
 		<div
