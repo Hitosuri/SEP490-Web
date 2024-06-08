@@ -12,8 +12,9 @@ const jwtHandler: Handle = async ({ event, resolve }) => {
 			event.locals.user = {
 				email: payload.sub,
 				userId: payload.userId,
-				roleId: payload.roleId,
-				uid: payload.jti
+				role: payload.role,
+				uid: payload.jti,
+				token
 			};
 		} catch (error) {
 			console.log(error);

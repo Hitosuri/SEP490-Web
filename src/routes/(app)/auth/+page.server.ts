@@ -30,7 +30,8 @@ export const actions: Actions = {
 
 		cookies.set(cookieName, data.token, {
 			path: '/',
-			expires: new Date(data.expireAt)
+			expires: form.data.rememberMe ? new Date(data.expireAt) : undefined,
+			secure: true
 		});
 
 		const backPath = url.searchParams.get('backTo') || '/';

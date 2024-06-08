@@ -13,7 +13,12 @@ export default {
 		join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')
 	],
 	theme: {
-		extend: {}
+		extend: {
+			padding: {
+				'scroll-bar': 'var(--scrollbar-width, 0)',
+				header: '5.5rem'
+			}
+		}
 	},
 	plugins: [
 		forms,

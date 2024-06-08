@@ -31,7 +31,7 @@
 	<header
 		class="card-header border-b px-10 py-4 bg-surface-50/40 flex justify-between items-center"
 	>
-		<h4 class="h4 font-semibold">Đăng nhập vào tài khoản abc.xyz</h4>
+		<h4 class="h4 font-semibold">Đăng nhập vào tài khoản Nha khoa Trịnh</h4>
 		<slot name="closeBtn" />
 	</header>
 	<section class="px-10 py-4">
@@ -47,7 +47,6 @@
 					<Control let:attrs>
 						<Label class="font-medium">Tên đăng nhập</Label>
 						<input
-							placeholder="example@gmail.com"
 							class="input rounded-container-token data-[fs-error]:input-error"
 							type="text"
 							{...attrs}
@@ -101,8 +100,8 @@
 			</button>
 		</form>
 	</section>
-	<footer class="card-footer border-t p-4 text-sm flex gap-4 bg-surface-50/40 justify-center">
+	<footer class="card-footer border-t p-4 text-sm text-center bg-surface-50/40 justify-center">
 		<span class="text-black/70 font-semibold">Chưa có tài khoản?</span>
-		<a href="#" class="font-semibold text-primary-500 hover:underline">Đăng ký</a>
+		<a href="#" class="font-semibold text-primary-500 hover:underline">Liên hệ với chúng tôi ngay.</a>
 	</footer>
 </div>

@@ -22,17 +22,40 @@ declare namespace App {
 
 interface UserBasic {
 	userId: string;
-	roleId: string;
+	role: string;
 	email: string;
 	uid: string;
+	token: string;
 }
 
 interface JwtPayload {
 	sub: string;
 	jti: string;
 	userId: string;
-	roleId: string;
+	role: string;
 	nbf: number;
 	exp: number;
 	iat: number;
+}
+
+interface User {
+	id: number;
+	name: string;
+	email: string;
+	username: string;
+	phone: string;
+	birthday: Date;
+	salary: number;
+	status: number;
+	role: Role;
+}
+
+interface Profile {
+	name: string;
+	email: string;
+	userName: string;
+	phone: string;
+	birthday: Date;
+	salary: number;
+	status: number;
 }

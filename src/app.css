@@ -42,3 +42,13 @@ body {
 [data-fs-field-error] {
 	@apply text-error-400 text-sm font-semibold;
 }
+
+#nprogress > .bar {
+	@apply !bg-primary-500;
+}
+
+#nprogress .peg {
+	box-shadow:
+		0 0 10px rgb(var(--color-surface-500) / 1),
+		0 0 5px rgb(var(--color-surface-500) / 1) !important;
+}

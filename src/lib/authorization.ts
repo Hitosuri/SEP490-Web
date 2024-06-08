@@ -1,61 +1,41 @@
 import { error, redirect } from '@sveltejs/kit';
 
 export enum Role {
-	Admin = 'admin',
-	Doctor = 'doctor',
-	Nurse = 'nurse',
-	Accountant = 'accountant',
-	Patient = 'patient',
-	All = 'all',
-	Test = '1'
+	Admin = 'Admin',
+	Doctor = 'Doctor',
+	Nurse = 'Nurse',
+	Recieptionist = 'Recieptionist',
+	Accountant = 'Accountant',
+	Patient = 'Patient',
+	All = 'All',
+	UnauthorizedOnly = 'UnauthorizedOnly'
 }
 
-export function filterRoles(
-	locals: App.Locals,
-	url: URL,
-	roles: { include?: Role[]; exclude?: Role[] } | Role[]
-) {
-	const backPath = encodeURI(url.href.substring(url.origin.length));
+export function filterRoles(locals: App.Locals, url: URL, role: Role | Role[]): void {
+	const roleArray = Array.isArray(role) ? role : [role];
 
-	if (Array.isArray(roles)) {
-		if (!locals.user) {
-			redirect(301, `/auth/login?backTo=${backPath}`);
+	// Nếu người dùng đã đăng nhập
+	if (locals.user) {
+		// Trường hợp role route là UnauthorizedOnly
+		if (roleArray.includes(Role.UnauthorizedOnly)) {
+			error(403, {
+				message: 'Bạn không được truy cập trang này'
+			});
 		}
 
-		if (roles.includes(Role.All)) {
-			return;
-		}
-
-		if (!(<unknown[]>roles).includes(locals.user.roleId)) {
+		// Trường hợp role route là All hoặc role route khớp với role của người dùng
+		if (!roleArray.includes(Role.All) && !(<unknown[]>roleArray).includes(locals.user.role)) {
 			error(401, {
 				message: 'Bạn không có quyền truy cập trang này'
 			});
 		}
 	} else {
-		if (!locals.user && (roles.include?.length ?? -1) > 0) {
+		// Nếu người dùng chưa đăng nhập và role route không phải là UnauthorizedOnly
+		if (!roleArray.includes(Role.UnauthorizedOnly)) {
+			// Lấy ra url của request và cắt bỏ phần hostname để redirect tới khi đăng nhập thành công
+			const backPath = encodeURI(url.href.substring(url.origin.length));
+
 			redirect(301, `/auth/login?backTo=${backPath}`);
-		}
-
-		if (locals.user) {
-			if (roles.include?.includes(Role.All)) {
-				return;
-			}
-
-			if (roles.include && !(<unknown[]>roles.include).includes(locals.user.roleId)) {
-				error(401, {
-					message: 'Bạn không có quyền truy cập trang này'
-				});
-			}
-
-			if (roles.exclude?.includes(Role.All)) {
-				redirect(301, '/');
-			}
-
-			if ((<unknown[] | undefined>roles.include)?.includes(locals.user.roleId)) {
-				error(401, {
-					message: 'Bạn không có quyền truy cập trang này'
-				});
-			}
 		}
 	}
 }
