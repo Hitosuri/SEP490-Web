@@ -3,6 +3,7 @@
 	import { loginSchema } from '$lib/form-schemas/login-schema';
 	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { Field, Control, Label, FieldErrors } from 'formsnap';
+	import { toast } from 'svelte-sonner';
 	import type { HTMLInputTypeAttribute } from 'svelte/elements';
 	import { superForm, type FormResult, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -13,7 +14,21 @@
 
 	const form = superForm(loginForm, {
 		validators: zodClient(loginSchema),
-		invalidateAll: false
+		invalidateAll: false,
+		onResult: (e) => {
+			if (e.result.type === 'failure') {
+				console.log(e.result);
+				
+				if (e.result?.data?.form?.message) {
+					toast.error('Sai mật khẩu hoặc tên đăng nhập');
+				} else {
+					toast.error('Xảy ra lỗi khi đăng nhập');
+				}
+			}
+			if (e.result.type === 'redirect') {
+				toast.success('Đăng nhập thành công');
+			}
+		}
 	});
 	const { form: formData, enhance } = form;
 	let revealPassword = false;
@@ -102,6 +117,8 @@
 	</section>
 	<footer class="card-footer border-t p-4 text-sm text-center bg-surface-50/40 justify-center">
 		<span class="text-black/70 font-semibold">Chưa có tài khoản?</span>
-		<a href="#" class="font-semibold text-primary-500 hover:underline">Liên hệ với chúng tôi ngay.</a>
+		<a href="#" class="font-semibold text-primary-500 hover:underline"
+			>Liên hệ với chúng tôi ngay.</a
+		>
 	</footer>
 </div>

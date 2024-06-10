@@ -1,6 +1,7 @@
 <script lang="ts">
 	import 'nprogress/nprogress.css';
 	import '../app.css';
+	import 'svelte-reveal/styles.css';
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { Modal, initializeStores, storePopup } from '@skeletonlabs/skeleton';
 	import { Toaster } from 'svelte-sonner';

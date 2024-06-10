@@ -48,7 +48,8 @@ export const actions: Actions = {
 			}
 		} catch (error) {
 			console.log(error);
-			return fail(500, { error: 'Đã có lỗi xảy ra' });
+			form.message = 'Đã có lỗi xảy ra';
+			return fail(500, { form });
 		}
 	},
 	changePassword: async ({ request, cookies }) => {
@@ -75,7 +76,7 @@ export const actions: Actions = {
 					form.message = 'Mật khẩu cũ không đúng';
 					return setError(form, 'oldPassword', 'Mật khẩu cũ không đúng');
 				}
-				form.message = result || response.statusText;
+				form.message = text || response.statusText;
 				return fail(response.status, { form });
 			} else {
 				return message(form, 'Cập nhật mật khẩu thành công');
