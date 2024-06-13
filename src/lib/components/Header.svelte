@@ -21,6 +21,7 @@
 	let logoutForm: HTMLFormElement;
 	let inLandingPage = false;
 	let scrollStoreUnsub: Unsubscriber;
+	let userStoreUnsub: Unsubscriber;
 	let showHeader = false;
 	let loginBtn: HTMLButtonElement | undefined;
 
@@ -38,14 +39,16 @@
 			lastScroll = scrollTop;
 		});
 
-		if ($userStore) {
-			return;
-		}
-		loginForm = await superValidate(zod(loginSchema));
+		userStoreUnsub = userStore.subscribe(async (userB) => {
+			if (!userB && !loginForm) {
+				loginForm = await superValidate(zod(loginSchema));
+			}
+		});
 	});
 
 	onDestroy(() => {
 		scrollStoreUnsub?.();
+		userStoreUnsub?.();
 	});
 
 	function onLoginModalOpenChange(state: boolean) {
@@ -62,7 +65,7 @@
 <div
 	class="fixed w-full pr-scroll-bar z-10 {inLandingPage && !showHeader
 		? '-translate-y-24'
-		: ''} transition-all duration-300 ease-out"
+		: ''} transition-transform duration-300 ease-out"
 >
 	<AppBar
 		background={inLandingPage ? '' : 'bg-white'}
@@ -184,7 +187,7 @@
 							easing: cubicOut
 						}}
 						sideOffset={8}
-						class="w-full max-w-[229px] rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+						class="w-full max-w-[229px] rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
 					>
 						<DropdownMenu.Label class="text-center select-none text-xs p-1 font-bold">
 							{$userStore.role}

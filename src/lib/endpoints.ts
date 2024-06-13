@@ -8,5 +8,8 @@ export default {
 		get: `${PUBLIC_API_HOST}/api/user/ViewProfile`,
 		edit: `${PUBLIC_API_HOST}/api/user/EditProfile`,
 		changePassword: `${PUBLIC_API_HOST}/api/user/ChangePassword`
+	},
+	users: {
+		get: `${PUBLIC_API_HOST}/api/user/ListUser`
 	}
 };

@@ -6,7 +6,7 @@
 </script>
 
 <div
-	class="h-full flex items-center bg-cover p-4"
+	class="h-screen flex items-center bg-cover p-4"
 	style="background-image: url(/images/login-bg.jpg);"
 >
 	<LoginForm loginForm={data.loginForm} />

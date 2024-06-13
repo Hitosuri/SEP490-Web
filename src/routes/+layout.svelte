@@ -5,14 +5,9 @@
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { Modal, initializeStores, storePopup } from '@skeletonlabs/skeleton';
 	import { Toaster } from 'svelte-sonner';
-	import type { LayoutData } from './$types';
-	import userStore from '$lib/stores/user-store';
 	import nProgress from 'nprogress';
 	import { navigating } from '$app/stores';
 
-	export let data: LayoutData;
-
-	$: userStore.set(data.user);
 	$: {
 		if ($navigating) {
 			nProgress.start();
@@ -29,5 +24,5 @@
 </script>
 
 <Modal regionBackdrop="!bg-black/70" />
-<Toaster />
+<Toaster position="top-center" />
 <slot />

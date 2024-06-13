@@ -12,7 +12,7 @@ const jwtHandler: Handle = async ({ event, resolve }) => {
 			event.locals.user = {
 				email: payload.sub,
 				userId: payload.userId,
-				role: payload.role,
+				role: typeof payload.role === 'string' ? [payload.role] : payload.role,
 				uid: payload.jti,
 				token
 			};

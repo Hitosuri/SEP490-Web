@@ -38,13 +38,14 @@ export const actions: Actions = {
 				expires: form.data.rememberMe ? new Date(data.expireAt) : undefined,
 				secure: true
 			});
-
-			const backPath = url.searchParams.get('backTo') || '/';
-
-			redirect(301, backPath);
 		} catch (error) {
+			console.log(error);
 			return fail(500, { form });
 		}
+
+		const backPath = url.searchParams.get('backTo') || '/';
+
+		redirect(301, backPath);
 	},
 	logout: async ({ cookies }) => {
 		cookies.set(cookieName, '', {

@@ -9,7 +9,6 @@
 	import ProfileInfo from '$lib/components/profile/ProfileInfo.svelte';
 	import EditProfileForm from '$lib/components/profile/EditProfileForm.svelte';
 	import { zod } from 'sveltekit-superforms/adapters';
-	import { onMount } from 'svelte';
 	import ChangePasswordForm from '$lib/components/profile/ChangePasswordForm.svelte';
 
 	export let data: PageData;

@@ -1,43 +1,93 @@
 <script lang="ts">
-	import { Role } from '$lib/authorization';
+	import { Role, roleTranslation, userRoles } from '$lib/authorization';
 	import { formatCurrency } from '$lib/helpers/util';
-	import { DropdownMenu, Select, type Selected, Checkbox } from 'bits-ui';
+	import { DropdownMenu, Select, type Selected, Checkbox, ToggleGroup } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
+	import type { PageData } from './$types';
+	import { sortableField, userFilterSchema } from '$lib/form-schemas/user-filter-schema';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { superForm } from 'sveltekit-superforms';
+	import { Control, Field, Label } from 'formsnap';
+	import type { z } from 'zod';
+	import endpoints from '$lib/endpoints';
+	import userStore from '$lib/stores/user-store';
+	import { isEqual } from 'lodash-es';
+	import { Pagination } from 'bits-ui';
 
-	const tmpUsers: User[] = Array(10)
-		.fill(undefined)
-		.map((_, i) => ({
-			id: i,
-			name: 'Lê Văn Quân',
-			email: 'zedovblack@gmail.com',
-			username: 'quanlv',
-			phone: '0868480002',
-			birthday: new Date(),
-			salary: 8000000,
-			status: 2,
-			role: Role.Accountant
-		}));
-	const userRoles: Selected<string>[] = [
-		Role.All,
-		Role.Admin,
-		Role.Accountant,
-		Role.Doctor,
-		Role.Nurse,
-		Role.Recieptionist
-	].map((x) => ({
-		value: x,
-		label: x === Role.All ? 'Tất cả' : x
-	}));
-	let sortingField: 'Name' | 'Email' | 'Phone' | 'Salary' | undefined;
-	let salaryCompareType: 'eq' | 'le' | 'ge' | undefined;
-	let extendedUsers: { user: User; selected: boolean }[] = [];
+	export let data: PageData;
+
+	const form = superForm(data.userFilterForm, {
+		SPA: true,
+		id: 'single',
+		invalidateAll: false,
+		resetForm: false,
+		validators: zodClient(userFilterSchema),
+		onChange: ({ get, paths }) => {
+			if (advancedFilterOpen) {
+				return;
+			}
+
+			let inputData: Partial<z.infer<typeof userFilterSchema>> = {};
+			switch (paths[0]) {
+				case 'name':
+				case 'email':
+				case 'phone':
+					inputData[paths[0]] = get(paths[0]);
+					break;
+				case 'fromSalary':
+				case 'toSalary':
+					inputData.fromSalary = get('fromSalary');
+					inputData.toSalary = get('toSalary');
+					break;
+			}
+
+			resetPage();
+			filtering(inputData, currentPage, pageSize);
+		},
+		onUpdate: ({ form }) => {
+			resetPage();
+			filtering(form.data, 1, currentPage, true);
+		}
+	});
+	const { form: formData, enhance } = form;
+	const singleFilterTypes: Selected<(typeof sortableField)[number]>[] = [
+		{
+			label: 'Họ và tên',
+			value: 'name'
+		},
+		{
+			label: 'Email',
+			value: 'email'
+		},
+		{
+			label: 'Số điện thoại',
+			value: 'phone'
+		},
+		{
+			label: 'Lương',
+			value: 'salary'
+		}
+	];
+	let extendedUsers = data.userListPage.data.map((x) => ({ user: x, selected: false }));
+	let pageSize = data.userListPage.pageSize || 10;
+	let currentPage = data.userListPage.pageNumber || 1;
+	let totalItems = data.userListPage.totalRecords || 0;
+	let paginationBinding = currentPage;
+	let sortingField: (typeof sortableField)[number] | undefined;
+	let sortingAscending = false;
+	let selectedSingleFilterType = singleFilterTypes[0];
 	let selectedUserCount = 0;
 	let selectedAllState: boolean | 'indeterminate' = 'indeterminate';
 	let openBatchMenu = false;
+	let advancedFilterOpen = false;
+	let filterTimer: NodeJS.Timeout | undefined;
+	let lastestFilterOption: Partial<z.infer<typeof userFilterSchema>> = {};
+	let lastestFilterOptionExtended: Record<string, string | string[]> = {};
 
-	$: extendedUsers = tmpUsers.map((x) => ({ user: x, selected: false }));
+	$: console.log(currentPage);
 	$: selectedUserCount = extendedUsers.filter((x) => x.selected).length;
+	$: openBatchMenu = selectedUserCount > 0;
 	$: {
 		if (selectedUserCount === 0) {
 			selectedAllState = false;
@@ -46,25 +96,370 @@
 		} else {
 			selectedAllState = 'indeterminate';
 		}
-		openBatchMenu = selectedUserCount > 0;
+	}
+
+	function resetPage() {
+		currentPage = 1;
+		paginationBinding = currentPage;
 	}
 
 	function onSelectedAllStateChanged(checked: boolean | 'indeterminate') {
-		if (checked === true) {
-			extendedUsers.forEach((x) => (x.selected = true));
-		} else {
-			extendedUsers.forEach((x) => (x.selected = false));
+		console.log(checked);
+
+		if (typeof checked === 'boolean') {
+			extendedUsers.forEach((x) => {
+				x.selected = checked;
+			});
 		}
+	}
+
+	function advancedFilterClick() {
+		advancedFilterOpen = !advancedFilterOpen;
+		form.reset();
+	}
+
+	function filtering(
+		filterOptions: Partial<z.infer<typeof userFilterSchema>>,
+		page: number,
+		size: number,
+		ignoreDelay: boolean = false
+	) {
+		if (filterTimer) {
+			clearTimeout(filterTimer);
+		}
+
+		filterTimer = setTimeout(
+			async () => {
+				if (!$userStore) {
+					return;
+				}
+				const filterOptionsExtended: Record<string, string | string[]> = {
+					page: String(page),
+					size: String(size)
+				};
+				if (sortingField) {
+					filterOptionsExtended.orderBy = sortingField;
+					filterOptionsExtended.asc = String(sortingAscending);
+				}
+				if (filterOptions.name) {
+					filterOptionsExtended.name = filterOptions.name ?? '';
+				}
+				if (filterOptions.email) {
+					filterOptionsExtended.email = filterOptions.email ?? '';
+				}
+				if (filterOptions.phone) {
+					filterOptionsExtended.phone = filterOptions.phone ?? '';
+				}
+				if (filterOptions.fromSalary) {
+					filterOptionsExtended.fromSalary = String(filterOptions.fromSalary);
+				}
+				if (filterOptions.toSalary) {
+					filterOptionsExtended.toSalary = String(filterOptions.toSalary);
+				}
+				if (filterOptions.roles && filterOptions.roles.length > 0) {
+					filterOptionsExtended.roles = filterOptions.roles;
+				}
+
+				if (isEqual(lastestFilterOptionExtended, filterOptionsExtended)) {
+					return;
+				}
+
+				const searchParams = new URLSearchParams();
+				for (const [key, value] of Object.entries(filterOptionsExtended)) {
+					if (typeof value === 'string') {
+						searchParams.set(key, value);
+					}
+					if (Array.isArray(value)) {
+						value.forEach((x) => searchParams.append(key, x));
+					}
+				}
+				const url = `${endpoints.users.get}?${searchParams}`;
+				const response = await fetch(url, {
+					headers: {
+						Authorization: `Bearer ${$userStore.token}`
+					}
+				});
+
+				if (response.ok) {
+					lastestFilterOption = filterOptions;
+					lastestFilterOptionExtended = filterOptionsExtended;
+					const pageData: Pagination<User[]> = await response.json();
+					extendedUsers = pageData.data.map((x) => ({ user: x, selected: false }));
+					totalItems = pageData.totalRecords;
+				}
+			},
+			ignoreDelay ? 0 : 400
+		);
+	}
+
+	function toggleRoleFilterSelection() {
+		if ($formData.roles.length === 0) {
+			$formData.roles = [...userRoles];
+		} else {
+			$formData.roles = [];
+		}
+	}
+
+	function selectSorting(field: (typeof sortableField)[number] | undefined) {
+		if (sortingField !== field) {
+			sortingField = field;
+			sortingAscending = false;
+		} else {
+			sortingAscending = !sortingAscending;
+		}
+
+		filtering(lastestFilterOption, currentPage, pageSize, true);
 	}
 </script>
 
 <svelte:head>
 	<title>Danh sách nhân viên</title>
 </svelte:head>
-<div class="px-4 pt-header h-full">
-	<div class="p-4 bg-primary-50 rounded-tl-3xl rounded-tr-3xl h-full">
-		<h1 class="h1">Danh sách nhân viên</h1>
-		<div class="bg-white p-1">
+<div class="px-4 pt-header h-full container mx-auto flex flex-col">
+	<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Danh sách nhân viên</h1>
+	<div class="p-8 bg-slate-300 rounded-t-2xl space-y-6 flex-1">
+		<div class="p-2 rounded-xl bg-white shadow-md group">
+			<div class="p-1 bg-slate-300 shadow-inner flex gap-1 rounded-lg overflow-hidden">
+				<Select.Root
+					disabled={advancedFilterOpen}
+					items={singleFilterTypes}
+					bind:selected={selectedSingleFilterType}
+					onSelectedChange={() => form.reset()}
+				>
+					<Select.Trigger class="btn bg-white rounded-md">
+						<i class="fa-regular fa-filter text-surface-300"></i>
+						<span class="pl-1">Tìm theo:</span>
+						<Select.Value class="font-semibold" />
+						<div class="flex flex-col text-[0.55rem] pl-1 text-surface-400">
+							<i class="fa-solid fa-chevron-up"></i>
+							<i class="fa-solid fa-chevron-down"></i>
+						</div>
+					</Select.Trigger>
+
+					<Select.Content
+						class="w-full !min-w-40 rounded-md border border-surface-50 bg-white p-1 shadow-lg"
+					>
+						{#each singleFilterTypes as singleFilterType}
+							<Select.Item
+								value={singleFilterType.value}
+								label={singleFilterType.label}
+								class="data-[highlighted]:bg-primary-50 cursor-pointer data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center h-10 justify-between"
+							>
+								<span class="font-semibold text-sm leading-4">{singleFilterType.label}</span>
+								<Select.ItemIndicator class="select-none">
+									<i class="fa-solid fa-check"></i>
+								</Select.ItemIndicator>
+							</Select.Item>
+						{/each}
+						<Select.Arrow />
+					</Select.Content>
+				</Select.Root>
+				{#if !advancedFilterOpen}
+					<form method="post" use:enhance transition:fly={{ x: 30, duration: 200 }}>
+						<fieldset class="flex gap-1 items-center" disabled={advancedFilterOpen}>
+							{#if selectedSingleFilterType.value === 'name'}
+								<Field {form} name="name">
+									<Control let:attrs>
+										<input
+											type="text"
+											placeholder="Nhập tên nhân viên..."
+											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
+											{...attrs}
+											bind:value={$formData.name}
+										/>
+									</Control>
+								</Field>
+							{:else if selectedSingleFilterType.value === 'email'}
+								<Field {form} name="email">
+									<Control let:attrs>
+										<input
+											type="text"
+											placeholder="Nhập email nhân viên..."
+											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
+											{...attrs}
+											bind:value={$formData.email}
+										/>
+									</Control>
+								</Field>
+							{:else if selectedSingleFilterType.value === 'phone'}
+								<Field {form} name="phone">
+									<Control let:attrs>
+										<input
+											type="text"
+											placeholder="Nhập sđt nhân viên..."
+											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
+											{...attrs}
+											bind:value={$formData.phone}
+											on:keypress={(e) => false}
+										/>
+									</Control>
+								</Field>
+							{:else if selectedSingleFilterType.value === 'salary'}
+								<Field {form} name="fromSalary">
+									<Control let:attrs>
+										<input
+											type="number"
+											placeholder="Từ..."
+											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-28 text-center"
+											{...attrs}
+											bind:value={$formData.fromSalary}
+										/>
+									</Control>
+								</Field>
+								<div class="border-t-2 border-surface-900 border-dashed w-14"></div>
+								<Field {form} name="toSalary">
+									<Control let:attrs>
+										<input
+											type="number"
+											placeholder="đến..."
+											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-28 text-center"
+											{...attrs}
+											bind:value={$formData.toSalary}
+										/>
+									</Control>
+								</Field>
+							{/if}
+						</fieldset>
+					</form>
+				{/if}
+				<button
+					on:click={advancedFilterClick}
+					class="btn {advancedFilterOpen
+						? 'variant-filled-tertiary'
+						: 'bg-white text-tertiary-600'} rounded-md font-medium ml-auto"
+				>
+					<i class="fa-regular fa-sliders"></i>
+					<span class="pl-2">Tìm kiếm kết hợp</span>
+				</button>
+				<button class="btn variant-filled-primary rounded-md font-medium">
+					<i class="fa-solid fa-plus"></i>
+					<span class="pl-2">Thêm nhân viên</span>
+				</button>
+			</div>
+			<div
+				class="grid {advancedFilterOpen
+					? 'grid-rows-[1fr]'
+					: 'grid-rows-[0fr]'} transition-all duration-200 ease-out"
+			>
+				<div class="overflow-hidden">
+					<form method="post" use:enhance class="p-6 pt-8">
+						<div class="flex justify-between gap-x-8 gap-y-6 flex-wrap">
+							<div>
+								<Field {form} name="name">
+									<Control let:attrs>
+										<Label class="text-sm font-semibold text-surface-500 select-none"
+											>Họ và tên</Label
+										>
+										<input
+											type="text"
+											placeholder="Nhập tên nhân viên..."
+											class="input rounded-md bg-white w-auto mt-1"
+											{...attrs}
+											bind:value={$formData.name}
+										/>
+									</Control>
+								</Field>
+							</div>
+							<div>
+								<Field {form} name="email">
+									<Control let:attrs>
+										<Label class="text-sm font-semibold text-surface-500 select-none">Email</Label>
+										<input
+											type="text"
+											placeholder="Nhập email nhân viên..."
+											class="input rounded-md bg-white w-auto mt-1"
+											{...attrs}
+											bind:value={$formData.email}
+										/>
+									</Control>
+								</Field>
+							</div>
+							<div>
+								<Field {form} name="phone">
+									<Control let:attrs>
+										<Label class="text-sm font-semibold text-surface-500 select-none"
+											>Số điện thoại</Label
+										>
+										<input
+											type="text"
+											placeholder="Nhập sđt nhân viên..."
+											class="input rounded-md bg-white w-auto mt-1"
+											{...attrs}
+											bind:value={$formData.phone}
+										/>
+									</Control>
+								</Field>
+							</div>
+							<div>
+								<p class="text-sm font-semibold text-surface-500 select-none">Khoảng lương</p>
+								<div class="flex gap-1 items-center mt-1">
+									<Field {form} name="fromSalary">
+										<Control let:attrs>
+											<input
+												type="number"
+												placeholder="Từ..."
+												class="input rounded-md bg-white w-28 text-center"
+												{...attrs}
+												bind:value={$formData.fromSalary}
+											/>
+										</Control>
+									</Field>
+									<div class="border-t-2 border-surface-900 border-dashed w-14"></div>
+									<Field {form} name="toSalary">
+										<Control let:attrs>
+											<input
+												type="number"
+												placeholder="đến..."
+												class="input rounded-md bg-white w-28 text-center"
+												{...attrs}
+												bind:value={$formData.toSalary}
+											/>
+										</Control>
+									</Field>
+								</div>
+							</div>
+							<div>
+								<p class="text-sm font-semibold text-surface-500 select-none">Vai trò</p>
+								<div class="flex gap-2 items-center mt-1">
+									<ToggleGroup.Root
+										bind:value={$formData.roles}
+										class="flex rounded-lg border overflow-hidden"
+									>
+										{#each userRoles as userRole, i}
+											{#if i !== 0}
+												<div class="h-auto border-r"></div>
+											{/if}
+											<ToggleGroup.Item
+												class="btn btn-sm rounded-none font-medium data-[state=on]:variant-filled-primary"
+												value={userRole}>{roleTranslation[userRole]}</ToggleGroup.Item
+											>
+										{/each}
+									</ToggleGroup.Root>
+									<button
+										type="button"
+										class="btn btn-sm w-10 {$formData.roles.length === 0
+											? 'variant-filled-secondary'
+											: 'variant-filled-error'} rounded-lg"
+										on:click={toggleRoleFilterSelection}
+									>
+										{#if $formData.roles.length === 0}
+											<i class="fa-solid fa-check"></i>
+										{:else}
+											<i class="fa-solid fa-xmark"></i>
+										{/if}
+									</button>
+								</div>
+							</div>
+						</div>
+						<button type="submit" class="btn variant-filled-primary ml-auto mt-4 block">
+							<i class="fa-solid fa-magnifying-glass"></i>
+							<span>Tìm kiếm</span>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="bg-white p-2 rounded-xl shadow-md">
 			<table class="w-full">
 				<thead>
 					<tr class="text-sm *:bg-slate-100 *:font-semibold *:text-surface-400">
@@ -89,49 +484,100 @@
 								</Checkbox.Indicator>
 							</Checkbox.Root>
 						</th>
-						<th class="">
-							<button class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9">
+						<th class="text-start">
+							<button
+								class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
+								on:click={() => selectSorting('name')}
+							>
 								<span>Họ và tên</span>
 								<div class="flex flex-col">
-									<i class="fa-solid fa-caret-up -mb-2"></i>
-									<i class="fa-solid fa-caret-down"></i>
+									<i
+										class="fa-solid fa-caret-up -mb-2 {sortingField === 'name' && sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
+									<i
+										class="fa-solid fa-caret-down {sortingField === 'name' && !sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
 								</div>
 							</button>
 						</th>
-						<th class="">
-							<button class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9">
+						<th class="text-start">
+							<button
+								class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
+								on:click={() => selectSorting('email')}
+							>
 								<span>Email</span>
 								<div class="flex flex-col">
-									<i class="fa-solid fa-caret-up -mb-2"></i>
-									<i class="fa-solid fa-caret-down"></i>
+									<i
+										class="fa-solid fa-caret-up -mb-2 {sortingField === 'email' && sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
+									<i
+										class="fa-solid fa-caret-down {sortingField === 'email' && !sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
 								</div>
 							</button>
 						</th>
 						<th class="">
-							<button class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9">
+							<button
+								class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
+								on:click={() => selectSorting('phone')}
+							>
 								<span>Số điện thoại</span>
 								<div class="flex flex-col">
-									<i class="fa-solid fa-caret-up -mb-2"></i>
-									<i class="fa-solid fa-caret-down"></i>
+									<i
+										class="fa-solid fa-caret-up -mb-2 {sortingField === 'phone' && sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
+									<i
+										class="fa-solid fa-caret-down {sortingField === 'phone' && !sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
 								</div>
 							</button>
 						</th>
 						<th class="text-end">
-							<button class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9">
+							<button
+								class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
+								on:click={() => selectSorting('salary')}
+							>
 								<span>Lương</span>
 								<div class="flex flex-col">
-									<i class="fa-solid fa-caret-up -mb-2"></i>
-									<i class="fa-solid fa-caret-down"></i>
+									<i
+										class="fa-solid fa-caret-up -mb-2 {sortingField === 'salary' && sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
+									<i
+										class="fa-solid fa-caret-down {sortingField === 'salary' && !sortingAscending
+											? 'text-primary-500'
+											: 'opacity-40'}"
+									></i>
 								</div>
 							</button>
 						</th>
-						<th>Vai trò</th>
-						<th class="rounded-tr-lg rounded-br-lg w-0"></th>
+						<th class="select-none">Vai trò</th>
+						<th class="rounded-tr-lg rounded-br-lg w-0">
+							<button
+								class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
+								on:click={() => selectSorting(undefined)}
+							>
+								<i class="fa-solid fa-arrow-rotate-left"></i>
+							</button>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each extendedUsers as extendedUser (extendedUser.user.id)}
-						<tr class="*:even:bg-slate-100 *:py-3.5 *:px-4 group">
+						<tr class="*:even:bg-slate-100 *:py-4 *:px-4 group">
 							<td class="rounded-tl-lg rounded-bl-lg text-[0] relative overflow-hidden !pl-6">
 								<input
 									class="checkbox bg-white size-4"
@@ -145,11 +591,41 @@
 										: 'hidden'}"
 								></div>
 							</td>
-							<td class="text-left">{extendedUser.user.name}</td>
+							<td class="text-left">
+								<a href="/users/{extendedUser.user.id}" class="hover:underline"
+									>{extendedUser.user.name}</a
+								>
+							</td>
 							<td class="text-left">{extendedUser.user.email}</td>
 							<td class="text-center">{extendedUser.user.phone}</td>
 							<td class="text-end">{formatCurrency(extendedUser.user.salary)}</td>
-							<td class="text-center">{extendedUser.user.role}</td>
+							<td class="text-center text-sm font-semibold">
+								<div class="flex flex-col items-center gap-y-1">
+									{#each extendedUser.user.roles as uRole (uRole)}
+										{#if uRole === Role.Admin}
+											<span class="bg-red-200 text-red-600 px-2 py-1 rounded-full w-fit">
+												{roleTranslation[Role.Admin]}
+											</span>
+										{:else if uRole === Role.Doctor}
+											<span class="bg-sky-200 text-sky-600 px-2 py-1 rounded-full w-fit">
+												{roleTranslation[Role.Doctor]}
+											</span>
+										{:else if uRole === Role.Nurse}
+											<span class="bg-green-200 text-green-700 px-2 py-1 rounded-full w-fit">
+												{roleTranslation[Role.Nurse]}
+											</span>
+										{:else if uRole === Role.Recieptionist}
+											<span class="bg-orange-200 text-orange-600 px-2 py-1 rounded-full w-fit">
+												{roleTranslation[Role.Recieptionist]}
+											</span>
+										{:else if uRole === Role.Accountant}
+											<span class="bg-violet-200 text-violet-600 px-2 py-1 rounded-full w-fit">
+												{roleTranslation[Role.Accountant]}
+											</span>
+										{/if}
+									{/each}
+								</div>
+							</td>
 							<td class="rounded-tr-lg rounded-br-lg !py-0">
 								<DropdownMenu.Root preventScroll={false}>
 									<DropdownMenu.Trigger
@@ -168,6 +644,7 @@
 										class="w-full max-w-36 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
 									>
 										<DropdownMenu.Item
+											href="/users/{extendedUser.user.id}"
 											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 										>
 											<div class="size-4 text-center">
@@ -200,6 +677,46 @@
 				</tbody>
 			</table>
 		</div>
+		{#if totalItems > pageSize}
+			<Pagination.Root
+				count={totalItems}
+				bind:page={paginationBinding}
+				onPageChange={(page) => filtering(lastestFilterOption, page, pageSize, true)}
+				perPage={pageSize}
+				let:pages
+				let:range
+			>
+				<div class="flex items-center justify-center">
+					<Pagination.PrevButton
+						class="mr-6 size-8 rounded-xl duration-200 bg-slate-200 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-surface-400"
+					>
+						<i class="fa-solid fa-chevron-left"></i>
+					</Pagination.PrevButton>
+					<div class="flex items-center gap-3">
+						{#each pages as page (page.key)}
+							{#if page.type === 'ellipsis'}
+								<div class="text-lg font-medium">...</div>
+							{:else}
+								<Pagination.Page
+									{page}
+									class="size-10 rounded-xl duration-200 bg-slate-300 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-surface-400 data-[selected]:font-semibold data-[selected]:bg-white data-[selected]:shadow-md select-none"
+								>
+									{page.value}
+								</Pagination.Page>
+							{/if}
+						{/each}
+					</div>
+					<Pagination.NextButton
+						class="ml-6 size-8 rounded-xl duration-200 bg-slate-200 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-surface-400"
+					>
+						<i class="fa-solid fa-chevron-right"></i>
+					</Pagination.NextButton>
+				</div>
+				<p class="text-center text-[13px] text-muted-foreground mt-6">
+					Hiển thị {range.start} - {range.end}
+				</p>
+			</Pagination.Root>
+		{/if}
 	</div>
 </div>
 {#if openBatchMenu}
