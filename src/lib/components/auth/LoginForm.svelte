@@ -17,8 +17,6 @@
 		invalidateAll: false,
 		onResult: (e) => {
 			if (e.result.type === 'failure') {
-				console.log(e.result);
-				
 				if (e.result?.data?.form?.message) {
 					toast.error('Sai mật khẩu hoặc tên đăng nhập');
 				} else {

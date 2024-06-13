@@ -24,5 +24,5 @@
 </script>
 
 <Modal regionBackdrop="!bg-black/70" />
-<Toaster position="top-center" />
+<Toaster position="top-center" richColors />
 <slot />

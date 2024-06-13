@@ -10,6 +10,7 @@ export default {
 		changePassword: `${PUBLIC_API_HOST}/api/user/ChangePassword`
 	},
 	users: {
-		get: `${PUBLIC_API_HOST}/api/user/ListUser`
+		get: `${PUBLIC_API_HOST}/api/user/ListUser`,
+		create: `${PUBLIC_API_HOST}/api/user`
 	}
 };

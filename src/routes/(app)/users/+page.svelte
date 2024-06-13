@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { Role, roleTranslation, userRoles } from '$lib/authorization';
 	import { formatCurrency } from '$lib/helpers/util';
-	import { DropdownMenu, Select, type Selected, Checkbox, ToggleGroup } from 'bits-ui';
+	import { DropdownMenu, Select, type Selected, Checkbox, ToggleGroup, Dialog } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import type { PageData } from './$types';
 	import { sortableField, userFilterSchema } from '$lib/form-schemas/user-filter-schema';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { superForm } from 'sveltekit-superforms';
+	import { zod, zodClient } from 'sveltekit-superforms/adapters';
+	import { superForm, superValidate, type SuperValidated } from 'sveltekit-superforms';
 	import { Control, Field, Label } from 'formsnap';
 	import type { z } from 'zod';
 	import endpoints from '$lib/endpoints';
 	import userStore from '$lib/stores/user-store';
 	import { isEqual } from 'lodash-es';
 	import { Pagination } from 'bits-ui';
+	import CreateUserForm from '$lib/components/users/CreateUserForm.svelte';
+	import { onMount } from 'svelte';
+	import { createUserSchema } from '$lib/form-schemas/create-user-schema';
 
 	export let data: PageData;
 
@@ -42,12 +45,12 @@
 					break;
 			}
 
-			resetPage();
+			resetPageNumber();
 			filtering(inputData, currentPage, pageSize);
 		},
 		onUpdate: ({ form }) => {
-			resetPage();
-			filtering(form.data, 1, currentPage, true);
+			resetPageNumber();
+			filtering(form.data, currentPage, pageSize, true);
 		}
 	});
 	const { form: formData, enhance } = form;
@@ -84,8 +87,9 @@
 	let filterTimer: NodeJS.Timeout | undefined;
 	let lastestFilterOption: Partial<z.infer<typeof userFilterSchema>> = {};
 	let lastestFilterOptionExtended: Record<string, string | string[]> = {};
+	let createUserForm: SuperValidated<z.infer<typeof createUserSchema>> | undefined;
+	let createUserFormCloseBtn: HTMLButtonElement;
 
-	$: console.log(currentPage);
 	$: selectedUserCount = extendedUsers.filter((x) => x.selected).length;
 	$: openBatchMenu = selectedUserCount > 0;
 	$: {
@@ -98,14 +102,26 @@
 		}
 	}
 
-	function resetPage() {
+	onMount(async () => {
+		createUserForm = await superValidate(zod(createUserSchema));
+	});
+
+	function createUserFinish() {
+		filtering(lastestFilterOption, currentPage, pageSize, true, true);
+		createUserFormCloseBtn?.click();
+	}
+
+	function resetPageNumber() {
 		currentPage = 1;
 		paginationBinding = currentPage;
 	}
 
-	function onSelectedAllStateChanged(checked: boolean | 'indeterminate') {
-		console.log(checked);
+	function resetPage() {
+		resetPageNumber();
+		filtering({}, currentPage, pageSize, true);
+	}
 
+	function onSelectedAllStateChanged(checked: boolean | 'indeterminate') {
 		if (typeof checked === 'boolean') {
 			extendedUsers.forEach((x) => {
 				x.selected = checked;
@@ -116,13 +132,15 @@
 	function advancedFilterClick() {
 		advancedFilterOpen = !advancedFilterOpen;
 		form.reset();
+		resetPage();
 	}
 
 	function filtering(
 		filterOptions: Partial<z.infer<typeof userFilterSchema>>,
 		page: number,
 		size: number,
-		ignoreDelay: boolean = false
+		ignoreDelay: boolean = false,
+		forceFilter: boolean = false
 	) {
 		if (filterTimer) {
 			clearTimeout(filterTimer);
@@ -160,7 +178,7 @@
 					filterOptionsExtended.roles = filterOptions.roles;
 				}
 
-				if (isEqual(lastestFilterOptionExtended, filterOptionsExtended)) {
+				if (!forceFilter && isEqual(lastestFilterOptionExtended, filterOptionsExtended)) {
 					return;
 				}
 
@@ -331,10 +349,54 @@
 					<i class="fa-regular fa-sliders"></i>
 					<span class="pl-2">Tìm kiếm kết hợp</span>
 				</button>
-				<button class="btn variant-filled-primary rounded-md font-medium">
-					<i class="fa-solid fa-plus"></i>
-					<span class="pl-2">Thêm nhân viên</span>
-				</button>
+				<Dialog.Root preventScroll={false}>
+					<Dialog.Trigger class="btn variant-filled-primary rounded-md font-medium">
+						<i class="fa-solid fa-plus"></i>
+						<span class="pl-2">Thêm nhân viên</span>
+					</Dialog.Trigger>
+					<Dialog.Portal>
+						<Dialog.Overlay
+							transition={fade}
+							transitionConfig={{
+								duration: 200,
+								easing: cubicOut
+							}}
+							class="fixed inset-0 z-50 bg-black/80"
+						/>
+						<Dialog.Content
+							transition={fly}
+							transitionConfig={{
+								duration: 200,
+								y: 100,
+								easing: cubicOut
+							}}
+							class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full sm:w-5/6 md:w-3/4 lg:w-3/5 xl:w-1/2 2xl:w-[720px] p-4"
+						>
+							{#if createUserForm}
+								<CreateUserForm {createUserForm} on:finish={createUserFinish}>
+									<svelte:fragment slot="closeBtn">
+										<Dialog.Close asChild let:builder>
+											<button
+												use:builder.action
+												{...builder}
+												bind:this={createUserFormCloseBtn}
+												class="btn-icon text-2xl !outline-none text-black/60 hover:text-black transition-colors"
+											>
+												<i class="fa-solid fa-xmark"></i>
+											</button>
+										</Dialog.Close>
+									</svelte:fragment>
+									<svelte:fragment slot="cancelBtn">
+										<Dialog.Close class="variant-soft-surface">
+											<i class="fa-solid fa-delete-left"></i>
+											<span class="pl-1">Huỷ</span>
+										</Dialog.Close>
+									</svelte:fragment>
+								</CreateUserForm>
+							{/if}
+						</Dialog.Content>
+					</Dialog.Portal>
+				</Dialog.Root>
 			</div>
 			<div
 				class="grid {advancedFilterOpen
