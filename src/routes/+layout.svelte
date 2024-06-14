@@ -23,6 +23,6 @@
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
-<Modal regionBackdrop="!bg-black/70" />
+<Modal regionBackdrop="!bg-black/80" />
 <Toaster position="top-center" richColors />
 <slot />

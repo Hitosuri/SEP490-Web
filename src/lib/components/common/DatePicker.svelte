@@ -14,12 +14,14 @@
 		regionInput?: string;
 		regionTrigger?: string;
 		regionSegment?: string;
+		regionContent?: string;
 		initValue?: Date | undefined;
 	}
 
 	export let regionInput = '';
 	export let regionTrigger = '';
 	export let regionSegment = '';
+	export let regionContent = '';
 	export let initValue: Date | undefined = undefined;
 
 	const dispatcher = createEventDispatcher<{
@@ -41,10 +43,12 @@
 	const cRegionTrigger = 'ml-auto hover:variant-soft-surface p-1.5 btn text-lg';
 	const cRegionSegment =
 		'rounded px-1 hover:bg-surface-50 focus:bg-surface-50 focus:text-foreground outline-0 aria-[valuetext=Empty]:text-surface-300';
+	const cRegionContent = 'x-50';
 
 	$: classesRegionInput = twMerge(cRegionInput, regionInput);
 	$: classesTrigger = twMerge(cRegionTrigger, regionTrigger);
 	$: classesSegment = twMerge(cRegionSegment, regionSegment);
+	$: classesContent = twMerge(cRegionContent, regionContent);
 
 	function onValueChange(date: DateValue | undefined) {
 		dispatcher('valueChange', date ? new Date(date.year, date.month - 1, date.day) : undefined);
@@ -95,7 +99,7 @@
 		sideOffset={12}
 		transition={fly}
 		transitionConfig={{ duration: 200, y: -30 }}
-		class="z-50"
+		class={classesContent}
 	>
 		<DatePicker.Calendar
 			class="rounded-container-token border-surface-100 border bg-white p-5 shadow-lg"

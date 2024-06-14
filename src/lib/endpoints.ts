@@ -11,6 +11,7 @@ export default {
 	},
 	users: {
 		get: `${PUBLIC_API_HOST}/api/user/ListUser`,
-		create: `${PUBLIC_API_HOST}/api/user`
+		create: `${PUBLIC_API_HOST}/api/user`,
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/user/UpdateUser/${id}`
 	}
 };

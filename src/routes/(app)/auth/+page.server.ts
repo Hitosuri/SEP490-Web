@@ -23,6 +23,7 @@ export const actions: Actions = {
 			});
 
 			const data = await response.json();
+			console.log(data);
 
 			if (!response.ok) {
 				if (Array.isArray(data) && data[0] === 'Username or password is wrong') {
@@ -33,7 +34,7 @@ export const actions: Actions = {
 				return fail(response.status, { form });
 			}
 
-			cookies.set(cookieName, data.token, {
+			cookies.set(cookieName, data.body.token, {
 				path: '/',
 				expires: form.data.rememberMe ? new Date(data.expireAt) : undefined,
 				secure: true

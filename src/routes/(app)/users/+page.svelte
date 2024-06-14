@@ -17,9 +17,13 @@
 	import CreateUserForm from '$lib/components/users/CreateUserForm.svelte';
 	import { onMount } from 'svelte';
 	import { createUserSchema } from '$lib/form-schemas/create-user-schema';
+	import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
+	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import EditUserForm from '$lib/components/users/EditUserForm.svelte';
 
 	export let data: PageData;
 
+	const modalStore = getModalStore();
 	const form = superForm(data.userFilterForm, {
 		SPA: true,
 		id: 'single',
@@ -88,6 +92,7 @@
 	let lastestFilterOption: Partial<z.infer<typeof userFilterSchema>> = {};
 	let lastestFilterOptionExtended: Record<string, string | string[]> = {};
 	let createUserForm: SuperValidated<z.infer<typeof createUserSchema>> | undefined;
+	let editUserForm: SuperValidated<z.infer<typeof editUserSchema>> | undefined;
 	let createUserFormCloseBtn: HTMLButtonElement;
 
 	$: selectedUserCount = extendedUsers.filter((x) => x.selected).length;
@@ -104,6 +109,7 @@
 
 	onMount(async () => {
 		createUserForm = await superValidate(zod(createUserSchema));
+		editUserForm = await superValidate(zod(editUserSchema));
 	});
 
 	function createUserFinish() {
@@ -228,6 +234,20 @@
 
 		filtering(lastestFilterOption, currentPage, pageSize, true);
 	}
+
+	function openEditUser(user: User) {
+		const modalSetting: ModalSettings = {
+			type: 'component',
+			component: {
+				ref: EditUserForm,
+				props: {
+					editUserForm,
+					user
+				}
+			}
+		};
+		modalStore.trigger(modalSetting);
+	}
 </script>
 
 <svelte:head>
@@ -349,7 +369,7 @@
 					<i class="fa-regular fa-sliders"></i>
 					<span class="pl-2">Tìm kiếm kết hợp</span>
 				</button>
-				<Dialog.Root preventScroll={false}>
+				<Dialog.Root>
 					<Dialog.Trigger class="btn variant-filled-primary rounded-md font-medium">
 						<i class="fa-solid fa-plus"></i>
 						<span class="pl-2">Thêm nhân viên</span>
@@ -717,6 +737,7 @@
 										<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
 										<DropdownMenu.Item
 											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+											on:click={() => openEditUser(extendedUser.user)}
 										>
 											<div class="size-4 text-center">
 												<i class="fa-regular fa-pen-to-square block"></i>
