@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatCurrency, formatFullDate } from '$lib/helpers/util';
+	import { formatCurrency, formatFullDate } from '$lib/helpers/formatters';
 
 	export let profile: Profile;
 </script>
@@ -14,17 +14,6 @@
 		<div>
 			<p class="text-sm font-semibold text-surface-500 select-none">Họ và tên</p>
 			<p class="text-xl font-medium tracking-wide">{profile.name}</p>
-		</div>
-	</div>
-	<div class="flex gap-4">
-		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
-		>
-			<i class="fa-solid fa-id-badge"></i>
-		</div>
-		<div>
-			<p class="text-sm font-semibold text-surface-500 select-none">Tên đăng nhập</p>
-			<p class="text-xl font-medium tracking-wide">{profile.userName}</p>
 		</div>
 	</div>
 	<div class="flex gap-4">

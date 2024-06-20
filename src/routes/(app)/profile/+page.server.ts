@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 };
 
 export const actions: Actions = {
-	editProfile: async ({ request, cookies }) => {
+	editProfile: async ({ request, cookies, fetch }) => {
 		const form = await superValidate(request, zod(editProfileSchema));
 
 		if (!form.valid) {
@@ -52,7 +52,7 @@ export const actions: Actions = {
 			return fail(500, { form });
 		}
 	},
-	changePassword: async ({ request, cookies }) => {
+	changePassword: async ({ request, cookies, fetch }) => {
 		const form = await superValidate(request, zod(changePasswordSchema));
 
 		if (!form.valid) {

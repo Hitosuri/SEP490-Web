@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { editProfileSchema } from '$lib/form-schemas/edit-profile-schema';
-	import { formatCurrency } from '$lib/helpers/util';
+	import { formatCurrency } from '$lib/helpers/formatters';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { dateProxy, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -24,7 +24,6 @@
 				dispatch('finish', {
 					...profile,
 					name: $formData.name,
-					userName: $formData.userName,
 					phone: $formData.phone,
 					birthday: $formData.birthday
 				});
@@ -67,27 +66,6 @@
 						type="text"
 						class="input rounded-container-token mt-1"
 						bind:value={$formData.name}
-					/>
-				</Control>
-				<FieldErrors />
-			</Field>
-		</div>
-	</div>
-	<div class="flex gap-4">
-		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
-		>
-			<i class="fa-solid fa-id-badge"></i>
-		</div>
-		<div>
-			<Field {form} name="userName">
-				<Control let:attrs>
-					<Label class="text-sm font-semibold text-surface-500 select-none">Tên đăng nhập</Label>
-					<input
-						{...attrs}
-						type="text"
-						class="input rounded-container-token mt-1"
-						bind:value={$formData.userName}
 					/>
 				</Control>
 				<FieldErrors />

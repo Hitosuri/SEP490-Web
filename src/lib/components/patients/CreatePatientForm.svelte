@@ -1,58 +1,80 @@
 <script lang="ts">
-	import { dateProxy, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import SuperDebug, {
+		dateProxy,
+		setError,
+		superForm,
+		type SuperValidated
+	} from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { createEventDispatcher, type ComponentEvents } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { createUserSchema } from '$lib/form-schemas/create-user-schema';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
-	import { ToggleGroup } from 'bits-ui';
-	import { roleTranslation, userRoles } from '$lib/authorization';
+	import { createPatientSchema } from '$lib/form-schemas/create-patient-schema';
+	import userStore from '$lib/stores/user-store';
+	import endpoints from '$lib/endpoints';
 
-	export let createUserForm: SuperValidated<z.infer<typeof createUserSchema>>;
+	export let createPatientForm: SuperValidated<z.infer<typeof createPatientSchema>>;
 
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
-	const form = superForm(createUserForm, {
-		validators: zodClient(createUserSchema),
-		invalidateAll: false,
+	const form = superForm(createPatientForm, {
+		validators: zodClient(createPatientSchema),
 		resetForm: false,
-		onSubmit: () => {
-			requesting = true;
-			const promise = new Promise<string>((resolve, reject) => {
-				submitingResolve = resolve;
-				submitingReject = reject;
-			});
-			toast.promise(promise, {
-				loading: 'Đang xử lý...',
-				success: (msg) => msg || 'Tạo nhân viên thành công',
-				error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo nhân viên'
-			});
-		},
-		onResult: (event) => {
-			requesting = false;
-			if (event.result.type === 'success') {
-				const msg = event.result?.data?.form?.message || 'Tạo nhân viên thành công';
-				submitingResolve?.(msg);
-				dispatch('finish');
+		SPA: true,
+		onUpdate: ({ form }) => {
+			if (!form.valid || !$userStore) {
+				return;
 			}
-			if (event.result.type === 'failure' && event.result?.data?.form?.message) {
-				submitingReject?.(event.result?.data?.form?.message);
-			}
+
+			toast.promise(
+				async () => {
+					const response = await fetch(endpoints.patients.create, {
+						method: 'POST',
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						},
+						body: JSON.stringify(form.data)
+					});
+					const data = await response.json();
+
+					if (!response.ok) {
+						let msg = '';
+						if (Array.isArray(data?.error)) {
+							msg = data.error.join(', ');
+							if (
+								typeof data?.error[0] === 'string' &&
+								data?.error[0].startsWith('Bệnh nhân với số điện thoại')
+							) {
+								console.log(data?.error[0]);
+								setError(form, 'phone', data?.error[0]);
+							}
+						}
+						return Promise.reject(msg);
+					}
+					dispatch('finish');
+				},
+				{
+					loading: 'Đang xử lý...',
+					success: 'Tạo bệnh nhân thành công',
+					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo bệnh nhân'
+				}
+			);
 		}
 	});
 	const { form: formData, enhance } = form;
 	const birthDateProxy = dateProxy(formData, 'birthday', { format: 'date', empty: undefined });
 	const today = new Date();
 	let requesting = false;
-	let submitingResolve: ((value: string | PromiseLike<string>) => void) | undefined;
-	let submitingReject: ((reason?: any) => void) | undefined;
 
 	function birthdayChanged(e: ComponentEvents<DatePicker>['valueChange']) {
 		if (e.detail) {
 			e.detail.setMinutes(e.detail.getMinutes() - e.detail.getTimezoneOffset());
 			$formData.birthday = e.detail;
+		} else {
+			$formData.birthday = undefined;
 		}
 	}
 </script>
@@ -60,13 +82,13 @@
 <div class="card bg-white p-6">
 	<div class="flex justify-between">
 		<div class="text-2xl rounded-md border border-surface-200 size-14 text-center leading-[3.5rem]">
-			<i class="fa-regular fa-user-plus"></i>
+			<i class="fa-regular fa-bed-pulse"></i>
 		</div>
 		<slot name="closeBtn" />
 	</div>
-	<h1 class="font-semibold text-2xl mt-6">Thêm nhân viên mới</h1>
-	<p class="font-semibold text-surface-400 mb-6">Nhập các thông tin của nhân viên mới</p>
-	<form use:enhance action="/users?/createUser" method="post">
+	<h1 class="font-semibold text-2xl mt-6">Thêm bệnh nhân mới</h1>
+	<p class="font-semibold text-surface-400 mb-6">Nhập các thông tin của bệnh nhân mới</p>
+	<form use:enhance action="/patients?/createPatient" method="post">
 		<fieldset class="grid grid-cols-2 gap-4" disabled={requesting}>
 			<div>
 				<Field {form} name="name">
@@ -122,7 +144,6 @@
 						/>
 						<DatePicker
 							regionInput="mt-1 w-full"
-							preventDeselect={true}
 							on:valueChange={birthdayChanged}
 							maxValue={new CalendarDate(
 								today.getFullYear(),
@@ -134,56 +155,13 @@
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
 			</div>
-			<div>
-				<Field {form} name="salary">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Lương</Label>
-						<input
-							{...attrs}
-							type="number"
-							class="input rounded-container-token mt-1"
-							bind:value={$formData.salary}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div class="col-span-2">
-				<Field {form} name="roles">
-					<p class="font-semibold text-surface-500 select-none">Vai trò</p>
-					<ToggleGroup.Root
-						bind:value={$formData.roles}
-						class="flex rounded-lg border overflow-hidden w-fit mt-1"
-					>
-						{#each userRoles as userRole, i}
-							<Control let:attrs>
-								{#if i !== 0}
-									<div class="h-auto border-r"></div>
-								{/if}
-								<input
-									class="hidden"
-									type="checkbox"
-									{...attrs}
-									bind:group={$formData.roles}
-									value={userRole}
-								/>
-								<ToggleGroup.Item
-									class="btn py-2 rounded-none font-medium data-[state=on]:variant-filled-tertiary"
-									value={userRole}>{roleTranslation[userRole]}</ToggleGroup.Item
-								>
-							</Control>
-						{/each}
-					</ToggleGroup.Root>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
 		</fieldset>
 		<fieldset
 			disabled={requesting}
 			class="flex gap-4 mt-8 font-medium *:btn *:rounded-container-token *:flex-1"
 		>
 			<slot name="cancelBtn">
-				<button type="button" class="variant-ghost-surface">
+				<button type="button" class="variant-soft-surface">
 					<i class="fa-solid fa-delete-left"></i>
 					<span class="pl-1">Huỷ</span>
 				</button>

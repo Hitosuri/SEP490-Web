@@ -10,7 +10,7 @@
 	import { ToggleGroup } from 'bits-ui';
 	import { roleTranslation, userRoles } from '$lib/authorization';
 	import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 
 	export let editUserForm: SuperValidated<z.infer<typeof editUserSchema>>;
 	export let user: User;
@@ -49,7 +49,7 @@
 		}
 	});
 	const { form: formData, enhance } = form;
-	const birthDateProxy = dateProxy(formData, 'birthday', { format: 'date', empty: undefined });
+	// const birthDateProxy = dateProxy(formData, 'birthday', { format: 'date', empty: undefined });
 	const today = new Date();
 	let requesting = false;
 	let submitingResolve: ((value: string | PromiseLike<string>) => void) | undefined;
@@ -57,21 +57,19 @@
 
 	onMount(() => {
 		$formData.id = user.id;
-		$formData.name = user.name;
-		$formData.email = user.email;
 		$formData.phone = user.phone;
-		$formData.birthday = user.birthday;
+		// $formData.birthday = user.birthday;
 		$formData.salary = user.salary;
 		// @ts-ignore
 		$formData.roles = [...user.roles];
 	});
 
-	function birthdayChanged(e: ComponentEvents<DatePicker>['valueChange']) {
-		if (e.detail) {
-			e.detail.setMinutes(e.detail.getMinutes() - e.detail.getTimezoneOffset());
-			$formData.birthday = e.detail;
-		}
-	}
+	// function birthdayChanged(e: ComponentEvents<DatePicker>['valueChange']) {
+	// 	if (e.detail) {
+	// 		e.detail.setMinutes(e.detail.getMinutes() - e.detail.getTimezoneOffset());
+	// 		$formData.birthday = e.detail;
+	// 	}
+	// }
 
 	function closeModal() {
 		modalStore.close();
@@ -108,34 +106,6 @@
 		</Field>
 		<fieldset class="grid grid-cols-2 gap-4" disabled={requesting}>
 			<div>
-				<Field {form} name="name">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Họ và tên</Label>
-						<input
-							{...attrs}
-							type="text"
-							class="input rounded-container-token mt-1"
-							bind:value={$formData.name}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div>
-				<Field {form} name="email">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Email</Label>
-						<input
-							{...attrs}
-							type="email"
-							class="input rounded-container-token mt-1"
-							bind:value={$formData.email}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div>
 				<Field {form} name="phone">
 					<Control let:attrs>
 						<Label class="font-semibold text-surface-500 select-none">Số điện thoại</Label>
@@ -149,7 +119,7 @@
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
 			</div>
-			<div>
+			<!-- <div>
 				<Field {form} name="birthday">
 					<Control let:attrs>
 						<Label class="font-semibold text-surface-500 select-none">Ngày sinh</Label>
@@ -173,7 +143,7 @@
 					</Control>
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
-			</div>
+			</div> -->
 			<div>
 				<Field {form} name="salary">
 					<Control let:attrs>
@@ -184,6 +154,26 @@
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.salary}
 						/>
+					</Control>
+					<FieldErrors class="text-sm mt-1" />
+				</Field>
+			</div>
+			<div>
+				<Field {form} name="status">
+					<Control let:attrs>
+						<Label class="font-semibold text-surface-500 select-none mb-1">Trạng thái</Label>
+						<SlideToggle
+							{...attrs}
+							size="sm"
+							bind:checked={$formData.status}
+							active="bg-primary-500"
+						>
+							{#if $formData.status}
+								Hoạt động
+							{:else}
+								Không hoạt động
+							{/if}
+						</SlideToggle>
 					</Control>
 					<FieldErrors class="text-sm mt-1" />
 				</Field>

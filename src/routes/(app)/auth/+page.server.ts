@@ -8,35 +8,37 @@ import { fail, redirect } from '@sveltejs/kit';
 const cookieName = 'access-token';
 
 export const actions: Actions = {
-	login: async ({ request, cookies, url }) => {
+	login: async ({ request, cookies, url, fetch }) => {
 		const form = await superValidate(request, zod(loginSchema));
+
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+
 		try {
 			const response = await fetch(endpoints.auth.login, {
 				method: 'POST',
 				headers: {
 					'content-type': 'application/json'
 				},
-				body: JSON.stringify({
-					userName: form.data.userName,
-					password: form.data.password
-				})
+				body: JSON.stringify(form.data)
 			});
 
 			const data = await response.json();
-			console.log(data);
 
 			if (!response.ok) {
-				if (Array.isArray(data) && data[0] === 'Username or password is wrong') {
-					form.message = 'Sai mật khẩu hoặc tên đăng nhập';
+				if (typeof data?.error === 'string') {
+					form.message = data.error;
 				} else {
 					form.message = 'Xảy ra lỗi khi đăng nhập';
 				}
 				return fail(response.status, { form });
 			}
 
-			cookies.set(cookieName, data.body.token, {
+			const user = data.body;
+			cookies.set(cookieName, user.token, {
 				path: '/',
-				expires: form.data.rememberMe ? new Date(data.expireAt) : undefined,
+				expires: form.data.rememberMe ? new Date(user.expireAt) : undefined,
 				secure: true
 			});
 		} catch (error) {

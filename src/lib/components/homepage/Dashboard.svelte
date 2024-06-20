@@ -27,6 +27,7 @@
 			lottieAnimUrl="/images/animations/patient.lottie"
 			title="Bệnh nhân"
 			class="from-pink-400 to-red-400"
+			href="/patients"
 		/>
 		<FunctionCard
 			lottieAnimUrl="/images/animations/schedule.lottie"

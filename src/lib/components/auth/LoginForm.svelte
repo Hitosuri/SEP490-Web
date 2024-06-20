@@ -16,9 +16,11 @@
 		validators: zodClient(loginSchema),
 		invalidateAll: false,
 		onResult: (e) => {
+			console.log(e.result);
+
 			if (e.result.type === 'failure') {
 				if (e.result?.data?.form?.message) {
-					toast.error('Sai mật khẩu hoặc tên đăng nhập');
+					toast.error(e.result.data.form.message);
 				} else {
 					toast.error('Xảy ra lỗi khi đăng nhập');
 				}
@@ -56,14 +58,14 @@
 			use:focusTrap={true}
 		>
 			<div>
-				<Field name="userName" {form}>
+				<Field name="emailOrPhone" {form}>
 					<Control let:attrs>
-						<Label class="font-medium mb-1">Tên đăng nhập</Label>
+						<Label class="font-medium mb-1">Email hoặc số điện thoại</Label>
 						<input
 							class="input rounded-container-token data-[fs-error]:input-error"
 							type="text"
 							{...attrs}
-							bind:value={$formData.userName}
+							bind:value={$formData.emailOrPhone}
 						/>
 					</Control>
 					<FieldErrors class="mt-1" />

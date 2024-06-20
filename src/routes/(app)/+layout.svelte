@@ -9,9 +9,9 @@
 </script>
 
 <svelte:window on:scroll={scrollHandler} />
-<div class="h-full bg-white relative">
+<div class="bg-white relative">
 	<Header />
-	<div class="min-h-screen h-screen">
+	<div class="min-h-screen h-screen bg-background">
 		<slot />
 	</div>
 </div>

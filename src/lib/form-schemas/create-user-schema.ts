@@ -9,7 +9,6 @@ export const createUserSchema = z.object({
 		.string()
 		.min(1, 'Email không dược để trống')
 		.email('Vui lòng nhập đúng định dạng của email'),
-	userName: z.string().min(1, 'Tên đăng nhập không được để trống'),
 	phone: z.coerce
 		.string()
 		.min(10, 'Số điện thoại bao gồm 10 chữ số')

@@ -52,11 +52,18 @@ interface User {
 interface Profile {
 	name: string;
 	email: string;
-	userName: string;
 	phone: string;
 	birthday: Date;
 	salary: number;
 	status: number;
+}
+
+interface Patient {
+	id: number;
+	name: string | undefined | null;
+	email: string | undefined | null;
+	phone: string | undefined | null;
+	birthday: Date | undefined | null;
 }
 
 interface Pagination<T> {
@@ -65,3 +72,14 @@ interface Pagination<T> {
 	totalRecords: number;
 	data: T;
 }
+
+type TableField<T> = {
+	[K in keyof T]: {
+		displayName: string;
+		name: K;
+		sortable?: boolean;
+		align?: 'left' | 'center' | 'right';
+		formatter?: (value: T[K]) => string;
+		href?: (value: T) => string;
+	};
+}[keyof T];

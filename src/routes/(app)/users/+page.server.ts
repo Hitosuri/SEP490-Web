@@ -6,6 +6,7 @@ import { userFilterSchema } from '$lib/form-schemas/user-filter-schema';
 import endpoints from '$lib/endpoints';
 import { createUserSchema } from '$lib/form-schemas/create-user-schema';
 import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
+import { getRoleId } from '$lib/helpers/utils';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	filterRoles(locals, url, Role.Admin);
@@ -20,12 +21,14 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	});
 	return {
 		userFilterForm: await superValidate(zod(userFilterSchema)),
+		createUserForm: await superValidate(zod(createUserSchema)),
+		editUserForm: await superValidate(zod(editUserSchema)),
 		userListPage
 	};
 };
 
 export const actions: Actions = {
-	createUser: async ({ request, cookies }) => {
+	createUser: async ({ request, cookies, fetch }) => {
 		const form = await superValidate(request, zod(createUserSchema));
 
 		if (!form.valid) {
@@ -34,10 +37,7 @@ export const actions: Actions = {
 
 		try {
 			const { roles, ...others } = form.data;
-			const rielForm: Record<string, string | number[] | number | Date> = {
-				...others,
-				password: '123456789'
-			};
+			const rielForm: Record<string, string | number[] | number | Date> = { ...others };
 			rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
 
 			const response = await fetch(endpoints.users.create, {
@@ -69,7 +69,7 @@ export const actions: Actions = {
 			return fail(500, { form });
 		}
 	},
-	editUser: async ({ request, cookies }) => {
+	editUser: async ({ request, cookies, fetch }) => {
 		const form = await superValidate(request, zod(editUserSchema));
 
 		if (!form.valid) {
@@ -79,7 +79,7 @@ export const actions: Actions = {
 		try {
 			// TODO incomplete because password is required and user list missing birthday
 			const { roles, ...others } = form.data;
-			const rielForm: Record<string, string | number[] | number | Date> = { ...others };
+			const rielForm: Record<string, string | boolean | number | number[]> = { ...others };
 			rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
 			console.log(JSON.stringify(rielForm, null, 2));
 
@@ -103,9 +103,9 @@ export const actions: Actions = {
 
 				form.message = result || response.statusText;
 				return fail(response.status, { form });
-			} else {
-				return message(form, 'Tạo nhân viên thành công');
 			}
+
+			return message(form, 'Tạo nhân viên thành công');
 		} catch (error) {
 			console.log(error);
 			form.message = 'Đã có lỗi xảy ra';
@@ -113,20 +113,3 @@ export const actions: Actions = {
 		}
 	}
 };
-
-function getRoleId(role: Role) {
-	switch (role) {
-		case Role.Admin:
-			return 1;
-		case Role.Accountant:
-			return 2;
-		case Role.Nurse:
-			return 4;
-		case Role.Recieptionist:
-			return 5;
-		case Role.Doctor:
-			return 6;
-		default:
-			return 0;
-	}
-}

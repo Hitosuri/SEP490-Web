@@ -4,7 +4,6 @@ const msInDay = 1000 * 60 * 60 * 24;
 
 export const editProfileSchema = z.object({
 	name: z.string().min(1, 'Tên người dùng không được để trống'),
-	userName: z.string().min(1, 'Tên đăng nhập không được để trống'),
 	phone: z.coerce
 		.string()
 		.min(10, 'Số điện thoại bao gồm 10 chữ số')
