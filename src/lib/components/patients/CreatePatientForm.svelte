@@ -91,14 +91,14 @@
 	<form use:enhance action="/patients?/createPatient" method="post">
 		<fieldset class="grid grid-cols-2 gap-4" disabled={requesting}>
 			<div>
-				<Field {form} name="name">
+				<Field {form} name="phone">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Họ và tên</Label>
+						<Label class="font-semibold text-surface-500 select-none">Số điện thoại</Label>
 						<input
 							{...attrs}
 							type="text"
 							class="input rounded-container-token mt-1"
-							bind:value={$formData.name}
+							bind:value={$formData.phone}
 						/>
 					</Control>
 					<FieldErrors class="text-sm mt-1" />
@@ -119,14 +119,14 @@
 				</Field>
 			</div>
 			<div>
-				<Field {form} name="phone">
+				<Field {form} name="name">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Số điện thoại</Label>
+						<Label class="font-semibold text-surface-500 select-none">Họ và tên</Label>
 						<input
 							{...attrs}
 							type="text"
 							class="input rounded-container-token mt-1"
-							bind:value={$formData.phone}
+							bind:value={$formData.name}
 						/>
 					</Control>
 					<FieldErrors class="text-sm mt-1" />
