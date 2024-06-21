@@ -3,7 +3,8 @@ import { PUBLIC_API_HOST } from '$env/static/public';
 export default {
 	auth: {
 		loginUser: `${PUBLIC_API_HOST}/api/authentication`,
-		loginPatient: `${PUBLIC_API_HOST}/api/authentication/LoginPatient`
+		loginPatient: `${PUBLIC_API_HOST}/api/authentication/LoginPatient`,
+		resetPassword: (email: string) => `${PUBLIC_API_HOST}/api/authentication/reset/${email}`
 	},
 	profile: {
 		get: `${PUBLIC_API_HOST}/api/user/ViewProfile`,
