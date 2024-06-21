@@ -1,4 +1,5 @@
 import { JWT_ACCESS_KEY } from '$env/static/private';
+import { Role } from '$lib/authorization';
 import type { Handle } from '@sveltejs/kit';
 import { jwtVerify } from 'jose';
 import { JWSSignatureVerificationFailed, JWTExpired } from 'jose/errors';
@@ -9,12 +10,19 @@ const jwtHandler: Handle = async ({ event, resolve }) => {
 	if (token) {
 		try {
 			const payload = await verifyJwt(token);
+			let roles: string[];
+			if (payload.role) {
+				roles = typeof payload.role === 'string' ? [payload.role] : payload.role;
+			} else {
+				roles = [Role.Patient];
+			}
 			event.locals.user = {
 				email: payload.sub,
-				userId: payload.userId,
-				role: typeof payload.role === 'string' ? [payload.role] : payload.role,
+				id: payload.userId,
 				uid: payload.jti,
-				token
+				roles: roles,
+				token,
+				isPatient: roles.includes(Role.Patient)
 			};
 		} catch (error) {
 			console.log(error);

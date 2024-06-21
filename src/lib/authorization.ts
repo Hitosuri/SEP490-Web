@@ -29,14 +29,14 @@ export const userRoles = [
 	Role.Accountant
 ] as const;
 
-export const roleTranslation = {
+export const roleTranslation: Record<string, string> = {
 	[Role.Admin]: 'Admin',
 	[Role.Doctor]: 'Bác sĩ',
 	[Role.Nurse]: 'Y tá',
 	[Role.Recieptionist]: 'Lễ tân',
 	[Role.Accountant]: 'Kế toán',
 	[Role.Patient]: 'Bệnh nhân'
-} as const;
+};
 
 export function filterRoles(locals: App.Locals, url: URL, role: Role | Role[]): void {
 	const roleArray = Array.isArray(role) ? role : [role];
@@ -51,7 +51,7 @@ export function filterRoles(locals: App.Locals, url: URL, role: Role | Role[]): 
 		}
 
 		// Trường hợp role route là All hoặc role route khớp với role của người dùng
-		if (!roleArray.includes(Role.All) && intersection(roleArray, locals.user.role).length === 0) {
+		if (!roleArray.includes(Role.All) && intersection(roleArray, locals.user.roles).length === 0) {
 			error(401, {
 				message: 'Bạn không có quyền truy cập trang này'
 			});

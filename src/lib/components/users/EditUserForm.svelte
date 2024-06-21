@@ -119,31 +119,6 @@
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
 			</div>
-			<!-- <div>
-				<Field {form} name="birthday">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Ngày sinh</Label>
-						<input
-							{...attrs}
-							type="hidden"
-							class="input rounded-container-token mt-1"
-							bind:value={$birthDateProxy}
-						/>
-						<DatePicker
-							regionInput="mt-1 w-full"
-							regionContent="z-[999]"
-							preventDeselect={true}
-							on:valueChange={birthdayChanged}
-							maxValue={new CalendarDate(
-								today.getFullYear(),
-								today.getMonth() + 1,
-								today.getDate()
-							)}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div> -->
 			<div>
 				<Field {form} name="salary">
 					<Control let:attrs>

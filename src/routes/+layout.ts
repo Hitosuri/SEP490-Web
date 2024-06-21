@@ -6,5 +6,5 @@ export const load: LayoutLoad = async ({ data }) => {
 	if (browser) {
 		userStore.set(data.user);
 	}
-	return {};
+	return data;
 };

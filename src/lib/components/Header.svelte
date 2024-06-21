@@ -16,6 +16,7 @@
 	import { zod } from 'sveltekit-superforms/adapters';
 	import scrollStore from '$lib/stores/scroll-store';
 	import type { Unsubscriber } from 'svelte/store';
+	import { Role, roleTranslation } from '$lib/authorization';
 
 	let loginForm: SuperValidated<z.infer<typeof loginSchema>> | undefined;
 	let logoutForm: HTMLFormElement;
@@ -25,7 +26,7 @@
 	let showHeader = false;
 	let loginBtn: HTMLButtonElement | undefined;
 
-	$: inLandingPage = $page.url.pathname === '/' && !$userStore;
+	$: inLandingPage = $page.url.pathname === '/' && (!$userStore || $userStore.isPatient);
 
 	onMount(async () => {
 		let lastScroll = 0;
@@ -190,7 +191,7 @@
 						class="w-full max-w-[229px] rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
 					>
 						<DropdownMenu.Label class="text-center select-none text-xs p-1 font-bold">
-							{$userStore.role}
+							{$userStore.roles.map((x) => roleTranslation[x]).join(', ')}
 						</DropdownMenu.Label>
 						<DropdownMenu.Item
 							href="/profile"

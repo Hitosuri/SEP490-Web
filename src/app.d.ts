@@ -21,18 +21,19 @@ declare namespace App {
 }
 
 interface UserBasic {
-	userId: string;
-	role: string[];
+	id: string;
+	roles: string[];
 	email: string;
 	uid: string;
 	token: string;
+	isPatient: boolean;
 }
 
 interface JwtPayload {
 	sub: string;
 	jti: string;
 	userId: string;
-	role: string | string[];
+	role?: string | string[];
 	nbf: number;
 	exp: number;
 	iat: number;
