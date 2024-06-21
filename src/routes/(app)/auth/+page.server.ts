@@ -1,9 +1,10 @@
-import { superValidate } from 'sveltekit-superforms';
+import { setError, superValidate } from 'sveltekit-superforms';
 import type { Actions } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import { loginSchema } from '$lib/form-schemas/login-schema';
 import endpoints from '$lib/endpoints';
 import { fail, redirect } from '@sveltejs/kit';
+import { z } from 'zod';
 
 const cookieName = 'access-token';
 
@@ -15,20 +16,43 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
+		if (!form.data.isUser && !z.string().email().safeParse(form.data.emailOrPhone).success) {
+			setError(form, 'emailOrPhone', 'Đăng nhập với vai trò bệnh nhân chỉ được phép dùng email');
+			return fail(400, { form });
+		}
+
 		try {
-			const response = await fetch(endpoints.auth.login, {
-				method: 'POST',
-				headers: {
-					'content-type': 'application/json'
-				},
-				body: JSON.stringify(form.data)
-			});
+			let rielForm: Record<string, string>;
+			if (form.data.isUser) {
+				rielForm = {
+					emailOrPhone: form.data.emailOrPhone,
+					password: form.data.password
+				};
+			} else {
+				rielForm = {
+					email: form.data.emailOrPhone,
+					password: form.data.password
+				};
+			}
+
+			const response = await fetch(
+				form.data.isUser ? endpoints.auth.loginUser : endpoints.auth.loginPatient,
+				{
+					method: 'POST',
+					headers: {
+						'content-type': 'application/json'
+					},
+					body: JSON.stringify(rielForm)
+				}
+			);
 
 			const data = await response.json();
 
 			if (!response.ok) {
 				if (typeof data?.error === 'string') {
 					form.message = data.error;
+				} else if (Array.isArray(data?.error)) {
+					form.message = data.error.join(', ');
 				} else {
 					form.message = 'Xảy ra lỗi khi đăng nhập';
 				}

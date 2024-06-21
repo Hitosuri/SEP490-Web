@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { loginSchema } from '$lib/form-schemas/login-schema';
-	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
 	import { Field, Control, Label, FieldErrors } from 'formsnap';
 	import { toast } from 'svelte-sonner';
 	import type { HTMLInputTypeAttribute } from 'svelte/elements';
-	import { superForm, type FormResult, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 
@@ -109,6 +109,20 @@
 				<a href="#" class="text-sm ml-auto font-semibold text-primary-500 hover:underline">
 					Quên mật khẩu?
 				</a>
+			</div>
+			<div>
+				<Field name="isUser" {form}>
+					<Control let:attrs>
+						<Label class="font-medium mb-1 w-fit">Bạn là:</Label>
+						<div class="flex justify-center items-center gap-4 font-semibold">
+							<p class="flex-1 shrink-0 text-end {$formData.isUser ? 'text-surface-400' : 'text-primary-500'}">Bệnh nhân</p>
+							<SlideToggle size="sm" {...attrs} bind:checked={$formData.isUser} />
+							<p class="flex-1 shrink-0 {!$formData.isUser ? 'text-surface-400' : 'text-primary-500'}">
+								Bác sĩ, nhân viên...
+							</p>
+						</div>
+					</Control>
+				</Field>
 			</div>
 			<button type="submit" class="btn variant-filled-primary w-1/2 mx-auto block font-semibold">
 				Đăng nhập
