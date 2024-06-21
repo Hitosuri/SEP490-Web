@@ -110,16 +110,16 @@
 									on:click={() => dispatch('sortField', field.name)}
 								>
 									<span>{field.displayName}</span>
-									<div class="flex flex-col">
+									<div class="relative">
 										<i
-											class="fa-solid fa-caret-up -mb-2 {sortingField === field.name &&
+											class="fa-solid fa-sort-up leading-5 {sortingField === field.name &&
 											sortingAscending
 												? 'text-primary-500'
 												: 'opacity-40'}"
 										></i>
 										<i
-											class="fa-solid fa-caret-down {sortingField === field.name &&
-											!sortingAscending
+											class="fa-solid fa-sort-down absolute top-0 left-0 leading-5 {sortingField ===
+												field.name && !sortingAscending
 												? 'text-primary-500'
 												: 'opacity-40'}"
 										></i>

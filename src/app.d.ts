@@ -73,6 +73,12 @@ interface Pagination<T> {
 	data: T;
 }
 
+interface ApiResponse<T, E = string> {
+	status: 200;
+	error?: E;
+	body?: T;
+}
+
 type TableField<T> = {
 	[K in keyof T]: {
 		displayName: string;

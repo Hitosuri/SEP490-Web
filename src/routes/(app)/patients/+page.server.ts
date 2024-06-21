@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const patientListPage: Pagination<Patient[]> = await response.json();
 
 	patientListPage.data.forEach((x) => {
-		x.birthday = new Date(x.birthday);
+		x.birthday = x.birthday ? new Date(x.birthday) : x.birthday;
 	});
 
 	return {

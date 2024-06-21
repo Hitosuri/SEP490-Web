@@ -1,10 +1,5 @@
 <script lang="ts">
-	import SuperDebug, {
-		dateProxy,
-		setError,
-		superForm,
-		type SuperValidated
-	} from 'sveltekit-superforms';
+	import { dateProxy, setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -44,12 +39,15 @@
 						let msg = '';
 						if (Array.isArray(data?.error)) {
 							msg = data.error.join(', ');
-							if (
-								typeof data?.error[0] === 'string' &&
-								data?.error[0].startsWith('Bệnh nhân với số điện thoại')
-							) {
-								console.log(data?.error[0]);
-								setError(form, 'phone', data?.error[0]);
+							const firstError = data?.error[0];
+							if (typeof firstError === 'string') {
+								if (firstError.startsWith('Bệnh nhân với số điện thoại')) {
+									console.log(firstError);
+									setError(form, 'phone', firstError);
+								} else if (firstError.startsWith('Bệnh nhân với Email ')) {
+									console.log(firstError);
+									setError(form, 'email', firstError);
+								}
 							}
 						}
 						return Promise.reject(msg);
@@ -88,7 +86,7 @@
 	</div>
 	<h1 class="font-semibold text-2xl mt-6">Thêm bệnh nhân mới</h1>
 	<p class="font-semibold text-surface-400 mb-6">Nhập các thông tin của bệnh nhân mới</p>
-	<form use:enhance action="/patients?/createPatient" method="post">
+	<form use:enhance method="post">
 		<fieldset class="grid grid-cols-2 gap-4" disabled={requesting}>
 			<div>
 				<Field {form} name="phone">

@@ -17,5 +17,7 @@ export default {
 	patients: {
 		get: `${PUBLIC_API_HOST}/api/patient/all`,
 		create: `${PUBLIC_API_HOST}/api/patient`,
+		detail: (id: number) => `${PUBLIC_API_HOST}/api/patient/${id}`,
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/patient/update/${id}`
 	}
 };

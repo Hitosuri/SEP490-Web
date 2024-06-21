@@ -132,7 +132,7 @@
 						const pageData: Pagination<Patient[]> = await response.json();
 
 						pageData.data.forEach((x) => {
-							x.birthday = x.birthday ? new Date(x.birthday) : undefined;
+							x.birthday = x.birthday ? new Date(x.birthday) : x.birthday;
 						});
 						patients = pageData.data;
 						totalItems = pageData.totalRecords;
