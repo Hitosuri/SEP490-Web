@@ -79,6 +79,11 @@ interface ApiResponse<T, E = string> {
 	body?: T;
 }
 
+interface Crumb {
+	label: string;
+	href?: string;
+}
+
 type TableField<T> = {
 	[K in keyof T]: {
 		displayName: string;

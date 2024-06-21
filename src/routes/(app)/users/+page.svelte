@@ -18,6 +18,7 @@
 	import EditUserForm from '$lib/components/users/EditUserForm.svelte';
 	import DropdownSelect from '$lib/components/common/DropdownSelect.svelte';
 	import DataTable from '$lib/components/common/DataTable.svelte';
+	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
 
 	export let data: PageData;
 
@@ -261,6 +262,7 @@
 	<title>Danh sách nhân viên</title>
 </svelte:head>
 <div class="px-4 pt-header h-full container mx-auto flex flex-col">
+	<Breadcrumb crumbs={[{ label: 'Danh sách nhân viên' }]} />
 	<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Danh sách nhân viên</h1>
 	<div class="p-8 bg-slate-300 rounded-t-2xl space-y-6 flex-1">
 		<div class="p-2 rounded-xl bg-white shadow-md group">

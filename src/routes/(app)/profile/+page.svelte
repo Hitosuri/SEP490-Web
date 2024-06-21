@@ -10,6 +10,7 @@
 	import EditProfileForm from '$lib/components/profile/EditProfileForm.svelte';
 	import { zod } from 'sveltekit-superforms/adapters';
 	import ChangePasswordForm from '$lib/components/profile/ChangePasswordForm.svelte';
+	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
 
 	export let data: PageData;
 
@@ -23,7 +24,6 @@
 		if (!editProfileForm) {
 			editProfileForm = await superValidate(zod(editProfileSchema));
 			editProfileForm.data.name = profile.name;
-			editProfileForm.data.userName = profile.userName;
 			editProfileForm.data.phone = profile.phone;
 			editProfileForm.data.birthday = profile.birthday;
 		}
@@ -42,7 +42,8 @@
 	<title>Tài khoản</title>
 </svelte:head>
 <div class="p-4 pt-header container mx-auto">
-	<div class="rounded-lg shadow-lg overflow-hidden border mt-8">
+	<Breadcrumb crumbs={[{ label: 'Tài khoản cá nhân' }]} />
+	<div class="rounded-lg shadow-lg overflow-hidden border mt-4">
 		<div class="py-4 px-6 border-b flex">
 			<h3 class="h3 font-semibold">
 				{profileEditting ? 'Sửa thông tin tài khoản' : 'Thông tin tài khoản'}

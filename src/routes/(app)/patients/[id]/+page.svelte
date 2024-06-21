@@ -12,6 +12,7 @@
 	import { CalendarDate } from '@internationalized/date';
 	import type { ComponentEvents } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
 
 	export let data: PageData;
 
@@ -96,6 +97,13 @@
 </svelte:head>
 <div class="pt-header bg-stone-100">
 	<div class="container mx-auto p-4 pb-8">
+		<Breadcrumb
+			crumbs={[
+				{ label: 'Danh sách bệnh nhân', href: '/patients' },
+				{ label: patient.name ?? 'Chưa có tên' }
+			]}
+			highlight
+		/>
 		<div class="grid grid-cols-12 gap-8">
 			<div class="col-span-5">
 				<p class="text-2xl font-semibold p-4">Thông tin bệnh nhân</p>
