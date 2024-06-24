@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dateProxy, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { dateProxy, setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -11,6 +11,9 @@
 	import { roleTranslation, userRoles } from '$lib/authorization';
 	import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
+	import userStore from '$lib/stores/user-store';
+	import endpoints from '$lib/endpoints';
+	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
 
 	export let editUserForm: SuperValidated<z.infer<typeof editUserSchema>>;
 	export let user: User;
@@ -19,41 +22,64 @@
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(editUserForm, {
 		validators: zodClient(editUserSchema),
-		invalidateAll: false,
 		resetForm: false,
-		onSubmit: () => {
-			requesting = true;
-			const promise = new Promise<string>((resolve, reject) => {
-				submitingResolve = resolve;
-				submitingReject = reject;
-			});
-			toast.promise(promise, {
-				loading: 'Đang xử lý...',
-				success: (msg) => msg || 'Cập nhật thông tin thành công',
-				error: (msg) =>
-					String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật thông tin nhân viên'
-			});
-		},
-		onResult: (event) => {
-			requesting = false;
-			console.log(event);
+		SPA: true,
+		onUpdate: ({ form }) => {
+			if (!form.valid || !$userStore) {
+				return;
+			}
 
-			if (event.result.type === 'success') {
-				const msg = event.result?.data?.form?.message || 'Cập nhật thông tin thành công';
-				submitingResolve?.(msg);
-				dispatch('finish');
-			}
-			if (event.result.type === 'failure' && event.result?.data?.form?.message) {
-				submitingReject?.(event.result?.data?.form?.message);
-			}
+			toast.promise(
+				async (): Promise<string> => {
+					const { roles, status, ...others } = form.data;
+					const rielForm: Record<string, string | boolean | number | number[]> = { ...others };
+					rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
+					rielForm.status = status ? 1 : 2;
+
+					const response = await fetch(endpoints.users.edit(form.data.id), {
+						method: 'PUT',
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						},
+						body: JSON.stringify(rielForm)
+					});
+
+					if (!response.ok) {
+						const data = await response.json();
+						if (Array.isArray(data?.error) || Array.isArray(data)) {
+							const msg = (data?.error ?? data).join(', ');
+							return Promise.reject(msg);
+						} else if (typeof data === 'object') {
+							Object.keys(data).forEach((k) => {
+								const fieldName = pascalToCamelcase(k);
+								if (Object.keys(form.data).includes(fieldName)) {
+									setError(form, fieldName, data[k]);
+								}
+							});
+							return Promise.reject();
+						}
+
+						return Promise.reject();
+					}
+					dispatch('finish');
+					$modalStore[0]?.response?.(true);
+					closeModal();
+					return 'Cập nhật thông tin thành công';
+				},
+				{
+					loading: 'Đang xử lý...',
+					success: (msg) => msg ?? 'Cập nhật thông tin thành công',
+					error: (msg) =>
+						String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật thông tin nhân viên'
+				}
+			);
 		}
 	});
 	const { form: formData, enhance } = form;
 	// const birthDateProxy = dateProxy(formData, 'birthday', { format: 'date', empty: undefined });
 	const today = new Date();
 	let requesting = false;
-	let submitingResolve: ((value: string | PromiseLike<string>) => void) | undefined;
-	let submitingReject: ((reason?: any) => void) | undefined;
 
 	onMount(() => {
 		$formData.id = user.id;

@@ -10,6 +10,8 @@
 	import { CalendarDate } from '@internationalized/date';
 	import { createEventDispatcher } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import userStore from '$lib/stores/user-store';
+	import endpoints from '$lib/endpoints';
 
 	export let editProfileForm: SuperValidated<z.infer<typeof editProfileSchema>>;
 	export let profile: Profile;
@@ -17,20 +19,44 @@
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: Profile }>();
 	const form = superForm(editProfileForm, {
 		validators: zodClient(editProfileSchema),
-		onResult: (event) => {
-			if (event.result.type === 'success') {
-				const msg = event.result?.data?.form?.message || 'Cập nhật profile thành công';
-				toast.success(msg);
-				dispatch('finish', {
-					...profile,
-					name: $formData.name,
-					phone: $formData.phone,
-					birthday: $formData.birthday
-				});
+		invalidateAll: false,
+		resetForm: false,
+		SPA: true,
+		onUpdate: ({ form }) => {
+			if (!form.valid || !$userStore) {
+				return;
 			}
-			if (event.result.type === 'failure' && event.result?.data?.form?.message) {
-				toast.error(event.result?.data?.form?.message);
-			}
+
+			toast.promise(
+				async (): Promise<string> => {
+					const response = await fetch(endpoints.profile.edit, {
+						method: 'PUT',
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						},
+						body: JSON.stringify(form.data)
+					});
+
+					if (!response.ok) {
+						const result = await response.json();
+						let msg = '';
+						if (typeof result === 'string') {
+							msg = result;
+						} else if (Array.isArray(result)) {
+							msg = result.join(', ');
+						}
+						return Promise.reject(msg);
+					}
+
+					return 'Cập nhật profile thành công';
+				},
+				{
+					loading: 'Đang xử lý...',
+					success: (msg) => msg ?? 'Cập nhật profile thành công',
+					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo bệnh nhân'
+				}
+			);
 		}
 	});
 	const { form: formData, enhance } = form;

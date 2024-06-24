@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dateProxy, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { dateProxy, setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -10,44 +10,69 @@
 	import { CalendarDate } from '@internationalized/date';
 	import { ToggleGroup } from 'bits-ui';
 	import { roleTranslation, userRoles } from '$lib/authorization';
+	import userStore from '$lib/stores/user-store';
+	import endpoints from '$lib/endpoints';
+	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
 
 	export let createUserForm: SuperValidated<z.infer<typeof createUserSchema>>;
 
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(createUserForm, {
 		validators: zodClient(createUserSchema),
-		invalidateAll: false,
 		resetForm: false,
-		onSubmit: () => {
-			requesting = true;
-			const promise = new Promise<string>((resolve, reject) => {
-				submitingResolve = resolve;
-				submitingReject = reject;
-			});
-			toast.promise(promise, {
-				loading: 'Đang xử lý...',
-				success: (msg) => msg || 'Tạo nhân viên thành công',
-				error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo nhân viên'
-			});
-		},
-		onResult: (event) => {
-			requesting = false;
-			if (event.result.type === 'success') {
-				const msg = event.result?.data?.form?.message || 'Tạo nhân viên thành công';
-				submitingResolve?.(msg);
-				dispatch('finish');
+		SPA: true,
+		onUpdate: ({ form }) => {
+			if (!form.valid || !$userStore) {
+				return;
 			}
-			if (event.result.type === 'failure' && event.result?.data?.form?.message) {
-				submitingReject?.(event.result?.data?.form?.message);
-			}
+
+			toast.promise(
+				async (): Promise<string> => {
+					const { roles, ...others } = form.data;
+					const rielForm: Record<string, string | number[] | number | Date> = { ...others };
+					rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
+
+					const response = await fetch(endpoints.users.create, {
+						method: 'POST',
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						},
+						body: JSON.stringify(rielForm)
+					});
+					const data = await response.json();
+
+					if (!response.ok) {
+						if (Array.isArray(data?.error) || Array.isArray(data)) {
+							const msg = (data?.error ?? data).join(', ');
+							return Promise.reject(msg);
+						} else if (typeof data === 'object') {
+							Object.keys(data).forEach((k) => {
+								const fieldName = pascalToCamelcase(k);
+								if (Object.keys(form.data).includes(fieldName)) {
+									setError(form, fieldName, data[k]);
+								}
+							});
+							return Promise.reject();
+						}
+
+						return Promise.reject();
+					}
+					dispatch('finish');
+					return 'Tạo nhân viên thành công';
+				},
+				{
+					loading: 'Đang xử lý...',
+					success: (msg) => msg ?? 'Tạo nhân viên thành công',
+					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo nhân viên'
+				}
+			);
 		}
 	});
 	const { form: formData, enhance } = form;
 	const birthDateProxy = dateProxy(formData, 'birthday', { format: 'date', empty: undefined });
 	const today = new Date();
 	let requesting = false;
-	let submitingResolve: ((value: string | PromiseLike<string>) => void) | undefined;
-	let submitingReject: ((reason?: any) => void) | undefined;
 
 	function birthdayChanged(e: ComponentEvents<DatePicker>['valueChange']) {
 		if (e.detail) {

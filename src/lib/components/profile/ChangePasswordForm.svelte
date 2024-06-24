@@ -6,24 +6,53 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { createEventDispatcher } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import userStore from '$lib/stores/user-store';
+	import endpoints from '$lib/endpoints';
 
 	export let changePasswordForm: SuperValidated<z.infer<typeof changePasswordSchema>>;
 
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(changePasswordForm, {
 		validators: zodClient(changePasswordSchema),
-		onResult: (event) => {
-			if (event.result.type === 'success') {
-				const msg = event.result?.data?.form?.message || 'Cập nhật mật khẩu thành công';
-				toast.success(msg);
-				dispatch('finish');
+		resetForm: false,
+		SPA: true,
+		onUpdate: async ({ form }) => {
+			if (!form.valid || !$userStore) {
+				return;
 			}
-			if (event.result.type === 'failure' && event.result?.data?.form?.message) {
-				toast.error(event.result?.data?.form?.message);
-			}
+
+			toast.promise(
+				async (): Promise<string> => {
+					const response = await fetch(endpoints.profile.changePassword, {
+						method: 'PUT',
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						},
+						body: JSON.stringify(form.data)
+					});
+
+					if (!response.ok) {
+						const text = await response.text();
+						const feedback = JSON.parse(text);
+						if (Array.isArray(feedback) && feedback[0] === 'Old password is incorrect') {
+							$errors.oldPassword = [...($errors.oldPassword ?? []), 'Mật khẩu cũ không đúng'];
+							return Promise.reject('Mật khẩu cũ không đúng');
+						}
+						return Promise.reject();
+					}
+
+					return 'Cập nhật mật khẩu thành công';
+				},
+				{
+					loading: 'Đang xử lý...',
+					success: (msg) => msg ?? 'Cập nhật mật khẩu thành công',
+					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật mật khẩu'
+				}
+			);
 		}
 	});
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, errors } = form;
 	let revealOldPassword = false;
 	let revealNewPassword = false;
 	let revealConfirmPassword = false;
@@ -35,7 +64,7 @@
 
 <form use:enhance action="/profile?/changePassword" method="post" class="flex gap-x-8">
 	<div>
-		<Field {form} name="oldPassword">
+		<Field {form} name="oldPassword" let:errors>
 			<Control let:attrs>
 				<Label class="text-sm font-semibold text-surface-500 select-none">Mật khẩu cũ</Label>
 				<div class="relative mt-1">

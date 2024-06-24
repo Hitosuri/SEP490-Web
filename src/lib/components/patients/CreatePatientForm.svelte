@@ -10,6 +10,7 @@
 	import { createPatientSchema } from '$lib/form-schemas/create-patient-schema';
 	import userStore from '$lib/stores/user-store';
 	import endpoints from '$lib/endpoints';
+	import { pascalToCamelcase } from '$lib/helpers/utils';
 
 	export let createPatientForm: SuperValidated<z.infer<typeof createPatientSchema>>;
 
@@ -39,16 +40,24 @@
 						let msg = '';
 						if (Array.isArray(data?.error)) {
 							msg = data.error.join(', ');
-							const firstError = data?.error[0];
-							if (typeof firstError === 'string') {
-								if (firstError.startsWith('Bệnh nhân với số điện thoại')) {
-									console.log(firstError);
-									setError(form, 'phone', firstError);
-								} else if (firstError.startsWith('Bệnh nhân với Email ')) {
-									console.log(firstError);
-									setError(form, 'email', firstError);
+							data.error.forEach((err: string) => {
+								if (typeof err === 'string') {
+									if (err.startsWith('Bệnh nhân với số điện thoại')) {
+										console.log(err);
+										setError(form, 'phone', err);
+									} else if (err.startsWith('Bệnh nhân với Email ')) {
+										console.log(err);
+										setError(form, 'email', err);
+									}
 								}
-							}
+							});
+						} else if (typeof data === 'object') {
+							Object.keys(data).forEach((k) => {
+								const fieldName = pascalToCamelcase(k);
+								if (Object.keys(form.data).includes(fieldName)) {
+									setError(form, fieldName, data[k]);
+								}
+							});
 						}
 						return Promise.reject(msg);
 					}

@@ -17,8 +17,6 @@
 		validators: zodClient(loginSchema),
 		invalidateAll: false,
 		onResult: (e) => {
-			console.log(e.result);
-
 			if (e.result.type === 'failure') {
 				if (e.result?.data?.form?.message) {
 					toast.error(e.result.data.form.message);

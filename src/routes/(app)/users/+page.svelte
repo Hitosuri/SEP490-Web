@@ -252,6 +252,11 @@
 					editUserForm: data.editUserForm,
 					user
 				}
+			},
+			response: (r) => {
+				if (r) {
+					filtering(lastestFilterOption, currentPage, pageSize, true, true);
+				}
 			}
 		};
 		modalStore.trigger(modalSetting);

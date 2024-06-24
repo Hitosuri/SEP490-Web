@@ -16,3 +16,7 @@ export function getRoleId(role: Role) {
 			return 0;
 	}
 }
+
+export function pascalToCamelcase(text: string) {
+	return `${text.slice(0, 1)?.toLowerCase()}${text.slice(1)}`;
+}

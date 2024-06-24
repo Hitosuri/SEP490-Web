@@ -47,6 +47,8 @@ export const actions: Actions = {
 			);
 
 			const data = await response.json();
+			console.log(data);
+			
 
 			if (!response.ok) {
 				if (typeof data?.error === 'string') {

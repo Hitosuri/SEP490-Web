@@ -24,6 +24,6 @@ export const createUserSchema = z.object({
 			maxDate.setMinutes(maxDate.getMinutes() - maxDate.getTimezoneOffset());
 			return date.getTime() / msInDay < maxDate.getTime() / msInDay;
 		}, 'Ngày sinh không được vượt qua ngày hiện tại'),
-	salary: z.number().min(0, 'Lương không thể là giá trị âm').default(0),
+	salary: z.number().min(1, 'Lương không thể là giá trị âm').default(1),
 	roles: z.array(z.enum(userRoles)).nonempty('Nhân viên phải có ít nhât 1 vai trò')
 });
