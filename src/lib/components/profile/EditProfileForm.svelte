@@ -8,14 +8,15 @@
 	import DatePicker from '../common/DatePicker.svelte';
 	import type { ComponentEvents } from 'svelte';
 	import { CalendarDate } from '@internationalized/date';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import userStore from '$lib/stores/user-store';
 	import endpoints from '$lib/endpoints';
+	import { type Writable } from 'svelte/store';
 
 	export let editProfileForm: SuperValidated<z.infer<typeof editProfileSchema>>;
 	export let profile: Profile;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: Profile }>();
 	const form = superForm(editProfileForm, {
 		validators: zodClient(editProfileSchema),

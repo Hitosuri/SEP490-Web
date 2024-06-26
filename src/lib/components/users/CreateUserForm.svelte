@@ -3,19 +3,20 @@
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { createEventDispatcher, type ComponentEvents } from 'svelte';
+	import { createEventDispatcher, getContext, type ComponentEvents } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { createUserSchema } from '$lib/form-schemas/create-user-schema';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
 	import { ToggleGroup } from 'bits-ui';
 	import { roleTranslation, userRoles } from '$lib/authorization';
-	import userStore from '$lib/stores/user-store';
 	import endpoints from '$lib/endpoints';
 	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
+	import { type Writable } from 'svelte/store';
 
 	export let createUserForm: SuperValidated<z.infer<typeof createUserSchema>>;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(createUserForm, {
 		validators: zodClient(createUserSchema),

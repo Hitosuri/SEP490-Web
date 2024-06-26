@@ -6,14 +6,16 @@
 	import DataTable from '$lib/components/common/DataTable.svelte';
 	import { formatCompactDate } from '$lib/helpers/formatters';
 	import Loading from '$lib/components/common/Loading.svelte';
-	import userStore from '$lib/stores/user-store';
 	import { isEqual } from 'lodash-es';
 	import endpoints from '$lib/endpoints';
 	import CreatePatientForm from '$lib/components/patients/CreatePatientForm.svelte';
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
+	import { type Writable } from 'svelte/store';
+	import { getContext } from 'svelte';
 
 	export let data: PageData;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let patients = data.patientListPage.data;
 	let pageSize = data.patientListPage.pageSize || 10;
 	let currentPage = data.patientListPage.pageNumber || 1;

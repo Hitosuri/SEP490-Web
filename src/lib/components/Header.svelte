@@ -9,14 +9,13 @@
 	import { superValidate, type SuperValidated } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import { enhance } from '$app/forms';
-	import userStore from '$lib/stores/user-store';
 	import { DropdownMenu } from 'bits-ui';
 	import { AppBar } from '@skeletonlabs/skeleton';
-	import { onDestroy, onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import { zod } from 'sveltekit-superforms/adapters';
 	import scrollStore from '$lib/stores/scroll-store';
-	import type { Unsubscriber } from 'svelte/store';
-	import { Role, roleTranslation } from '$lib/authorization';
+	import type { Unsubscriber, Writable } from 'svelte/store';
+	import { roleTranslation } from '$lib/authorization';
 
 	let loginForm: SuperValidated<z.infer<typeof loginSchema>> | undefined;
 	let logoutForm: HTMLFormElement;
@@ -25,6 +24,7 @@
 	let userStoreUnsub: Unsubscriber;
 	let showHeader = false;
 	let loginBtn: HTMLButtonElement | undefined;
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 
 	$: inLandingPage = $page.url.pathname === '/' && (!$userStore || $userStore.isPatient);
 
@@ -69,13 +69,13 @@
 		: ''} transition-transform duration-300 ease-out"
 >
 	<AppBar
-		background={inLandingPage ? '' : 'bg-white'}
+		background={inLandingPage ? 'px-4' : 'bg-white'}
 		padding={inLandingPage ? 'py-4' : 'py-6'}
 		slotLead="h-10"
 		slotDefault="flex justify-center gap-8 h-10"
-		regionRowMain="container px-4 {inLandingPage
+		regionRowMain="container px-4 mx-auto bg-white rounded-container-token {inLandingPage
 			? 'py-2 border shadow-lg'
-			: 'py-0'} mx-auto bg-white rounded-container-token"
+			: 'py-0'}"
 	>
 		<svelte:fragment slot="lead">
 			<a href="/" class="px-3">

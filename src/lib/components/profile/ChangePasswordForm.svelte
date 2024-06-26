@@ -4,13 +4,14 @@
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import userStore from '$lib/stores/user-store';
 	import endpoints from '$lib/endpoints';
+	import { type Writable } from 'svelte/store';
 
 	export let changePasswordForm: SuperValidated<z.infer<typeof changePasswordSchema>>;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(changePasswordForm, {
 		validators: zodClient(changePasswordSchema),

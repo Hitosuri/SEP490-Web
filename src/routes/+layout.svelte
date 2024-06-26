@@ -7,6 +7,13 @@
 	import { Toaster } from 'svelte-sonner';
 	import nProgress from 'nprogress';
 	import { navigating } from '$app/stores';
+	import { writable, type Writable } from 'svelte/store';
+	import type { PageData } from './(app)/$types';
+	import { setContext } from 'svelte';
+
+	export let data: PageData;
+
+	const userStore: Writable<UserBasic | undefined> = writable(data.user);
 
 	$: {
 		if ($navigating) {
@@ -15,7 +22,9 @@
 			nProgress.done();
 		}
 	}
+	$: userStore.set(data.user);
 
+	setContext('user-store', userStore);
 	nProgress.configure({
 		showSpinner: false
 	});

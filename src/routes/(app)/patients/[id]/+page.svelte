@@ -2,7 +2,6 @@
 	import { formatCompactDate } from '$lib/helpers/formatters';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
-	import userStore from '$lib/stores/user-store';
 	import { setError, superForm } from 'sveltekit-superforms';
 	import { editPatientSchema } from '$lib/form-schemas/edit-patient-schema';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -10,12 +9,14 @@
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
-	import type { ComponentEvents } from 'svelte';
+	import { getContext, type ComponentEvents } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
+	import { type Writable } from 'svelte/store';
 
 	export let data: PageData;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let patient: Patient = data.patient;
 	const form = superForm(data.editPatientForm, {
 		validators: zodClient(editPatientSchema),

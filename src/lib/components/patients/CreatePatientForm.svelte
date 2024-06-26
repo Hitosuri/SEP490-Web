@@ -3,17 +3,18 @@
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { createEventDispatcher, type ComponentEvents } from 'svelte';
+	import { createEventDispatcher, getContext, type ComponentEvents } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
 	import { createPatientSchema } from '$lib/form-schemas/create-patient-schema';
-	import userStore from '$lib/stores/user-store';
 	import endpoints from '$lib/endpoints';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { type Writable } from 'svelte/store';
 
 	export let createPatientForm: SuperValidated<z.infer<typeof createPatientSchema>>;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(createPatientForm, {
 		validators: zodClient(createPatientSchema),

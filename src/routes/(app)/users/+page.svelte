@@ -11,7 +11,6 @@
 	import { Control, Field, Label } from 'formsnap';
 	import type { z } from 'zod';
 	import endpoints from '$lib/endpoints';
-	import userStore from '$lib/stores/user-store';
 	import { isEqual } from 'lodash-es';
 	import CreateUserForm from '$lib/components/users/CreateUserForm.svelte';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
@@ -19,9 +18,12 @@
 	import DropdownSelect from '$lib/components/common/DropdownSelect.svelte';
 	import DataTable from '$lib/components/common/DataTable.svelte';
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
+	import { type Writable } from 'svelte/store';
+	import { getContext } from 'svelte';
 
 	export let data: PageData;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
 	const form = superForm(data.userFilterForm, {
 		SPA: true,

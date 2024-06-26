@@ -3,7 +3,7 @@
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { createEventDispatcher, onMount, type ComponentEvents } from 'svelte';
+	import { createEventDispatcher, getContext, onMount, type ComponentEvents } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
@@ -11,13 +11,14 @@
 	import { roleTranslation, userRoles } from '$lib/authorization';
 	import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import userStore from '$lib/stores/user-store';
 	import endpoints from '$lib/endpoints';
 	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
+	import { type Writable } from 'svelte/store';
 
 	export let editUserForm: SuperValidated<z.infer<typeof editUserSchema>>;
 	export let user: User;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(editUserForm, {
