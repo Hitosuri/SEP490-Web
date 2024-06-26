@@ -17,6 +17,9 @@ export default {
 			padding: {
 				'scroll-bar': 'var(--scrollbar-width, 0)',
 				header: '5.5rem'
+			},
+			spacing: {
+				scrollBar: '0.5rem'
 			}
 		}
 	},
