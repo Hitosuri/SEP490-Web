@@ -16,6 +16,7 @@
 	import scrollStore from '$lib/stores/scroll-store';
 	import type { Unsubscriber, Writable } from 'svelte/store';
 	import { roleTranslation } from '$lib/authorization';
+	import HeaderUserDropdown from './auth/HeaderUserDropdown.svelte';
 
 	let loginForm: SuperValidated<z.infer<typeof loginSchema>> | undefined;
 	let logoutForm: HTMLFormElement;
@@ -60,6 +61,10 @@
 		} else {
 			history.back();
 		}
+	}
+
+	function illegalLogout() {
+		logoutForm.requestSubmit();
 	}
 </script>
 
@@ -173,49 +178,7 @@
 				</Dialog.Root>
 			{/if}
 			{#if $userStore}
-				<DropdownMenu.Root preventScroll={true}>
-					<DropdownMenu.Trigger
-						class="h-10 px-[10px] w-40 overflow-x-hidden rounded-full ring-surface-200 transition-all duration-300 variant-outline hover:variant-outline-primary hover:text-primary-500 flex items-center"
-					>
-						<i class="fa-solid fa-circle-user text-xl"></i>
-						<span class="text-sm ml-2 text-ellipsis overflow-x-hidden">{$userStore.email}</span>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content
-						transition={fly}
-						transitionConfig={{
-							duration: 200,
-							y: 30,
-							easing: cubicOut
-						}}
-						sideOffset={8}
-						class="w-full max-w-[229px] rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
-					>
-						<DropdownMenu.Label class="text-center select-none text-xs p-1 font-bold">
-							{$userStore.roles.map((x) => roleTranslation[x]).join(', ')}
-						</DropdownMenu.Label>
-						<DropdownMenu.Item
-							href="/profile"
-							class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center"
-						>
-							<div class="size-4 text-center">
-								<i class="fa-solid fa-user block"></i>
-							</div>
-							<span class="font-semibold text-sm leading-4">Tài khoản</span>
-						</DropdownMenu.Item>
-						<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
-						<DropdownMenu.Item
-							on:click={() => {
-								logoutForm.requestSubmit();
-							}}
-							class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-						>
-							<div class="size-4 text-center">
-								<i class="fa-solid fa-right-from-bracket block"></i>
-							</div>
-							<span class="font-semibold text-sm leading-4">Đăng xuất</span>
-						</DropdownMenu.Item>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+				<HeaderUserDropdown userAuth={$userStore} on:logout={illegalLogout} />
 			{/if}
 			<form action="/auth?/logout" hidden method="post" use:enhance bind:this={logoutForm}></form>
 		</svelte:fragment>
@@ -264,13 +227,17 @@
 				</div>
 			</a>
 		</div>
-		<button
-			type="button"
-			class="absolute shadow-md flex gap-2 right-0 btn rounded-r-none text-white text-lg top-1/2 -translate-y-1/2 bg-gradient-to-r from-sky-800 to-teal-800"
-			on:click={() => loginBtn?.click()}
-		>
-			<i class="fa-regular fa-right-to-bracket"></i>
-			<span class="uppercase">Đăng nhập</span>
-		</button>
+		{#if $userStore}
+			<HeaderUserDropdown userAuth={$userStore} inLandingHeader on:logout={illegalLogout} />
+		{:else}
+			<button
+				type="button"
+				class="absolute shadow-md flex gap-2 right-0 btn rounded-r-none text-white text-lg top-1/2 -translate-y-1/2 bg-gradient-to-r from-sky-800 to-teal-800"
+				on:click={() => loginBtn?.click()}
+			>
+				<i class="fa-regular fa-right-to-bracket"></i>
+				<span class="uppercase">Đăng nhập</span>
+			</button>
+		{/if}
 	</div>
 {/if}
