@@ -22,6 +22,7 @@
 			lottieAnimUrl="/images/animations/material.lottie"
 			title="Thuốc/Dụng cụ"
 			class="from-indigo-400 to-purple-400"
+			href="/materials"
 		/>
 		<FunctionCard
 			lottieAnimUrl="/images/animations/patient.lottie"

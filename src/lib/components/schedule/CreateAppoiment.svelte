@@ -294,7 +294,7 @@
 											<p class={!patient.label ? 'text-warning-500' : ''}>
 												{patient.label || 'Chưa có tên'}
 											</p>
-											<p class="text-xs font-medium4 text-surface-400">
+											<p class="text-xs font-medium text-surface-400">
 												{patient.value.phone ?? patient.value.email ?? ''}
 											</p>
 										</div>
@@ -353,7 +353,7 @@
 									>
 										<div>
 											<p>{doctor.label}</p>
-											<p class="text-xs font-medium4 text-surface-400">{doctor.value.email}</p>
+											<p class="text-xs font-medium text-surface-400">{doctor.value.email}</p>
 										</div>
 										<Combobox.ItemIndicator class="ml-auto" asChild={false}>
 											<i class="fa-solid fa-check text-primary-500"></i>

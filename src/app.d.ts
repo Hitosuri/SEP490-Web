@@ -85,6 +85,21 @@ interface Crumb {
 	href?: string;
 }
 
+interface Material {
+	id: number;
+	name: string;
+	price: number;
+	quantity: number;
+	supplierName: string;
+	materialTypeName: string;
+}
+
+interface MaterialType {
+	id: number;
+	name: string;
+	code: string;
+}
+
 type TableField<T> = {
 	[K in keyof T]: {
 		displayName: string;

@@ -21,5 +21,14 @@ export default {
 		create: `${PUBLIC_API_HOST}/api/patient`,
 		detail: (id: number) => `${PUBLIC_API_HOST}/api/patient/${id}`,
 		edit: (id: number) => `${PUBLIC_API_HOST}/api/patient/update/${id}`
+	},
+	materials: {
+		get: `${PUBLIC_API_HOST}/api/materials/all`,
+		create: `${PUBLIC_API_HOST}/api/materials/create`,
+		detail: (id: number) => `${PUBLIC_API_HOST}/api/materials/${id}`,
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/materials/update/${id}`
+	},
+	materialTypes: {
+		get: `${PUBLIC_API_HOST}/api/material-type/all`
 	}
 };
