@@ -1,21 +1,29 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { Calendar, DropdownMenu } from 'bits-ui';
-	import { today, getLocalTimeZone } from '@internationalized/date';
+	import { Calendar, DropdownMenu, type Selected } from 'bits-ui';
+	import { today, getLocalTimeZone, type DateValue } from '@internationalized/date';
 	import { cubicOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import CreateAppoiment from '$lib/components/schedule/CreateAppoiment.svelte';
+	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
+	import endpoints from '$lib/endpoints';
+	import { getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import { formatHourMinute } from '$lib/helpers/formatters';
 
 	export let data: PageData;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
+	let schedules: ScheduleByRecieptionist[] = [...data.schedules.data];
 	let scheduleGrabing = false;
 	let mouseAnchor: { x: number; y: number };
 	let scheduleScroll: { x: number; y: number };
 	let scheduleListElement: HTMLDivElement;
 	let scheduleHovering = false;
 	let quarterCount = 0;
+	let rowCount = 0;
 	let hoverHintTop = 0;
 	let preventNextContextMenu = false;
 	let timelineSelection = false;
@@ -26,8 +34,28 @@
 	let scheduleMenuTriggerLeft = 0;
 	let scheduleMenuTriggerTop = 0;
 	let preventCancelSelection = false;
-	let currentDate = today(getLocalTimeZone());
+	let selectedDate: DateValue = today(getLocalTimeZone());
+	let currentMonthValue = selectedDate.year * 100 + selectedDate.month;
+	let addingDoctor: Selected<User> | undefined;
+	let selectionInDoctor: DoctorInSchedule | undefined;
+	let canCreateSchedule = true;
+	let rangeLimit: [number, number] = [0, 0];
 
+	$: selectedDateSchedules = schedules.filter((x) => x.startAt.getDate() === selectedDate.day);
+	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
+	$: blockRangeByDoctors = scheduleByDoctors.map((x) =>
+		x[1].map(
+			(y) =>
+				[
+					y.startAt.getHours() * 4 + y.startAt.getMinutes() / 15,
+					y.endAt.getHours() * 4 + y.endAt.getMinutes() / 15
+				] as [number, number]
+		)
+	);
+	$: canCreateSchedule = !blockRangeByDoctors[rowCount]?.some(
+		(x) => quarterCount >= x[0] && quarterCount < x[1]
+	);
+	$: hoverHintTop = rowCount * 64;
 	$: hoverHintLeft = (quarterCount + 2) * 32;
 	$: hoveringHours = Math.floor(quarterCount / 4);
 	$: hoveringMinutes = (quarterCount % 4) * 15;
@@ -39,7 +67,57 @@
 	$: selectedEndHours = Math.floor(Math.max(selectedStart, selectedEnd) / 4);
 	$: selectedEndMinutes = (Math.max(selectedStart, selectedEnd) % 4) * 15;
 
+	async function refreshScheduleList(month: number | undefined = undefined) {
+		if (!$userStore) {
+			return;
+		}
+
+		const currentMonthValueTmp = selectedDate.year * 100 + (month ?? selectedDate.month);
+		const searchParams = new URLSearchParams();
+		searchParams.set('page', '1');
+		searchParams.set('size', '1000');
+		searchParams.set('startAt', `${selectedDate.year}-${month ?? selectedDate.month}-1`);
+		searchParams.set('endAt', `${selectedDate.year}-${(month ?? selectedDate.month) + 1}-1`);
+
+		const r = await fetch(`${endpoints.schedule.getByRecieptionist}?${searchParams}`, {
+			headers: {
+				Authorization: `Bearer ${$userStore.token}`
+			}
+		});
+		const result: Pagination<ScheduleByRecieptionist[]> = await r.json();
+
+		result.data.forEach((x) => {
+			x.startAt = new Date(x.startAt);
+			x.endAt = new Date(x.endAt);
+		});
+
+		schedules = result.data;
+		currentMonthValue = currentMonthValueTmp;
+	}
+
+	function extractScheduleByDoctor(
+		schedules: ScheduleByRecieptionist[]
+	): [DoctorInSchedule, ScheduleByRecieptionist[]][] {
+		const doctors: Record<number, [DoctorInSchedule, ScheduleByRecieptionist[]]> = {};
+
+		schedules.forEach((s) => {
+			const doctorId = s.doctor.id;
+			if (!doctors[doctorId]) {
+				doctors[doctorId] = [s.doctor, [s]];
+				return;
+			}
+
+			doctors[doctorId][1].push(s);
+		});
+
+		return Object.values(doctors);
+	}
+
 	function createAppointment() {
+		if (!selectionInDoctor) {
+			return;
+		}
+
 		preventCancelSelection = true;
 		const setting: ModalSettings = {
 			type: 'component',
@@ -51,12 +129,14 @@
 					startMinute: selectedStartMinutes,
 					endHour: selectedEndHours,
 					endMinute: selectedEndMinutes,
-					date: currentDate.toDate(getLocalTimeZone())
+					date: selectedDate.toDate(getLocalTimeZone()),
+					doctor: selectionInDoctor
 				}
 			},
 			response: (r) => {
 				if (r) {
 					cancelCreateSchedule();
+					refreshScheduleList();
 					return;
 				}
 				scheduleMenuOpened = true;
@@ -66,11 +146,23 @@
 	}
 
 	function scheduleDragStart(e: MouseEvent & { currentTarget: EventTarget & HTMLDivElement }) {
-		if (e.button === 0 && !scheduleGrabing) {
+		if (scheduleByDoctors.length === 0) {
+			return;
+		}
+		if (e.button === 0 && !scheduleGrabing && canCreateSchedule) {
 			timelineSelection = true;
-			const bounding = e.currentTarget.getBoundingClientRect();
-			selectedStart = selectedEnd = Math.round(Math.max(e.clientX - bounding.left - 62, 0) / 32);
-			scheduleMenuTriggerTop = selectedTop = Math.floor((e.clientY - bounding.top) / 64) * 64;
+			selectedStart = selectedEnd = quarterCount;
+			const posibleStartLimits = [...blockRangeByDoctors[rowCount].map((x) => x[1])];
+			const posibleEndLimits = [...blockRangeByDoctors[rowCount].map((x) => x[0])];
+			posibleStartLimits.sort((a, b) => b - a);
+			posibleEndLimits.sort((a, b) => a - b);
+			rangeLimit = [
+				posibleStartLimits.find((x) => x < selectedStart) ?? 0,
+				posibleEndLimits.find((x) => x > selectedStart) ?? 24 * 4
+			];
+
+			scheduleMenuTriggerTop = selectedTop = rowCount * 64;
+			selectionInDoctor = scheduleByDoctors[rowCount][0];
 			return;
 		}
 		if (e.button !== 2) {
@@ -133,6 +225,69 @@
 			return;
 		}
 		selectedEnd = selectedStart = 0;
+		selectionInDoctor = undefined;
+	}
+
+	async function searchDoctorFn(keyword: string): Promise<Selected<User>[] | undefined> {
+		if (!$userStore) {
+			return;
+		}
+
+		const searchParams = new URLSearchParams();
+		searchParams.set('page', '1');
+		searchParams.set('size', '5');
+		searchParams.set('name', keyword);
+		searchParams.set('roles', 'doctor');
+
+		const url = `${endpoints.users.get}?${searchParams}`;
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${$userStore.token}`
+			}
+		});
+
+		if (!response.ok) {
+			return;
+		}
+
+		const data: Pagination<User[]> = await response.json();
+
+		return data.data.map((x) => ({
+			label: x.name ?? '',
+			value: x
+		}));
+	}
+
+	function addDoctorSubmit() {
+		if (!addingDoctor || scheduleByDoctors.some((x) => x[0].id === addingDoctor?.value.id)) {
+			return;
+		}
+
+		scheduleByDoctors = [
+			...scheduleByDoctors,
+			[
+				{
+					id: addingDoctor.value.id,
+					name: addingDoctor.value.name
+				},
+				[]
+			]
+		];
+		addingDoctor = undefined;
+	}
+
+	async function onSelectedDateChange(date: DateValue | DateValue[] | undefined) {
+		if (!date || (Array.isArray(date) && date.length === 0)) {
+			return;
+		}
+
+		const selectedDateTmp = Array.isArray(date) ? date[0] : date;
+
+		if (selectedDateTmp.year * 100 + selectedDateTmp.month !== currentMonthValue) {
+			await refreshScheduleList(selectedDateTmp.month);
+		}
+
+		selectedDate = selectedDateTmp;
 	}
 </script>
 
@@ -152,7 +307,7 @@
 		<div class="col-span-2">thanh search nằm ở đây</div>
 		<div class="flex gap-4">
 			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_5rem]"
+				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem]"
 			>
 				<div
 					class="grid pb-2 border-b font-bold text-sm text-surface-500 tracking-wide pr-scrollBar"
@@ -161,18 +316,36 @@
 					<span class="text-center">Bệnh nhân</span>
 					<span class="text-center">Thời gian</span>
 					<span class="text-center">Bác sĩ</span>
-					<span class="text-center">Đã tới</span>
+					<span class="text-center">Trạng thái</span>
 				</div>
 				<div class="grid overflow-y-scroll flex-1 items-center content-start">
-					{#each Array(12) as _, i}
-						<span class="py-2 text-center">{i + 1}</span>
-						<span class="py-2 text-center">Bệnh nhân A</span>
-						<span class="py-2 text-center">
-							<span class="badge variant-soft-tertiary">13:00</span>
-							-
-							<span class="badge variant-soft-tertiary">15:00</span>
+					{#each selectedDateSchedules as schedule, i (schedule.id)}
+						<span class="text-center">
+							<button
+								class="btn rounded-none hover:underline font-medium"
+								on:click={() => {
+									const el = document.getElementById(`schedule-${schedule.id}`);
+									if (el) {
+										el.scrollIntoView({
+											behavior: 'smooth',
+											block: 'center',
+											inline: 'center'
+										});
+									}
+								}}>{i + 1}</button
+							>
 						</span>
-						<span class="py-2 text-center">Bác sĩ B</span>
+						<span class="py-2 text-center">{schedule.patient.name}</span>
+						<span class="py-2 text-center">
+							<span class="badge variant-soft-tertiary">
+								{formatHourMinute(schedule.startAt)}
+							</span>
+							-
+							<span class="badge variant-soft-tertiary">
+								{formatHourMinute(schedule.endAt)}
+							</span>
+						</span>
+						<span class="py-2 text-center">{schedule.doctor.name}</span>
 						<span class="py-2 text-center">
 							<i class="fa-solid fa-circle-check text-success-500 text-xl"></i>
 						</span>
@@ -186,7 +359,8 @@
 					let:months
 					let:weekdays
 					preventDeselect={true}
-					bind:value={currentDate}
+					value={selectedDate}
+					onValueChange={onSelectedDateChange}
 				>
 					<Calendar.Header class="flex items-center h-10">
 						<Calendar.Heading class="text-lg font-semibold capitalize tracking-tight ml-2.5" />
@@ -259,9 +433,37 @@
 							>
 								Bác sĩ
 							</div>
-							{#each Array(10) as _}
-								<div class="h-16 border-b flex items-center justify-center">Bác sĩ A</div>
+							{#each scheduleByDoctors as pair (pair[0].id)}
+								<div class="h-16 border-b flex items-center justify-center">{pair[0].name}</div>
 							{/each}
+							<div class="h-[42px] relative">
+								<form
+									class="absolute left-0 top-0 -right-16 border-b flex items-center justify-center h-full"
+									on:submit|preventDefault|stopPropagation={addDoctorSubmit}
+								>
+									{#key scheduleByDoctors}
+										<SearchCombobox
+											placeholder="Tên bác sĩ..."
+											searchFn={searchDoctorFn}
+											class="input border-none bg-white rounded-none w-full py-2"
+											bind:selected={addingDoctor}
+											let:itemData
+										>
+											<div>
+												<p>{itemData.label}</p>
+												<p class="text-xs font-medium text-surface-400">{itemData.value.email}</p>
+											</div>
+										</SearchCombobox>
+									{/key}
+									<button
+										disabled={!addingDoctor}
+										type="submit"
+										class="btn variant-filled-primary h-full w-16 flex-shrink-0 rounded-none"
+									>
+										<i class="fa-solid fa-plus"></i>
+									</button>
+								</form>
+							</div>
 						</div>
 					</div>
 					<div class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10">
@@ -275,14 +477,26 @@
 					<div
 						class="h-fit relative"
 						on:mousedown={scheduleDragStart}
-						on:mouseenter={() => (scheduleHovering = true)}
+						on:mouseenter={() => {
+							if (scheduleByDoctors.length === 0) {
+								return;
+							}
+							scheduleHovering = true;
+						}}
 						on:mouseleave={() => (scheduleHovering = false)}
 						on:mousemove={(e) => {
 							const bounding = e.currentTarget.getBoundingClientRect();
-							quarterCount = Math.round(Math.max(e.clientX - bounding.left - 62, 0) / 32);
-							hoverHintTop = Math.floor((e.clientY - bounding.top) / 64) * 64;
+							quarterCount = Math.min(
+								Math.max(Math.round((e.clientX - bounding.left - 62) / 32), 0),
+								96
+							);
+							rowCount = Math.max(
+								Math.min(Math.floor((e.clientY - bounding.top) / 64), scheduleByDoctors.length - 1),
+								0
+							);
 							if (timelineSelection) {
-								scheduleMenuTriggerLeft = ((selectedEnd = quarterCount) + 2) * 32;
+								selectedEnd = Math.min(Math.max(quarterCount, rangeLimit[0]), rangeLimit[1]);
+								scheduleMenuTriggerLeft = (selectedEnd + 2) * 32;
 							}
 						}}
 					>
@@ -296,7 +510,8 @@
 						<div
 							class="h-12 my-2 w-1 bg-red-300 rounded-full absolute z-10 top-0 -translate-x-1/2 {scheduleHovering &&
 							!scheduleMenuOpened &&
-							(selectedRange === 0 || !timelineSelection)
+							(selectedRange === 0 || !timelineSelection) &&
+							canCreateSchedule
 								? 'opacity-100'
 								: 'opacity-0'}"
 							style="left: {hoverHintLeft}px; top: {hoverHintTop}px;"
@@ -316,7 +531,7 @@
 							>
 								<div class="bg-orange-400 w-1"></div>
 								<div
-									class="absolute w-28 text-center z-20 -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
+									class="absolute w-32 text-center z-20 -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
 								>
 									{selectedStartHours}:{String(selectedStartMinutes).padStart(2, '0')}
 									-
@@ -368,21 +583,43 @@
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
 						<div class="pl-16 w-full r relative">
-							{#each Array(10) as _}
-								<div class="h-16 w-full border-b border-dashed">
-									<div class="w-52 h-full p-0.5">
+							{#each scheduleByDoctors as pair (pair[0].id)}
+								<div class="h-16 w-full border-b border-dashed relative">
+									{#each pair[1] as schedule}
+										{@const leftOffset =
+											(schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60) * 128}
+										{@const width =
+											(schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60) * 128 -
+											leftOffset}
 										<div
-											class="bg-sky-100 border border-sky-200 rounded-md h-full flex overflow-hidden"
+											class="h-full p-0.5 absolute top-0 overflow-hidden"
+											style="left: {leftOffset}px; width: {width}px"
+											id="schedule-{schedule.id}"
 										>
-											<div class="bg-sky-400 w-1"></div>
-											<div class="flex-1 flex flex-col justify-center px-3 select-text">
-												<p class="font-medium">Bệnh nhân A</p>
-												<p class="text-xs font-semibold text-surface-400">00:00 - 01:30</p>
+											<div
+												class="bg-sky-100 border border-sky-200 rounded-md h-full flex overflow-hidden"
+											>
+												<div class="bg-sky-400 w-1"></div>
+												<div class="flex-1 flex flex-col justify-center px-3 select-text w-full">
+													<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+														{schedule.patient.name}
+													</p>
+													<p class="text-xs font-semibold text-surface-400">
+														{schedule.startAt.getHours()}:{String(
+															schedule.startAt.getMinutes()
+														).padStart(2, '0')}
+														-
+														{schedule.endAt.getHours()}:{String(
+															schedule.endAt.getMinutes()
+														).padStart(2, '0')}
+													</p>
+												</div>
 											</div>
 										</div>
-									</div>
+									{/each}
 								</div>
 							{/each}
+							<div class="h-[42px] border-b"></div>
 						</div>
 					</div>
 				</div>

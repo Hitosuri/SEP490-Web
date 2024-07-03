@@ -107,6 +107,28 @@ interface Suppiler {
 	phoneNumber: string;
 }
 
+interface ScheduleByRecieptionist {
+	id: number;
+	startAt: Date;
+	endAt: Date;
+	doctor: DoctorInSchedule;
+	patient: PatientInSchedule;
+	status: 1 | 2 | 3;
+	isPatientConfirm: boolean;
+}
+
+interface DoctorInSchedule {
+	id: number;
+	name: string;
+}
+
+interface PatientInSchedule {
+	id: number;
+	name: string;
+	phone: string;
+	age: number;
+}
+
 type TableField<T> = {
 	[K in keyof T]: {
 		displayName: string;

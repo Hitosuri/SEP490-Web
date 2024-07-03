@@ -33,3 +33,10 @@ export function formatCompactDate(date: Date | undefined | null): string {
 	}
 	return compactDateFormatter.format(date);
 }
+
+export function formatHourMinute(date: Date | undefined | null): string {
+	if (!date) {
+		return '';
+	}
+	return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+}

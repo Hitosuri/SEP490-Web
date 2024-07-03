@@ -33,5 +33,11 @@ export default {
 	},
 	suppliers: {
 		get: `${PUBLIC_API_HOST}/api/Supplier/all`
+	},
+	schedule: {
+		getByRecieptionist: `${PUBLIC_API_HOST}/api/schedules/GetListScheduleByRecieptionist`,
+		getByPatient: `${PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatient`,
+		createByRecieptionist: `${PUBLIC_API_HOST}/api/schedules/CreateByRecieptionist`,
+		createByPatient: `${PUBLIC_API_HOST}/api/schedules/CreateByPatient`
 	}
 };
