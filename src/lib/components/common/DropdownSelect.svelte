@@ -26,7 +26,7 @@
 	</Select.Trigger>
 
 	<Select.Content
-		class="w-full !min-w-40 rounded-md border border-surface-50 bg-white p-1 shadow-lg"
+		class="w-full !min-w-40 rounded-md border border-surface-50 bg-white p-1 shadow-lg z-10"
 		sideOffset={8}
 	>
 		{#each items ?? [] as item}

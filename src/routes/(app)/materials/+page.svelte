@@ -18,6 +18,7 @@
 	import isEqual from 'lodash-es/isEqual';
 	import endpoints from '$lib/endpoints';
 	import { uppercaseFirstLetter } from '$lib/helpers/utils';
+	import CreateMaterialForm from '$lib/components/materials/CreateMaterialForm.svelte';
 
 	export let data: PageData;
 
@@ -186,6 +187,7 @@
 	let lastestFilterOption: Partial<z.infer<typeof materialFilterSchema>> = {};
 	let lastestFilterOptionExtended: Record<string, string | number> = {};
 	let filterTimer: NodeJS.Timeout;
+	let createMatereialFormCloseBtn: HTMLButtonElement;
 
 	onMount(async () => {
 		if (!$userStore) {
@@ -222,6 +224,11 @@
 			];
 		}
 	});
+
+	function createMaterialFinish() {
+		filtering(lastestFilterOption, currentPage, pageSize, true, true);
+		createMatereialFormCloseBtn?.click();
+	}
 
 	function resetPage() {
 		filtering({}, 1, pageSize, true, false, true);
@@ -541,7 +548,34 @@
 								easing: cubicOut
 							}}
 							class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full sm:w-5/6 md:w-3/4 lg:w-3/5 xl:w-1/2 2xl:w-[720px] p-4"
-						></Dialog.Content>
+						>
+							{#if materialTypes}
+								<CreateMaterialForm
+									createMaterialForm={data.createMaterialForm}
+									{materialTypes}
+									on:finish={createMaterialFinish}
+								>
+									<svelte:fragment slot="closeBtn">
+										<Dialog.Close asChild let:builder>
+											<button
+												use:builder.action
+												{...builder}
+												bind:this={createMatereialFormCloseBtn}
+												class="btn-icon text-2xl !outline-none text-black/60 hover:text-black transition-colors"
+											>
+												<i class="fa-solid fa-xmark"></i>
+											</button>
+										</Dialog.Close>
+									</svelte:fragment>
+									<svelte:fragment slot="cancelBtn">
+										<Dialog.Close class="variant-soft-surface">
+											<i class="fa-solid fa-delete-left"></i>
+											<span class="pl-1">Huỷ</span>
+										</Dialog.Close>
+									</svelte:fragment>
+								</CreateMaterialForm>
+							{/if}
+						</Dialog.Content>
 					</Dialog.Portal>
 				</Dialog.Root>
 			</div>

@@ -30,5 +30,8 @@ export default {
 	},
 	materialTypes: {
 		get: `${PUBLIC_API_HOST}/api/material-type/all`
+	},
+	suppliers: {
+		get: `${PUBLIC_API_HOST}/api/Supplier/all`
 	}
 };

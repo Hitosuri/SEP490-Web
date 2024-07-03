@@ -100,6 +100,13 @@ interface MaterialType {
 	code: string;
 }
 
+interface Suppiler {
+	name: string;
+	email: string;
+	address: string;
+	phoneNumber: string;
+}
+
 type TableField<T> = {
 	[K in keyof T]: {
 		displayName: string;
