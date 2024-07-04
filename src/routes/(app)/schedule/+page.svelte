@@ -115,7 +115,7 @@
 		const searchParams = new URLSearchParams();
 
 		Object.keys(filterOptionsExtended).forEach((key) => {
-			if (!filterOptionsExtended[key]) {
+			if (filterOptionsExtended[key] === undefined) {
 				return;
 			}
 			searchParams.set(key, String(filterOptionsExtended[key]));
