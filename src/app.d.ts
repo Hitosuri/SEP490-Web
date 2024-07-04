@@ -115,6 +115,7 @@ interface ScheduleByRecieptionist {
 	patient: PatientInSchedule;
 	status: 1 | 2 | 3;
 	isPatientConfirm: boolean;
+	order: number;
 }
 
 interface DoctorInSchedule {

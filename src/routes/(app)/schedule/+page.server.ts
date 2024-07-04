@@ -4,6 +4,7 @@ import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import endpoints from '$lib/endpoints';
+import { scheduleFilterSchema } from '$lib/form-schemas/schedule-filter-schema';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	filterRoles(locals, url, Role.All);
@@ -22,13 +23,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	});
 
 	const schedules: Pagination<ScheduleByRecieptionist[]> = await r.json();
-	schedules.data.forEach((x) => {
+	schedules.data.forEach((x, i) => {
 		x.startAt = new Date(x.startAt);
 		x.endAt = new Date(x.endAt);
+		x.order = i;
 	});
 
 	return {
 		createAppointmentForm: await superValidate(zod(createAppointmentSchema)),
+		scheduleFilterForm: await superValidate(zod(scheduleFilterSchema)),
 		schedules: schedules
 	};
 };
