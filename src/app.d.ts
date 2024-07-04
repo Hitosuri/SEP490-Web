@@ -101,6 +101,7 @@ interface MaterialType {
 }
 
 interface Suppiler {
+	id: number;
 	name: string;
 	email: string;
 	address: string;

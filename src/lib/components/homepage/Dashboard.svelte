@@ -34,6 +34,7 @@
 			lottieAnimUrl="/images/animations/schedule.lottie"
 			title="Đặt lịch"
 			class="from-emerald-400 to-lime-400"
+			href="/schedule"
 		/>
 	</div>
 </div>

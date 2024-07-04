@@ -90,7 +90,7 @@
 
 	$: onSupplierSearchOpen(suppilerSearchOpen);
 	$: suppilerSearch(supplierSearchInput);
-	// $: $formData.supplierId = selectedSupplier?.value.id;
+	$: $formData.supplierId = selectedSupplier?.value.id ?? 0;
 	$: $formData.materialTypeId = selectedMaterialType?.value.id ?? 0;
 
 	function onSupplierSearchOpen(open: boolean) {
@@ -136,10 +136,10 @@
 				return;
 			}
 
-			const data: ApiResponse<Suppiler[]> = await response.json();
+			const data: Pagination<Suppiler[]> = await response.json();
 
 			lastSupplierSearchInput = keyword;
-			suppliers = (data.body ?? []).map((x) => ({
+			suppliers = (data.data ?? []).map((x) => ({
 				label: x.name ?? '',
 				value: x
 			}));
