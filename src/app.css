@@ -14,6 +14,18 @@
 		-webkit-appearance: none;
 		margin: 0;
 	}
+
+	.schedule-pending {
+		@apply bg-schedule-pending border-schedule-pending text-schedule-pending;
+	}
+
+	.schedule-confirmed {
+		@apply bg-schedule-confirmed border-schedule-confirmed text-schedule-confirmed;
+	}
+
+	.schedule-done {
+		@apply bg-schedule-done border-schedule-done text-schedule-done;
+	}
 }
 
 @layer components {
@@ -68,4 +80,14 @@ body {
 	box-shadow:
 		0 0 10px rgb(var(--color-surface-500) / 1),
 		0 0 5px rgb(var(--color-surface-500) / 1) !important;
+}
+
+.untouchable {
+	background: repeating-linear-gradient(
+		142deg,
+		theme('colors.surface.50'),
+		theme('colors.surface.50') 4px,
+		theme('colors.surface.200') 4px,
+		theme('colors.surface.200') 8px
+	);
 }

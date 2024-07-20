@@ -162,20 +162,22 @@
 			</Field>
 		</div>
 	</div>
-	<div class="flex gap-4">
-		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
-		>
-			<i class="fa-solid fa-hand-holding-circle-dollar"></i>
+	{#if !$userStore?.isPatient}
+		<div class="flex gap-4">
+			<div
+				class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
+			>
+				<i class="fa-solid fa-hand-holding-circle-dollar"></i>
+			</div>
+			<div>
+				<p class="text-sm font-semibold text-surface-500 select-none">Lương</p>
+				<p class="text-xl font-medium tracking-wide text-surface-300">
+					{formatCurrency(profile.salary)}
+					<i class="fa-solid fa-lock text-error-500 text-base ml-1"></i>
+				</p>
+			</div>
 		</div>
-		<div>
-			<p class="text-sm font-semibold text-surface-500 select-none">Lương</p>
-			<p class="text-xl font-medium tracking-wide text-surface-300">
-				{formatCurrency(profile.salary)}
-				<i class="fa-solid fa-lock text-error-500 text-base ml-1"></i>
-			</p>
-		</div>
-	</div>
+	{/if}
 	<div class="col-span-2 flex justify-center *:w-36 gap-6 py-4">
 		<button
 			type="button"

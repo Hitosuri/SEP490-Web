@@ -5,8 +5,8 @@
 	import type { SuperForm } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import DropdownSelect from '../common/DropdownSelect.svelte';
-	import scheduleStatus from '$lib/constants/schedule-status';
 	import { createEventDispatcher } from 'svelte';
+	import { ScheduleStatus, scheduleStatusInfo } from '$lib/constants/schedule-constant';
 
 	export let form: SuperForm<z.infer<typeof scheduleFilterSchema>>;
 	export let isFiltering: boolean = false;
@@ -22,15 +22,15 @@
 		},
 		{
 			value: '1',
-			label: scheduleStatus[1]
+			label: scheduleStatusInfo[1].label
 		},
 		{
 			value: '2',
-			label: scheduleStatus[2]
+			label: scheduleStatusInfo[2].label
 		},
 		{
 			value: '3',
-			label: scheduleStatus[3]
+			label: scheduleStatusInfo[3].label
 		}
 	];
 	let selectedStatus: Selected<z.infer<typeof scheduleFilterSchema>['status'] | undefined> =

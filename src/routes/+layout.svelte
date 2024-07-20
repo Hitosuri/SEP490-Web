@@ -32,6 +32,12 @@
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
-<Modal regionBackdrop="!bg-black/80" />
+<Modal
+	regionBackdrop="!bg-black/80"
+	buttonTextCancel="Huỷ"
+	buttonTextConfirm="Xác nhận"
+	buttonPositive="font-semibold hover:underline"
+	buttonNeutral="variant-filled-primary"
+/>
 <Toaster position="top-center" richColors />
 <slot />

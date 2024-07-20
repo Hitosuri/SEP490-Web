@@ -1,44 +1,46 @@
 <script lang="ts">
+	import { ScheduleStatus, scheduleStatusInfo } from '$lib/constants/schedule-constant';
+	import { formatHourMinute } from '$lib/helpers/formatters';
 	import { createEventDispatcher } from 'svelte';
 
-	export let schedule: ScheduleByRecieptionist;
+	export let schedule: ScheduleFull;
 
-	const leftOffset = (schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60) * 128;
-	const width = (schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60) * 128 - leftOffset;
-	const colors = {
-		1: ['bg-warning-100', 'border-warning-200', 'bg-warning-400'],
-		2: ['bg-success-100', 'border-success-200', 'bg-success-400'],
-		3: ['bg-stone-200', 'border-stone-200', 'bg-stone-400']
-	} as const;
 	const dispatch = createEventDispatcher<{
 		hoverStart: number;
 		hoverEnd: number;
 	}>();
+
+	$: leftOffset = schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60;
+	$: width = Math.max(
+		schedule.status === ScheduleStatus.PENDING || !schedule.endAt
+			? 0.25
+			: schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60 - leftOffset,
+		0
+	);
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	class="h-full p-0.5 absolute top-0 overflow-hidden group"
-	style="left: {leftOffset}px; width: {width}px"
+	style="left: {leftOffset * 128}px; width: {width * 128}px"
 	id="schedule-{schedule.id}"
 	on:mouseenter={() => dispatch('hoverStart', schedule.id)}
 	on:mouseleave={() => dispatch('hoverEnd', schedule.id)}
 >
 	<div
-		class="border rounded-md h-full flex overflow-hidden relative {colors[
-			schedule.status
-		][0]} {colors[schedule.status][1]}"
+		class="border rounded-md h-full flex overflow-hidden relative border-l-4 {(
+			scheduleStatusInfo[schedule.status]?.styleClasses ?? []
+		).join(' ')}"
 	>
-		<div class="{colors[schedule.status][2]} w-1"></div>
-		{#if width > 64}
+		{#if width * 4 > 2}
 			<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
-				<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+				<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
 					{schedule.patient.name}
 				</p>
 				<p class="text-xs font-semibold text-surface-400">
-					{schedule.startAt.getHours()}:{String(schedule.startAt.getMinutes()).padStart(2, '0')}
+					{formatHourMinute(schedule.startAt)}
 					-
-					{schedule.endAt.getHours()}:{String(schedule.endAt.getMinutes()).padStart(2, '0')}
+					{formatHourMinute(schedule.startAt) || '...'}
 				</p>
 			</div>
 		{:else}

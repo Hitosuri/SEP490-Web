@@ -24,7 +24,10 @@
 
 			toast.promise(
 				async (): Promise<string> => {
-					const response = await fetch(endpoints.profile.changePassword, {
+					const url = $userStore.isPatient
+						? endpoints.profile.changePasswordByPatient
+						: endpoints.profile.changePasswordByUser;
+					const response = await fetch(url, {
 						method: 'PUT',
 						headers: {
 							'content-type': 'application/json',
@@ -42,6 +45,8 @@
 						}
 						return Promise.reject();
 					}
+
+					dispatch('finish');
 
 					return 'Cập nhật mật khẩu thành công';
 				},

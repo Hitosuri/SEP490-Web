@@ -7,13 +7,14 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
-	import { Control, Field, FieldErrors, Label } from 'formsnap';
+	import { Control, Description, Field, FieldErrors, Label } from 'formsnap';
 	import { Combobox, type Selected } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { formatFullDate } from '$lib/helpers/formatters';
 	import { type Writable } from 'svelte/store';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 
 	export let createAppointmentForm: SuperValidated<z.infer<typeof createAppointmentSchema>>;
 	export let startHour: number;
@@ -21,7 +22,7 @@
 	export let endHour: number;
 	export let endMinute: number;
 	export let date: Date;
-	export let doctor: DoctorInSchedule;
+	export let doctor: UserMinimal;
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
@@ -92,10 +93,10 @@
 	onMount(() => {
 		const startTime = new Date(date);
 		startTime.setHours(startHour);
-		startTime.setMinutes(startMinute - startTime.getTimezoneOffset());
+		startTime.setMinutes(startMinute);
 		const endTime = new Date(date);
 		endTime.setHours(endHour);
-		endTime.setMinutes(endMinute - endTime.getTimezoneOffset());
+		endTime.setMinutes(endMinute);
 
 		$formData.startAt = startTime;
 		$formData.endAt = endTime;
@@ -264,24 +265,24 @@
 			<div class="col-span-2">
 				<Field {form} name="description">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none mb-1">Mô tả</Label>
+						<Label class="font-semibold text-surface-500 select-none mb-1">
+							Mô tả<sup class="text-red-500">*</sup>
+						</Label>
 						<textarea
 							class="textarea rounded-md bg-white"
 							{...attrs}
-							rows="4"
-							placeholder="Nhập mô tả..."
+							placeholder="Nhập mô tả, triệu chứng..."
 							bind:value={$formData.description}
+							use:autoHeightTextArea={{
+								minRows: 3,
+								value: $formData.description
+							}}
 						></textarea>
 					</Control>
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
 			</div>
 		</fieldset>
-		<div>
-			{#each $allErrors as error}
-				<p>{error.messages.join(', ')}</p>
-			{/each}
-		</div>
 		<fieldset
 			disabled={requesting}
 			class="flex gap-4 mt-8 font-medium *:btn *:rounded-container-token *:flex-1"

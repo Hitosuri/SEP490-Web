@@ -41,9 +41,9 @@
 						},
 						body: JSON.stringify(rielForm)
 					});
-					const data = await response.json();
 
 					if (!response.ok) {
+						const data = await response.json();
 						if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);

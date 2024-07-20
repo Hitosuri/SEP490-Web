@@ -6,30 +6,48 @@ import { editPatientSchema } from '$lib/form-schemas/edit-patient-schema';
 import { zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';
 
-export const load: PageServerLoad = async ({ locals, url, params }) => {
-	filterRoles(locals, url, [Role.Doctor, Role.Nurse]);
+export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
+	filterRoles(locals, url, Role.Doctor, Role.Nurse);
 	const patientId = Number(params.id);
 	if (!patientId) {
 		error(400, { message: 'Id của bệnh nhân phải là số' });
 	}
 
-	const response = await fetch(`${endpoints.patients.detail(patientId)}`, {
-		headers: {
-			Authorization: `Bearer ${locals.user?.token}`
-		}
-	});
-	const data: ApiResponse<Patient> = await response.json();
+	const [patient, records] = await Promise.all([
+		fetch(`${endpoints.patients.detail(patientId)}`, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		}).then<ApiResponse<Patient>>((x) => x.json()),
+		fetch(`${endpoints.records.get(patientId)}`, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		}).then<ApiResponse<RecordListItem[]>>((x) => x.json())
+	]);
 
-	if (!response.ok || data.status >= 400) {
-		error(response.status >= 400 ? response.status : data.status, { message: data.error ?? '' });
-	} else if (!data.body) {
-		error(500);
+	if (patient.status === 404) {
+		error(404, {
+			message: patient.error ?? ''
+		});
 	}
 
-	data.body.birthday = data.body.birthday ? new Date(data.body.birthday) : data.body.birthday;
+	if (!patient.body || !records.body) {
+		error(500, {
+			message: 'Đã có lỗi xảy ra'
+		});
+	}
+
+	patient.body.birthday = patient.body.birthday
+		? new Date(patient.body.birthday)
+		: patient.body.birthday;
+	records.body.forEach((x) => {
+		x.visitDate = new Date(x.visitDate);
+	});
 
 	return {
-		patient: data.body,
+		patient: patient.body,
+		records: records.body,
 		editPatientForm: await superValidate(zod(editPatientSchema))
 	};
 };

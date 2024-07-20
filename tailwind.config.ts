@@ -20,7 +20,22 @@ export default {
 			},
 			spacing: {
 				scrollBar: '0.5rem'
-			}
+			},
+			backgroundColor: ({ colors }) => ({
+				'schedule-pending': colors.orange[100],
+				'schedule-confirmed': colors.green[100],
+				'schedule-done': colors.violet[100]
+			}),
+			borderColor: ({ colors }) => ({
+				'schedule-pending': colors.orange[400],
+				'schedule-confirmed': colors.green[400],
+				'schedule-done': colors.violet[400]
+			}),
+			textColor: ({ colors }) => ({
+				'schedule-pending': colors.orange[600],
+				'schedule-confirmed': colors.green[600],
+				'schedule-done': colors.violet[600]
+			})
 		}
 	},
 	plugins: [

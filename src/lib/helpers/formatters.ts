@@ -34,6 +34,13 @@ export function formatCompactDate(date: Date | undefined | null): string {
 	return compactDateFormatter.format(date);
 }
 
+export function formatCompactDateTime(date: Date | undefined | null): string {
+	if (!date) {
+		return '';
+	}
+	return `${formatHourMinute(date)} - ${formatCompactDate(date)}`;
+}
+
 export function formatHourMinute(date: Date | undefined | null): string {
 	if (!date) {
 		return '';

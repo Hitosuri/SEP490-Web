@@ -5,7 +5,7 @@ export const createMaterialSchema = z.object({
 		.string()
 		.trim()
 		.min(1, 'Tên vật liệu không được để trống')
-		.max(255, 'Tên vật liệu không được vượt quá 255'),
+		.max(255, 'Tên vật liệu không được vượt quá 255 kí tự'),
 	price: z.number().positive('Đơn giá phải là số dương'),
 	materialTypeId: z
 		.number({ required_error: 'Loại vật liệu không được để trống' })
@@ -17,10 +17,12 @@ export const createMaterialSchema = z.object({
 		.string()
 		.trim()
 		.min(1, 'Đơn vị không được để trống')
-		.max(255, 'Đơn vị không được vượt quá 255'),
+		.max(255, 'Đơn vị không được vượt quá 255 kí tự'),
 	description: z
 		.string()
 		.trim()
 		.min(1, 'Mô tả không được để trống')
-		.max(255, 'Mô tả không được vượt quá 255')
+		.max(255, 'Mô tả không được vượt quá 255 kí tự'),
+	dosage: z.string().trim().max(255, 'Liều dùng không được vượt quá 255 kí tự').optional(),
+	uses: z.string().trim().max(255, 'Cách dùng không được vượt quá 255 kí tự').optional()
 });

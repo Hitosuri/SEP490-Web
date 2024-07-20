@@ -6,7 +6,7 @@ import { materialFilterSchema } from '$lib/form-schemas/material-filter-schema';
 import endpoints from '$lib/endpoints';
 import { createMaterialSchema } from '$lib/form-schemas/create-material-schema';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, Role.Accountant);
 
 	const response = await fetch(`${endpoints.materials.get}?page=1&size=10`, {

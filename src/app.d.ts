@@ -21,7 +21,7 @@ declare namespace App {
 }
 
 interface UserBasic {
-	id: string;
+	id: number;
 	roles: string[];
 	email: string;
 	uid: string;
@@ -56,7 +56,6 @@ interface Profile {
 	phone: string;
 	birthday: Date;
 	salary: number;
-	status: number;
 }
 
 interface Patient {
@@ -75,7 +74,7 @@ interface Pagination<T> {
 }
 
 interface ApiResponse<T, E = string> {
-	status: 200;
+	status: number;
 	error?: E;
 	body?: T;
 }
@@ -92,6 +91,7 @@ interface Material {
 	quantity: number;
 	supplierName: string;
 	materialTypeName: string;
+	medicine?: Medicine;
 }
 
 interface MaterialType {
@@ -108,18 +108,104 @@ interface Suppiler {
 	phoneNumber: string;
 }
 
-interface ScheduleByRecieptionist {
+interface ScheduleFull {
 	id: number;
 	startAt: Date;
-	endAt: Date;
-	doctor: DoctorInSchedule;
+	endAt?: Date;
+	doctor: UserMinimal;
 	patient: PatientInSchedule;
-	status: 1 | 2 | 3;
+	status: import('$lib/constants/schedule-constant').ScheduleStatus;
 	isPatientConfirm: boolean;
+	description?: string;
 	order: number;
 }
 
-interface DoctorInSchedule {
+interface RecordListItem {
+	id: number;
+	doctorName: string;
+	doctorPhone: string;
+	visitDate: Date;
+	diagnosis: string;
+	reason: string;
+	isReVisit: boolean;
+	status: import('$lib/constants/record-constant').RecordStatus;
+}
+
+interface QueueItem {
+	id: number;
+	patientName: string;
+	doctorName: string;
+	exportId: number;
+	diagnostic: string;
+	reason: string;
+	status: number;
+	isReVisit: boolean;
+}
+
+interface RecordPatient {
+	doctor: UserMinimal;
+	patient: UserMinimal;
+	status: import('$lib/constants/record-constant').RecordStatus;
+	diagnostic: string;
+	reason: string;
+	prescriptionId: number;
+	recordTreatmentListItemDtos: {
+		implementerName: string;
+		implementerPhone: string;
+		note: string;
+		treatmentName: string;
+		treatmentId: number;
+		actionAt: Date;
+		number: number;
+	}[];
+	usedMaterials: {
+		materialId: number;
+		materialName: string;
+		quantity: number;
+		unit: string;
+	}[];
+}
+
+interface Prescription {
+	id: number;
+	date: Date;
+	indication: string;
+	recordId: number;
+	createAt: Date;
+	createBy: UserMinimal;
+	details: PrescriptionDetail[];
+	patients: UserMinimal;
+}
+
+interface PrescriptionDetail {
+	id: number;
+	quantiy: number;
+	medicineDetail: MedicineDetail;
+}
+
+interface Medicine {
+	id: number;
+	dosage: string;
+	uses: string;
+}
+
+interface MedicineDetail extends Medicine {
+	name: string;
+	price: number;
+	quantity: number;
+	weight: number;
+	unit: string;
+	description: string;
+}
+
+interface ScheduleByPatient {
+	id: number;
+	startAt: Date;
+	endAt: Date;
+	doctor: UserMinimal;
+}
+
+interface UserMinimal {
 	id: number;
 	name: string;
 }
@@ -129,6 +215,13 @@ interface PatientInSchedule {
 	name: string;
 	phone: string;
 	age: number;
+}
+
+interface Treatment {
+	id: number;
+	name: string;
+	price: number;
+	deleted: boolean;
 }
 
 type TableField<T> = {

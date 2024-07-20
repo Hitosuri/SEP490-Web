@@ -92,6 +92,8 @@
 	$: suppilerSearch(supplierSearchInput);
 	$: $formData.supplierId = selectedSupplier?.value.id ?? 0;
 	$: $formData.materialTypeId = selectedMaterialType?.value.id ?? 0;
+	$: isMedicine =
+		selectedMaterialType?.value.code === 'THUOC' || selectedMaterialType?.value.id === 5;
 
 	function onSupplierSearchOpen(open: boolean) {
 		if (!open) {
@@ -147,195 +149,235 @@
 	}
 </script>
 
-<div class="card bg-white p-6">
-	<div class="flex justify-between">
-		<div class="text-2xl rounded-md border border-surface-200 size-14 text-center leading-[3.5rem]">
-			<i class="fa-regular fa-capsules"></i>
+<div class="card bg-white p-2">
+	<div class="p-4 pr-2 overflow-y-scroll max-h-[90vh]">
+		<div class="flex justify-between">
+			<div
+				class="text-2xl rounded-md border border-surface-200 size-14 text-center leading-[3.5rem]"
+			>
+				<i class="fa-regular fa-capsules"></i>
+			</div>
+			<slot name="closeBtn" />
 		</div>
-		<slot name="closeBtn" />
-	</div>
-	<h1 class="font-semibold text-2xl mt-6">Tạo vật liệu</h1>
-	<p class="font-semibold text-surface-400 mb-6">
-		Tạo vật liệu được sử dụng cho phòng khám như dụng cụ, thuốc...
-	</p>
-	<form use:enhance method="post">
-		<fieldset disabled={requesting} class="grid grid-cols-2 gap-4">
-			<div>
-				<Field {form} name="name">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">
-							Tên vật liệu<sup class="text-red-500">*</sup>
-						</Label>
-						<input
-							{...attrs}
-							type="text"
-							class="input rounded-container-token mt-1"
-							bind:value={$formData.name}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div>
-				<Field {form} name="unit">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">
-							Đơn vị<sup class="text-red-500">*</sup>
-						</Label>
-						<input
-							{...attrs}
-							type="text"
-							class="input rounded-container-token mt-1"
-							bind:value={$formData.unit}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div>
-				<Field {form} name="price">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">
-							Đơn giá<sup class="text-red-500">*</sup>
-						</Label>
-						<input
-							{...attrs}
-							type="number"
-							class="input rounded-container-token mt-1"
-							bind:value={$formData.price}
-						/>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div>
-				<Field {form} name="materialTypeId">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">
-							Phân loại<sup class="text-red-500">*</sup>
-						</Label>
-						<DropdownSelect
-							items={materialTypes}
-							bind:selected={selectedMaterialType}
-							regionInput="ring-1 ring-surface-300 focus:ring-primary- justify-between mt-1 w-full"
-							let:ValueComponent
-						>
-							<ValueComponent class="font-semibold px-2" />
-							<div class="flex flex-col text-[0.55rem] pl-1 text-surface-400">
-								<i class="fa-solid fa-chevron-up"></i>
-								<i class="fa-solid fa-chevron-down"></i>
-							</div>
-							<svelte:fragment slot="item" let:value>
-								<div>
-									<p class="font-medium">{value.name}</p>
-									<p class="text-xs font-medium text-surface-400">{value.code}</p>
-								</div>
-							</svelte:fragment>
-						</DropdownSelect>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div>
-				<Field {form} name="supplierId">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">
-							Nhà cung cấp<sup class="text-red-500">*</sup>
-						</Label>
-						<Combobox.Root
-							items={suppliers}
-							bind:inputValue={supplierSearchInput}
-							bind:open={suppilerSearchOpen}
-							bind:selected={selectedSupplier}
-						>
-							<div class="relative mt-1">
-								<Combobox.Input
-									class="input rounded-md bg-white w-full"
-									placeholder="Tên nhà cung cấp..."
-									aria-label="Tên nhà cung cấp..."
-								/>
-								{#if selectedSupplier}
-									<button
-										type="button"
-										class="btn p-2 rounded-md absolute top-[5px] right-1.5 variant-soft-error"
-										on:click={() => {
-											supplierSearchInput = '';
-											selectedSupplier = undefined;
-										}}
-									>
-										<i class="fa-solid fa-circle-xmark"></i>
-									</button>
-								{/if}
-							</div>
-							<Combobox.Content
-								class="w-full rounded-md border border-surface-100 bg-white p-1 shadow-lg z-[999]"
-								transition={fly}
-								transitionConfig={{
-									duration: 200,
-									y: 30,
-									easing: cubicOut
-								}}
-								sideOffset={8}
+		<h1 class="font-semibold text-2xl mt-6">Tạo vật liệu</h1>
+		<p class="font-semibold text-surface-400 mb-6">
+			Tạo vật liệu được sử dụng cho phòng khám như dụng cụ, thuốc...
+		</p>
+		<form use:enhance method="post">
+			<fieldset disabled={requesting} class="grid grid-cols-2 gap-4">
+				<div>
+					<Field {form} name="name">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none">
+								Tên vật liệu<sup class="text-red-500">*</sup>
+							</Label>
+							<input
+								{...attrs}
+								type="text"
+								class="input rounded-container-token mt-1"
+								bind:value={$formData.name}
+							/>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+				<div>
+					<Field {form} name="unit">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none">
+								Đơn vị<sup class="text-red-500">*</sup>
+							</Label>
+							<input
+								{...attrs}
+								type="text"
+								class="input rounded-container-token mt-1"
+								bind:value={$formData.unit}
+							/>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+				<div>
+					<Field {form} name="price">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none">
+								Đơn giá<sup class="text-red-500">*</sup>
+							</Label>
+							<input
+								{...attrs}
+								type="number"
+								class="input rounded-container-token mt-1"
+								bind:value={$formData.price}
+							/>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+				<div>
+					<Field {form} name="materialTypeId">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none">
+								Phân loại<sup class="text-red-500">*</sup>
+							</Label>
+							<DropdownSelect
+								items={materialTypes}
+								bind:selected={selectedMaterialType}
+								regionInput="ring-1 px-3 ring-surface-300 focus:ring-primary justify-between mt-1 w-full"
+								let:ValueComponent
 							>
-								{#each suppliers as supplier (supplier.value.email)}
-									<Combobox.Item
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-2 rounded select-none flex gap-3 items-center cursor-pointer"
-										value={supplier.value}
-										label={supplier.label}
-									>
-										<div>
-											<p class={!supplier.label ? 'text-warning-500' : ''}>
-												{supplier.label || 'Chưa có tên'}
-											</p>
-											<p class="text-xs font-medium text-surface-400">
-												{supplier.value.email ?? supplier.value.phoneNumber ?? ''}
-											</p>
-										</div>
-										<Combobox.ItemIndicator class="ml-auto" asChild={false}>
-											<i class="fa-solid fa-check text-primary-500"></i>
-										</Combobox.ItemIndicator>
-									</Combobox.Item>
-								{:else}
-									<span class="block px-5 py-2 text-sm text-muted-foreground">
-										Không có kết quả
-									</span>
-								{/each}
-							</Combobox.Content>
-							<Combobox.HiddenInput name="favoriteFruit" />
-						</Combobox.Root>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-			<div class="col-span-2">
-				<Field {form} name="description">
-					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none mb-1">
-							Mô tả<sup class="text-red-500">*</sup>
-						</Label>
-						<textarea
-							class="textarea rounded-md bg-white"
-							{...attrs}
-							rows="4"
-							placeholder="Nhập mô tả..."
-							bind:value={$formData.description}
-						></textarea>
-					</Control>
-					<FieldErrors class="text-sm" />
-				</Field>
-			</div>
-		</fieldset>
-		<fieldset
-			disabled={requesting}
-			class="grid grid-cols-2 gap-4 mt-8 font-medium *:btn *:rounded-container-token"
-		>
-			<slot name="cancelBtn">
-				<span></span>
-			</slot>
-			<button type="submit" class="variant-filled-primary">
-				<i class="fa-solid fa-plus"></i>
-				<span class="pl-1">Tạo</span>
-			</button>
-		</fieldset>
-	</form>
+								<ValueComponent class="font-semibold" />
+								<div class="flex flex-col text-[0.55rem] pl-1 text-surface-400">
+									<i class="fa-solid fa-chevron-up"></i>
+									<i class="fa-solid fa-chevron-down"></i>
+								</div>
+								<svelte:fragment slot="item" let:value>
+									<div>
+										<p class="font-medium">{value.name}</p>
+										<p class="text-xs font-medium text-surface-400">{value.code}</p>
+									</div>
+								</svelte:fragment>
+							</DropdownSelect>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+				<div>
+					<Field {form} name="supplierId">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none">
+								Nhà cung cấp<sup class="text-red-500">*</sup>
+							</Label>
+							<Combobox.Root
+								items={suppliers}
+								bind:inputValue={supplierSearchInput}
+								bind:open={suppilerSearchOpen}
+								bind:selected={selectedSupplier}
+							>
+								<div class="relative mt-1">
+									<Combobox.Input
+										class="input rounded-md bg-white w-full"
+										placeholder="Tên nhà cung cấp..."
+										aria-label="Tên nhà cung cấp..."
+									/>
+									{#if selectedSupplier}
+										<button
+											type="button"
+											class="btn p-2 rounded-md absolute top-[5px] right-1.5 variant-soft-error"
+											on:click={() => {
+												supplierSearchInput = '';
+												selectedSupplier = undefined;
+											}}
+										>
+											<i class="fa-solid fa-circle-xmark"></i>
+										</button>
+									{/if}
+								</div>
+								<Combobox.Content
+									class="w-full rounded-md border border-surface-100 bg-white p-1 shadow-lg z-[999]"
+									transition={fly}
+									transitionConfig={{
+										duration: 200,
+										y: 30,
+										easing: cubicOut
+									}}
+									sideOffset={8}
+								>
+									{#each suppliers as supplier (supplier.value.email)}
+										<Combobox.Item
+											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-2 rounded select-none flex gap-3 items-center cursor-pointer"
+											value={supplier.value}
+											label={supplier.label}
+										>
+											<div>
+												<p class={!supplier.label ? 'text-warning-500' : ''}>
+													{supplier.label || 'Chưa có tên'}
+												</p>
+												<p class="text-xs font-medium text-surface-400">
+													{supplier.value.email ?? supplier.value.phoneNumber ?? ''}
+												</p>
+											</div>
+											<Combobox.ItemIndicator class="ml-auto" asChild={false}>
+												<i class="fa-solid fa-check text-primary-500"></i>
+											</Combobox.ItemIndicator>
+										</Combobox.Item>
+									{:else}
+										<span class="block px-5 py-2 text-sm text-muted-foreground">
+											Không có kết quả
+										</span>
+									{/each}
+								</Combobox.Content>
+								<Combobox.HiddenInput name="favoriteFruit" />
+							</Combobox.Root>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+				<div class="col-span-2">
+					<Field {form} name="description">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none mb-1">
+								Mô tả<sup class="text-red-500">*</sup>
+							</Label>
+							<textarea
+								class="textarea rounded-md bg-white"
+								{...attrs}
+								rows="3"
+								placeholder="Nhập mô tả..."
+								bind:value={$formData.description}
+							></textarea>
+						</Control>
+						<FieldErrors class="text-sm" />
+					</Field>
+				</div>
+				{#if isMedicine}
+					<div class="col-span-2">
+						<Field {form} name="dosage">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none mb-1">
+									Liều dùng<sup class="text-red-500">*</sup>
+								</Label>
+								<textarea
+									class="textarea rounded-md bg-white"
+									{...attrs}
+									rows="3"
+									placeholder="Nhập liều dùng..."
+									bind:value={$formData.dosage}
+								></textarea>
+							</Control>
+							<FieldErrors class="text-sm" />
+						</Field>
+					</div>
+					<div class="col-span-2">
+						<Field {form} name="uses">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none mb-1">
+									Cách dùng<sup class="text-red-500">*</sup>
+								</Label>
+								<textarea
+									class="textarea rounded-md bg-white"
+									{...attrs}
+									rows="3"
+									placeholder="Nhập cách dùng..."
+									bind:value={$formData.uses}
+								></textarea>
+							</Control>
+							<FieldErrors class="text-sm" />
+						</Field>
+					</div>
+				{/if}
+			</fieldset>
+			<fieldset
+				disabled={requesting}
+				class="grid grid-cols-2 gap-4 mt-8 font-medium *:btn *:rounded-container-token"
+			>
+				<slot name="cancelBtn">
+					<span></span>
+				</slot>
+				<button type="submit" class="variant-filled-primary">
+					<i class="fa-solid fa-plus"></i>
+					<span class="pl-1">Tạo</span>
+				</button>
+			</fieldset>
+		</form>
+	</div>
 </div>

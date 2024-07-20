@@ -51,7 +51,7 @@
 		</DropdownMenu.Item>
 		{#if userAuth.roles.includes(Role.Patient)}
 			<DropdownMenu.Item
-				href="/appointments"
+				href="/schedule"
 				class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center"
 			>
 				<div class="size-4 text-center">

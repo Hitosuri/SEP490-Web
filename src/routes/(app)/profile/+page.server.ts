@@ -1,17 +1,52 @@
 import { filterRoles, Role } from '$lib/authorization';
 import endpoints from '$lib/endpoints';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, Role.All);
-	const response = await fetch(endpoints.profile.get, {
-		headers: {
-			Authorization: `Bearer ${locals.user?.token}`
+
+	let profile: Profile;
+	let records: RecordListItem[] | undefined;
+
+	if (locals.user?.isPatient) {
+		const [profileData, recordsData] = await Promise.all([
+			fetch(endpoints.profile.getByPatient, {
+				headers: {
+					Authorization: `Bearer ${locals.user?.token}`
+				}
+			}).then<ApiResponse<Profile>>((x) => x.json()),
+			fetch(`${endpoints.records.get(locals.user.id)}`, {
+				headers: {
+					Authorization: `Bearer ${locals.user?.token}`
+				}
+			}).then<ApiResponse<RecordListItem[]>>((x) => x.json())
+		]);
+
+		if (!profileData.body || !recordsData.body) {
+			error(500);
 		}
-	});
-	const profile: Profile = await response.json();
-	profile.birthday = new Date(profile.birthday);
+
+		profileData.body.birthday = new Date(profileData.body.birthday);
+		profile = profileData.body;
+		recordsData.body.forEach((x) => {
+			x.visitDate = new Date(x.visitDate);
+		});
+		records = recordsData.body;
+	} else {
+		const response = await fetch(endpoints.profile.getByUser, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		});
+		const data: Profile = await response.json();
+
+		data.birthday = new Date(data.birthday);
+		profile = data;
+	}
+
 	return {
-		profile
+		profile,
+		records
 	};
 };

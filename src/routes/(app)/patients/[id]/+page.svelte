@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatCompactDate } from '$lib/helpers/formatters';
+	import { formatCompactDate, formatCompactDateTime } from '$lib/helpers/formatters';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import { setError, superForm } from 'sveltekit-superforms';
@@ -13,11 +13,16 @@
 	import { fly } from 'svelte/transition';
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
 	import { type Writable } from 'svelte/store';
+	import { Tooltip } from 'bits-ui';
+	import { cubicOut } from 'svelte/easing';
+	import { recordStatusInfo } from '$lib/constants/record-constant';
 
 	export let data: PageData;
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
-	let patient: Patient = data.patient;
+	let patient = data.patient;
+	let records = data.records;
+
 	const form = superForm(data.editPatientForm, {
 		validators: zodClient(editPatientSchema),
 		resetForm: false,
@@ -96,7 +101,7 @@
 <svelte:head>
 	<title>Bệnh nhân {patient.name ?? ''}</title>
 </svelte:head>
-<div class="pt-header bg-stone-100">
+<div class="pt-header bg-stone-100 min-h-screen">
 	<div class="container mx-auto p-4 pb-8">
 		<Breadcrumb
 			crumbs={[
@@ -287,6 +292,70 @@
 						{/each}
 					</div>
 				</div>
+			</div>
+		</div>
+		<div class="mt-4">
+			<p class="text-2xl font-semibold p-4">Bệnh án</p>
+			<div class="p-4 bg-white rounded-container-token shadow-md border">
+				<table class="w-full">
+					<thead>
+						<tr>
+							<th class="h-10 table-cell-fit px-4"></th>
+							<th class="text-start px-4">Bác sĩ</th>
+							<th class="text-end px-4">Số điện thoại</th>
+							<th class="text-start px-4">Lý do</th>
+							<th class="px-4">Thời gian khám</th>
+							<th class="px-4">Trạng thái</th>
+							<th class="px-4">Tái khám</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each records as record (record.id)}
+							<tr class="border-t">
+								<td class="px-4 py-2">
+									<Tooltip.Root openDelay={0}>
+										<Tooltip.Trigger asChild let:builder>
+											<a
+												use:builder.action
+												{...builder}
+												href="/records/{record.id}"
+												class="btn-icon variant-outline-surface rounded-xl hover:variant-ghost-tertiary"
+											>
+												<i class="fa-solid fa-circle-info"></i>
+											</a>
+										</Tooltip.Trigger>
+										<Tooltip.Content
+											transition={fly}
+											transitionConfig={{
+												duration: 200,
+												y: 30,
+												easing: cubicOut
+											}}
+											sideOffset={8}
+											class="shadow-md font-semibold px-4 py-3 border rounded-md bg-white"
+										>
+											Chi tiết
+											<Tooltip.Arrow class="border-l border-t" />
+										</Tooltip.Content>
+									</Tooltip.Root>
+								</td>
+								<td class="text-start px-4">{record.doctorName}</td>
+								<td class="text-end px-4">{record.doctorPhone}</td>
+								<td class="text-start px-4">{record.reason}</td>
+								<td class="text-center px-4">{formatCompactDateTime(record.visitDate)}</td>
+								<td class="text-center px-4">{recordStatusInfo[record.status]?.label}</td>
+								<td class="text-center px-4">
+									<input
+										type="checkbox"
+										disabled
+										checked={record.isReVisit}
+										class="checkbox bg-white"
+									/>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>

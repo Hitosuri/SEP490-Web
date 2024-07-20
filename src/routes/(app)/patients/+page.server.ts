@@ -5,8 +5,8 @@ import { zod } from 'sveltekit-superforms/adapters';
 import type { PageServerLoad } from './$types';
 import { superValidate } from 'sveltekit-superforms';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
-	filterRoles(locals, url, [Role.Doctor, Role.Nurse]);
+export const load: PageServerLoad = async ({ locals, url, fetch }) => {
+	filterRoles(locals, url, Role.Doctor, Role.Nurse);
 
 	const response = await fetch(`${endpoints.patients.get}?page=1&size=10`, {
 		headers: {

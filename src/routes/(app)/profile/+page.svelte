@@ -11,14 +11,22 @@
 	import { zod } from 'sveltekit-superforms/adapters';
 	import ChangePasswordForm from '$lib/components/profile/ChangePasswordForm.svelte';
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
+	import { getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import { Tooltip } from 'bits-ui';
+	import { formatCompactDateTime } from '$lib/helpers/formatters';
+	import { recordStatusInfo } from '$lib/constants/record-constant';
 
 	export let data: PageData;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let profile: Profile = data.profile;
 	let profileEditting = false;
 	let passwordEditting = false;
 	let editProfileForm: SuperValidated<z.infer<typeof editProfileSchema>> | undefined;
 	let changePasswordForm: SuperValidated<z.infer<typeof changePasswordSchema>> | undefined;
+
+	$: console.log(data);
 
 	async function profileStartEditting() {
 		if (!editProfileForm) {
@@ -124,4 +132,72 @@
 			</div>
 		</div>
 	</div>
+	{#if $userStore?.isPatient && data.records}
+		<div class="rounded-lg shadow-lg overflow-hidden border mt-8">
+			<div class="py-4 px-6 border-b">
+				<h3 class="h3 font-semibold">Hồ sơ khám bệnh</h3>
+			</div>
+			<div>
+				<table class="w-full">
+					<thead>
+						<tr>
+							<th class="h-10 table-cell-fit px-4"></th>
+							<th class="text-start px-4">Bác sĩ</th>
+							<th class="text-end px-4">Số điện thoại</th>
+							<th class="text-start px-4">Lý do</th>
+							<th class="px-4">Thời gian khám</th>
+							<th class="px-4">Trạng thái</th>
+							<th class="px-4">Tái khám</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each data.records as record (record.id)}
+							<tr class="border-t odd:bg-stone-50">
+								<td class="px-4 py-2">
+									<Tooltip.Root openDelay={0}>
+										<Tooltip.Trigger asChild let:builder>
+											<a
+												use:builder.action
+												{...builder}
+												href="/records/{record.id}"
+												class="btn-icon variant-outline-surface rounded-xl hover:variant-ghost-tertiary"
+											>
+												<i class="fa-solid fa-circle-info"></i>
+											</a>
+										</Tooltip.Trigger>
+										<Tooltip.Content
+											transition={fly}
+											transitionConfig={{
+												duration: 200,
+												y: 30,
+												easing: cubicOut
+											}}
+											sideOffset={8}
+											class="shadow-md font-semibold px-4 py-3 border rounded-md bg-white"
+										>
+											Chi tiết
+											<Tooltip.Arrow class="border-l border-t" />
+										</Tooltip.Content>
+									</Tooltip.Root>
+								</td>
+								<td class="text-start px-4">{record.doctorName}</td>
+								<td class="text-end px-4">{record.doctorPhone}</td>
+								<td class="text-start px-4">{record.reason}</td>
+								<td class="text-center px-4">{formatCompactDateTime(record.visitDate)}</td>
+								<td class="text-center px-4">{recordStatusInfo[record.status]?.label}</td>
+								<td class="text-center px-4">
+									<input
+										type="checkbox"
+										disabled
+										checked={record.isReVisit}
+										class="checkbox bg-white"
+									/>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	{/if}
 </div>
