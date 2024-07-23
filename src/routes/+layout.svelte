@@ -37,7 +37,9 @@
 	buttonTextCancel="Huỷ"
 	buttonTextConfirm="Xác nhận"
 	buttonPositive="font-semibold hover:underline"
-	buttonNeutral="variant-filled-primary"
+	background="bg-white"
+	padding="py-6 px-8"
+	buttonNeutral="font-semibold variant-filled-primary"
 />
 <Toaster position="top-center" richColors />
 <slot />

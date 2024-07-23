@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { Role } from '$lib/authorization';
 	import FunctionCard from '$lib/components/homepage/FunctionCard.svelte';
 	import endpoints from '$lib/endpoints';
 	import { formatHourMinute } from '$lib/helpers/formatters';
 	import { MinuteTick } from '$lib/helpers/minute-tick';
+	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { getContext, onDestroy, onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	import type { Writable } from 'svelte/store';
 
+	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let patientQueue: QueueItem[] | undefined = undefined;
 	let lastDataTime: Date = new Date();
@@ -39,8 +43,73 @@
 			return;
 		}
 
+		data.body.forEach((x) => {
+			x.startAt = new Date(x.startAt);
+			x.startAt.setMinutes(x.startAt.getMinutes() - x.startAt.getTimezoneOffset());
+			x.endAt = new Date(x.endAt);
+			x.endAt.setMinutes(x.endAt.getMinutes() - x.endAt.getTimezoneOffset());
+		});
+		data.body.sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+
 		patientQueue = data.body;
 		lastDataTime = new Date();
+	}
+
+	function pullSchedule() {
+		if (!$userStore?.roles.includes(Role.Doctor)) {
+			return;
+		}
+		const newStartAt = new Date();
+		const newMinutes = Math.ceil(newStartAt.getMinutes() / 15) * 15;
+		newStartAt.setMinutes(newMinutes);
+
+		const modalSetting: ModalSettings = {
+			type: 'confirm',
+			title: 'Xác nhận thay đổi thời gian',
+			// body: `Vui lòng xác nhận thay đổi thời gian bắt đầu lịch hẹn của bệnh nhân ${schedule.patient.name} từ ${formatHourMinute(schedule.startAt)} vào lúc ${formatHourMinute(newStartAt)}`,
+			body: '',
+			response: (r) => {
+				if (!r || !$userStore) {
+					return;
+				}
+
+				toast.promise(
+					async (): Promise<string> => {
+						const response = await fetch(endpoints.schedule.pullSchedule($userStore.id), {
+							method: 'PUT',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							}
+						});
+
+						if (!response.ok) {
+							// if (Array.isArray(data?.error) || Array.isArray(data)) {
+							// 	const msg = (data?.error ?? data).join(', ');
+							// 	return Promise.reject(msg);
+							// } else if (typeof data === 'object') {
+							// 	Object.keys(data).forEach((k) => {
+							// 		const fieldName = pascalToCamelcase(k);
+							// 		if (Object.keys(form.data).includes(fieldName)) {
+							// 			setError(form, fieldName, data[k]);
+							// 		}
+							// 	});
+							// 	return Promise.reject();
+							// }
+
+							return Promise.reject();
+						}
+						return 'Cập nhật lịch hẹn thành công';
+					},
+					{
+						loading: 'Đang xử lý...',
+						success: (msg) => msg ?? 'Cập nhật lịch hẹn thành công',
+						error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật lịch hẹn'
+					}
+				);
+			}
+		};
+		modalStore.trigger(modalSetting);
 	}
 </script>
 
@@ -85,9 +154,16 @@
 			</div>
 			<div class="flex-1 flex-shrink-0">
 				<div class="border rounded-xl bg-white h-fit overflow-hidden">
-					<p class="text-2xl font-semibold py-4 px-6 bg-tertiary-500 text-white">
-						Danh sách chờ khám hôm nay
-					</p>
+					<div class="py-4 px-6 bg-tertiary-500 flex justify-between items-center">
+						<span class="text-2xl font-semibold text-white">Danh sách chờ khám</span>
+						{#if patientQueue && patientQueue.length > 0}
+							<button
+								type="button"
+								class="btn ring-4 ring-white py-1.5 px-3 text-white font-bold"
+								on:click={pullSchedule}>Gọi bệnh nhân tiếp theo</button
+							>
+						{/if}
+					</div>
 					<div>
 						<table class="w-full">
 							<thead>
@@ -101,28 +177,39 @@
 								{#if patientQueue}
 									{#each patientQueue as queueItem, i (queueItem.id)}
 										<tr
-											class="group cursor-pointer odd:bg-slate-50 border-t hover:bg-primary-50"
+											class="group cursor-pointer odd:bg-slate-50 border-t {i === 0
+												? 'hover:bg-primary-50'
+												: ''}"
 											on:click={() => {
 												console.log(queueItem);
 											}}
 										>
-											<td class="p-0 border-r group-hover:border-primary-300">
-												<a
+											<td class="p-0 border-r {i === 0 ? 'group-hover:border-primary-300' : ''}">
+												<svelte:element
+													this={i == 0 ? 'a' : 'div'}
 													href="/records/{queueItem.id}"
 													class="block px-4 py-4 text-center font-semibold"
 												>
 													{i + 1}
-												</a>
+												</svelte:element>
 											</td>
-											<td class="p-0 border-r group-hover:border-primary-300">
-												<a href="/records/{queueItem.id}" class="block px-4 py-4">
+											<td class="p-0 border-r {i === 0 ? 'group-hover:border-primary-300' : ''}">
+												<svelte:element
+													this={i == 0 ? 'a' : 'div'}
+													href="/records/{queueItem.id}"
+													class="block px-4 py-4"
+												>
 													{queueItem.patientName}
-												</a>
+												</svelte:element>
 											</td>
 											<td class="p-0">
-												<a href="/records/{queueItem.id}" class="block px-4 py-4">
+												<svelte:element
+													this={i == 0 ? 'a' : 'div'}
+													href="/records/{queueItem.id}"
+													class="block px-4 py-4"
+												>
 													{queueItem.reason}
-												</a>
+												</svelte:element>
 											</td>
 										</tr>
 									{/each}
@@ -130,10 +217,14 @@
 							</tbody>
 						</table>
 						{#if !patientQueue}
-							<h3 class="h3 font-semibold text-center text-surface-400 py-4 border-t">Đang tải thông tin</h3>
+							<h3 class="h3 font-semibold text-center text-surface-400 py-4 border-t">
+								Đang tải thông tin
+							</h3>
 						{/if}
 						{#if patientQueue?.length === 0}
-							<h3 class="h3 font-semibold text-center text-tertiary-500 py-4 border-t">Danh sách trống</h3>
+							<h3 class="h3 font-semibold text-center text-tertiary-500 py-4 border-t">
+								Danh sách trống
+							</h3>
 						{/if}
 					</div>
 				</div>

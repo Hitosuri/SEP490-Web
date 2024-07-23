@@ -139,6 +139,8 @@ interface QueueItem {
 	diagnostic: string;
 	reason: string;
 	status: number;
+	startAt: Date;
+	endAt: Date;
 	isReVisit: boolean;
 }
 

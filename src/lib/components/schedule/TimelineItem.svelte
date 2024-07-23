@@ -40,7 +40,7 @@
 				<p class="text-xs font-semibold text-surface-400">
 					{formatHourMinute(schedule.startAt)}
 					-
-					{formatHourMinute(schedule.startAt) || '...'}
+					{formatHourMinute(schedule.endAt) || '...'}
 				</p>
 			</div>
 		{:else}
