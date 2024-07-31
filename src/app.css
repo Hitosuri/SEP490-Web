@@ -61,7 +61,7 @@ body {
 }
 
 ::-webkit-scrollbar {
-	@apply bg-surface-50/70 w-scrollBar h-scrollBar;
+	@apply bg-surface-50/70 w-scroll-bar h-scroll-bar;
 }
 
 ::-webkit-scrollbar-thumb {

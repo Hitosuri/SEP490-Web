@@ -4,6 +4,7 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let schedule: ScheduleFull;
+	export let placeholder = false;
 
 	const dispatch = createEventDispatcher<{
 		hoverStart: number;
@@ -27,24 +28,28 @@
 	on:mouseenter={() => dispatch('hoverStart', schedule.id)}
 	on:mouseleave={() => dispatch('hoverEnd', schedule.id)}
 >
-	<div
-		class="border rounded-md h-full flex overflow-hidden relative border-l-4 {(
-			scheduleStatusInfo[schedule.status]?.styleClasses ?? []
-		).join(' ')}"
-	>
-		{#if width * 4 > 2}
-			<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
-				<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
-					{schedule.patient.name}
-				</p>
-				<p class="text-xs font-semibold text-surface-400">
-					{formatHourMinute(schedule.startAt)}
-					-
-					{formatHourMinute(schedule.endAt) || '...'}
-				</p>
-			</div>
-		{:else}
-			<div class="flex items-center font-bold justify-center flex-1">{schedule.order + 1}</div>
-		{/if}
-	</div>
+	{#if !placeholder}
+		<div
+			class="border rounded-md h-full flex overflow-hidden relative border-l-4 {(
+				scheduleStatusInfo[schedule.status]?.styleClasses ?? []
+			).join(' ')}"
+		>
+			{#if width * 4 > 2}
+				<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
+					<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
+						{schedule.patient.name}
+					</p>
+					<p class="text-xs font-semibold text-surface-400">
+						{formatHourMinute(schedule.startAt)}
+						-
+						{formatHourMinute(schedule.endAt) || '...'}
+					</p>
+				</div>
+			{:else}
+				<div class="flex items-center font-bold justify-center flex-1">{schedule.order + 1}</div>
+			{/if}
+		</div>
+	{:else}
+		<div class="border-2 border-primary-500 border-dashed h-full rounded-md"></div>
+	{/if}
 </div>

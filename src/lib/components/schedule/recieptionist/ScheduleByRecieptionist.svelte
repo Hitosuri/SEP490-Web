@@ -2,12 +2,12 @@
 	import { Calendar, DropdownMenu, type Selected } from 'bits-ui';
 	import { today, getLocalTimeZone, type DateValue } from '@internationalized/date';
 	import { cubicOut } from 'svelte/easing';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import CreateAppoimentByRecieptionist from '$lib/components/schedule/recieptionist/CreateAppoimentByRecieptionist.svelte';
 	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
 	import endpoints from '$lib/endpoints';
-	import { getContext, onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import {
 		formatCompactDate,
@@ -30,6 +30,8 @@
 	import ConfirmScheduleForm from './ConfirmScheduleForm.svelte';
 	import type { editScheduleSchema } from '$lib/form-schemas/edit-schedule-schema';
 	import { toast } from 'svelte-sonner';
+	import { MinuteTick } from '$lib/helpers/minute-tick';
+	import EditAppointmentReceptionist from './EditAppointmentReceptionist.svelte';
 
 	export let scheduleFilterForm: SuperValidated<z.infer<typeof scheduleFilterSchema>>;
 	export let schedules: ScheduleFull[];
@@ -73,12 +75,17 @@
 	let canCreateSchedule = true;
 	let rangeLimit: [number, number] = [0, 0];
 	let lastFilterOptions: Partial<z.infer<typeof scheduleFilterSchema>> = {};
+	let limitEndElement: HTMLDivElement;
+	let editingSchedule: ScheduleFull | undefined;
+	let timeChanged = false;
 
+	$: lowerLimit = calculateLowerLimit(selectedDate);
+	$: blockPastWidth = lowerLimit * 32;
 	$: selectedDateSchedules = schedules.filter((x) => x.startAt.getDate() === selectedDate.day);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
 	$: blockRangeByDoctors = scheduleByDoctors.map((x) =>
 		x[1]
-			.filter((x) => x.status !== 1)
+			.filter((x) => x.status !== 1 && x.id !== editingSchedule?.id)
 			.map(
 				(y) =>
 					[
@@ -93,9 +100,9 @@
 					] as [number, number]
 			)
 	);
-	$: canCreateSchedule = !blockRangeByDoctors[rowCount]?.some(
-		(x) => quarterCount >= x[0] && quarterCount < x[1]
-	);
+	$: canCreateSchedule =
+		quarterCount >= lowerLimit &&
+		!blockRangeByDoctors[rowCount]?.some((x) => quarterCount >= x[0] && quarterCount < x[1]);
 	$: hoverHintTop = rowCount * 64;
 	$: hoverHintLeft = (quarterCount + 2) * 32;
 	$: hoveringHours = Math.floor(quarterCount / 4);
@@ -113,6 +120,31 @@
 		lastFilterOptions.isPatientConfirm ||
 		lastFilterOptions.status
 	);
+
+	onMount(() => {
+		MinuteTick.addEvent(calculateLowerLimitActive);
+	});
+
+	onDestroy(() => {
+		MinuteTick.removeEvent(calculateLowerLimitActive);
+	});
+
+	function calculateLowerLimitActive() {
+		lowerLimit = calculateLowerLimit(selectedDate);
+	}
+
+	function calculateLowerLimit(date: DateValue): number {
+		const result = date.compare(today(getLocalTimeZone()));
+
+		if (result < 0) {
+			return 96;
+		} else if (result > 0) {
+			return 0;
+		} else {
+			const now = new Date();
+			return now.getHours() * 4 + Math.ceil((now.getMinutes() + 1) / 15);
+		}
+	}
 
 	async function filtering(
 		filterOptions: Partial<z.infer<typeof scheduleFilterSchema>>,
@@ -168,14 +200,15 @@
 		}
 	}
 
-	function extractScheduleByDoctor(schedules: ScheduleFull[]): [UserMinimal, ScheduleFull[]][] {
+	function extractScheduleByDoctor(
+		scheduleInDay: ScheduleFull[] = selectedDateSchedules
+	): [UserMinimal, ScheduleFull[]][] {
 		const doctors: Record<number, [UserMinimal, ScheduleFull[]]> = {};
 
-		schedules.forEach((s) => {
+		scheduleInDay.forEach((s) => {
 			const doctorId = s.doctor.id;
 			if (!doctors[doctorId]) {
-				doctors[doctorId] = [s.doctor, [s]];
-				return;
+				doctors[doctorId] = [s.doctor, []];
 			}
 
 			doctors[doctorId][1].push(s);
@@ -206,14 +239,20 @@
 			},
 			response: (r) => {
 				if (r) {
-					cancelCreateSchedule();
-					filtering(lastFilterOptions);
+					updateScheduleList();
 					return;
 				}
 				scheduleMenuOpened = true;
 			}
 		};
 		modalStore.trigger(setting);
+	}
+
+	function updateScheduleList() {
+		console.log(123);
+
+		cancelSelection();
+		filtering(lastFilterOptions);
 	}
 
 	function scheduleDragStart(e: MouseEvent & { currentTarget: EventTarget & HTMLDivElement }) {
@@ -223,6 +262,7 @@
 		if (e.button === 0 && !scheduleGrabing && canCreateSchedule) {
 			timelineSelection = true;
 			selectedStart = selectedEnd = quarterCount;
+			timeChanged = true;
 			const posibleStartLimits = [...blockRangeByDoctors[rowCount].map((x) => x[1])];
 			const posibleEndLimits = [...blockRangeByDoctors[rowCount].map((x) => x[0])];
 			posibleStartLimits.sort((a, b) => b - a);
@@ -283,20 +323,21 @@
 		if (scheduleGrabing) {
 			preventNextContextMenu = true;
 		}
-		if (timelineSelection && selectedRange > 0) {
+		if (timelineSelection && selectedRange > 0 && !editingSchedule) {
 			scheduleMenuOpened = true;
 		}
 		scheduleGrabing = false;
 		timelineSelection = false;
 	}
 
-	function cancelCreateSchedule() {
+	function cancelSelection() {
 		if (preventCancelSelection) {
 			preventCancelSelection = false;
 			return;
 		}
 		selectedEnd = selectedStart = 0;
 		selectionInDoctor = undefined;
+		editingSchedule = undefined;
 	}
 
 	async function searchDoctorFn(keyword: string): Promise<Selected<User>[] | undefined> {
@@ -511,6 +552,33 @@
 		modalStore.trigger(modalSetting);
 	}
 
+	function editSchedule(schedule: ScheduleFull) {
+		if (!schedule.endAt) {
+			return;
+		}
+		scrollToSchedule(schedule);
+		editingSchedule = schedule;
+		selectedStart =
+			schedule.startAt.getHours() / scheduleStepInHour +
+			schedule.startAt.getMinutes() / scheduleStepInMinute;
+		selectedEnd =
+			schedule.endAt.getHours() / scheduleStepInHour +
+			schedule.endAt.getMinutes() / scheduleStepInMinute;
+		timeChanged = false;
+		selectionInDoctor = schedule.doctor;
+	}
+
+	function scrollToSchedule(schedule: ScheduleFull) {
+		const el = document.getElementById(`schedule-${schedule.id}`);
+		if (el) {
+			el.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center',
+				inline: 'center'
+			});
+		}
+	}
+
 	function deleteSchedule(schedule: ScheduleFull) {
 		const modalSetting: ModalSettings = {
 			type: 'confirm',
@@ -632,6 +700,12 @@
 />
 <div class="pt-header bg-stone-50 h-screen">
 	<div class="flex flex-col gap-4 p-4 h-full">
+		{#if editingSchedule}
+			<div
+				transition:fade={{ duration: 200 }}
+				class="fixed left-0 top-0 right-0 bottom-0 bg-black/60 z-[100]"
+			></div>
+		{/if}
 		<ListFilterForm
 			{form}
 			bind:isFiltering
@@ -641,10 +715,43 @@
 		/>
 		<div class="flex gap-4">
 			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_4rem]"
+				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_4rem] relative"
 			>
+				{#if editingSchedule}
+					{@const startAt = new Date(
+						selectedDate.year,
+						selectedDate.month - 1,
+						selectedDate.day,
+						selectedStartHours,
+						selectedStartMinutes
+					)}
+					{@const endAt = new Date(
+						selectedDate.year,
+						selectedDate.month - 1,
+						selectedDate.day,
+						selectedEndHours,
+						selectedEndMinutes
+					)}
+					<div
+						transition:fly={{
+							duration: 200,
+							y: 200
+						}}
+						class="absolute left-0 right-0 bottom-0 z-[200]"
+					>
+						<EditAppointmentReceptionist
+							{editScheduleForm}
+							schedule={editingSchedule}
+							{startAt}
+							{endAt}
+							doctor={selectionInDoctor}
+							on:cancel={cancelSelection}
+							on:updated={updateScheduleList}
+						/>
+					</div>
+				{/if}
 				<div
-					class="grid pb-2 border-b font-bold text-sm text-surface-400 tracking-wide pr-scrollBar"
+					class="grid pb-2 border-b font-bold text-sm text-surface-400 tracking-wide pr-scroll-bar"
 				>
 					<span class="text-center">#</span>
 					<span class="text-center">Bệnh nhân</span>
@@ -663,16 +770,7 @@
 						>
 							<button
 								class="btn rounded-none hover:underline font-medium"
-								on:click={() => {
-									const el = document.getElementById(`schedule-${schedule.id}`);
-									if (el) {
-										el.scrollIntoView({
-											behavior: 'smooth',
-											block: 'center',
-											inline: 'center'
-										});
-									}
-								}}>{schedule.order + 1}</button
+								on:click={() => scrollToSchedule(schedule)}>{schedule.order + 1}</button
 							>
 						</div>
 						<div
@@ -748,35 +846,50 @@
 											</div>
 											<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
 										</DropdownMenu.Item>
-									{:else if schedule.status === ScheduleStatus.CONFIRMED}
-										<DropdownMenu.Item
-											on:click={() => patientCheckin(schedule)}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-solid fa-check-to-slot"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
-										</DropdownMenu.Item>
-										<DropdownMenu.Item
-											on:click={() => deleteSchedule(schedule)}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-trash-can"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
-										</DropdownMenu.Item>
-									{:else if schedule.status === ScheduleStatus.DONE && schedule.startAt > new Date()}
-										<DropdownMenu.Item
-											on:click={() => pullSchedule(schedule)}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-trash-can"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Kéo lịch lên hiện tại</span>
-										</DropdownMenu.Item>
+									{:else}
+										{#if schedule.endAt && schedule.endAt > new Date()}
+											<DropdownMenu.Item
+												on:click={() => editSchedule(schedule)}
+												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+											>
+												<div class="size-4 text-center *:block">
+													<i class="fa-solid fa-pen-to-square"></i>
+												</div>
+												<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+											</DropdownMenu.Item>
+										{/if}
+										{#if schedule.status === ScheduleStatus.CONFIRMED}
+											{#if today(getLocalTimeZone()).compare(selectedDate) === 0}
+												<DropdownMenu.Item
+													on:click={() => patientCheckin(schedule)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center *:block">
+														<i class="fa-solid fa-check-to-slot"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
+												</DropdownMenu.Item>
+											{/if}
+											<DropdownMenu.Item
+												on:click={() => deleteSchedule(schedule)}
+												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+											>
+												<div class="size-4 text-center *:block">
+													<i class="fa-regular fa-trash-can"></i>
+												</div>
+												<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
+											</DropdownMenu.Item>
+										{:else if schedule.status === ScheduleStatus.DONE && schedule.startAt > new Date()}
+											<DropdownMenu.Item
+												on:click={() => pullSchedule(schedule)}
+												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+											>
+												<div class="size-4 text-center *:block">
+													<i class="fa-regular fa-trash-can"></i>
+												</div>
+												<span class="font-semibold text-sm leading-4">Kéo lịch lên hiện tại</span>
+											</DropdownMenu.Item>
+										{/if}
 									{/if}
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
@@ -784,76 +897,83 @@
 					{/each}
 				</div>
 			</div>
-			<div>
-				<Calendar.Root
-					locale="vi"
-					class="rounded-container-token border bg-white p-4 shadow-md"
-					let:months
-					let:weekdays
-					preventDeselect={true}
-					value={selectedDate}
-					onValueChange={onSelectedDateChange}
-				>
-					<Calendar.Header class="flex items-center h-10">
-						<Calendar.Heading class="text-lg font-semibold capitalize tracking-tight ml-2.5" />
-						<Calendar.PrevButton
-							class="size-8 p-2 text-secondary-500 hover:variant-soft-secondary disabled:text-black btn ml-auto"
-						>
-							<i class="fa-solid fa-chevron-left"></i>
-						</Calendar.PrevButton>
-						<Calendar.NextButton
-							class="size-8 p-2 text-secondary-500 hover:variant-soft-secondary disabled:text-black btn"
-						>
-							<i class="fa-solid fa-chevron-right"></i>
-						</Calendar.NextButton>
-					</Calendar.Header>
+			<div class={editingSchedule ? 'z-[200]' : ''}>
+				{#key editingSchedule}
+					<Calendar.Root
+						locale="vi"
+						class="rounded-container-token border bg-white p-4 shadow-md"
+						let:months
+						let:weekdays
+						preventDeselect={true}
+						value={selectedDate}
+						onValueChange={onSelectedDateChange}
+						minValue={editingSchedule ? today(getLocalTimeZone()) : undefined}
+					>
+						<Calendar.Header class="flex items-center h-10">
+							<Calendar.Heading class="text-lg font-semibold capitalize tracking-tight ml-2.5" />
+							<Calendar.PrevButton
+								class="size-8 p-2 text-secondary-500 hover:variant-soft-secondary disabled:text-black btn ml-auto"
+							>
+								<i class="fa-solid fa-chevron-left"></i>
+							</Calendar.PrevButton>
+							<Calendar.NextButton
+								class="size-8 p-2 text-secondary-500 hover:variant-soft-secondary disabled:text-black btn"
+							>
+								<i class="fa-solid fa-chevron-right"></i>
+							</Calendar.NextButton>
+						</Calendar.Header>
 
-					<div class="flex flex-col space-y-4 pt-3 sm:flex-row sm:space-x-4 sm:space-y-0">
-						{#each months as month}
-							<Calendar.Grid class="w-full border-collapse select-none space-y-1">
-								<Calendar.GridHead>
-									<Calendar.GridRow class="mb-1 flex w-full justify-between">
-										{#each weekdays as day}
-											<Calendar.HeadCell
-												class="w-10 rounded-md text-xs text-surface-400 font-medium"
-											>
-												<div>{day.slice(0, 2)}</div>
-											</Calendar.HeadCell>
-										{/each}
-									</Calendar.GridRow>
-								</Calendar.GridHead>
-								<Calendar.GridBody>
-									{#each month.weeks as weekDates}
-										<Calendar.GridRow class="flex w-full gap-2">
-											{#each weekDates as date}
-												<Calendar.Cell {date} class="relative w-10 h-10 !p-0 text-center">
-													<Calendar.Day
-														{date}
-														month={month.value}
-														class="group relative font-medium inline-flex w-full h-full items-center justify-center whitespace-nowrap rounded-full border border-transparent bg-transparent p-0 text-foreground transition-all hover:border-primary-700 data-[disabled]:pointer-events-none data-[outside-month]:pointer-events-none data-[selected]:bg-primary-200 data-[selected]:font-semibold data-[selected]:text-primary-700 data-[disabled]:text-surface-300 data-[unavailable]:text-surface-300 data-[unavailable]:line-through"
-													>
-														<div
-															class="absolute top-[5px] hidden size-1 rounded-full bg-primary-400 transition-all group-data-[today]:block"
-														/>
-														{date.day}
-													</Calendar.Day>
-												</Calendar.Cell>
+						<div class="flex flex-col space-y-4 pt-3 sm:flex-row sm:space-x-4 sm:space-y-0">
+							{#each months as month}
+								<Calendar.Grid class="w-full border-collapse select-none space-y-1">
+									<Calendar.GridHead>
+										<Calendar.GridRow class="mb-1 flex w-full justify-between">
+											{#each weekdays as day}
+												<Calendar.HeadCell
+													class="w-10 rounded-md text-xs text-surface-400 font-medium"
+												>
+													<div>{day.slice(0, 2)}</div>
+												</Calendar.HeadCell>
 											{/each}
 										</Calendar.GridRow>
-									{/each}
-								</Calendar.GridBody>
-							</Calendar.Grid>
-						{/each}
-					</div>
-				</Calendar.Root>
+									</Calendar.GridHead>
+									<Calendar.GridBody>
+										{#each month.weeks as weekDates}
+											<Calendar.GridRow class="flex w-full gap-2">
+												{#each weekDates as date}
+													<Calendar.Cell {date} class="relative w-10 h-10 !p-0 text-center">
+														<Calendar.Day
+															{date}
+															month={month.value}
+															class="group relative font-medium inline-flex w-full h-full items-center justify-center whitespace-nowrap rounded-full border border-transparent bg-transparent p-0 text-foreground transition-all hover:border-primary-700 data-[disabled]:pointer-events-none data-[outside-month]:pointer-events-none data-[selected]:bg-primary-200 data-[selected]:font-semibold data-[selected]:text-primary-700 data-[disabled]:text-surface-300 data-[unavailable]:text-surface-300 data-[unavailable]:line-through"
+														>
+															<div
+																class="absolute top-[5px] hidden size-1 rounded-full bg-primary-400 transition-all group-data-[today]:block"
+															/>
+															{date.day}
+														</Calendar.Day>
+													</Calendar.Cell>
+												{/each}
+											</Calendar.GridRow>
+										{/each}
+									</Calendar.GridBody>
+								</Calendar.Grid>
+							{/each}
+						</div>
+					</Calendar.Root>
+				{/key}
 			</div>
 		</div>
 		<div class="flex flex-1 gap-4">
-			<div class="bg-white border shadow-md rounded-container-token p-4 flex-1 h-auto relative">
+			<div
+				class="bg-white border shadow-md rounded-container-token p-4 flex-1 h-auto relative {editingSchedule
+					? 'z-[200]'
+					: ''}"
+			>
 				<div
 					bind:this={scheduleListElement}
 					class="absolute top-4 left-4 bottom-4 right-4 {scheduleMenuOpened
-						? 'overflow-hidden pr-scrollBar pb-scrollBar'
+						? 'overflow-hidden pr-scroll-bar pb-scroll-bar'
 						: 'overflow-scroll'} {scheduleGrabing || timelineSelection ? 'select-none' : ''}"
 				>
 					<div class="h-fit w-fit pl-40">
@@ -979,7 +1099,7 @@
 								bind:open={scheduleMenuOpened}
 								onOpenChange={(o) => {
 									if (!o) {
-										cancelCreateSchedule();
+										cancelSelection();
 									}
 								}}
 							>
@@ -994,19 +1114,23 @@
 										y: 30,
 										easing: cubicOut
 									}}
-									class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+									class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg {editingSchedule
+										? 'z-[200]'
+										: ''}"
 								>
+									{#if !editingSchedule}
+										<DropdownMenu.Item
+											on:click={createAppointment}
+											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+										>
+											<div class="size-4 text-center *:block">
+												<i class="fa-regular fa-calendar-check"></i>
+											</div>
+											<span class="font-semibold text-sm leading-4">Tạo lịch hẹn</span>
+										</DropdownMenu.Item>
+									{/if}
 									<DropdownMenu.Item
-										on:click={createAppointment}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-regular fa-calendar-check"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Tạo lịch hẹn</span>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										on:click={cancelCreateSchedule}
+										on:click={cancelSelection}
 										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 									>
 										<div class="size-4 text-center *:block">
@@ -1016,11 +1140,21 @@
 									</DropdownMenu.Item>
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
-							<div class="pl-16 w-full r relative">
+							<div class="pl-16 w-full relative">
+								<div
+									class="w-10 untouchable absolute top-0 left-16 bottom-0"
+									style="width: {blockPastWidth}px;"
+								>
+									<div class="w-0 ml-auto" bind:this={limitEndElement}></div>
+								</div>
 								{#each scheduleByDoctors as pair (pair[0].id)}
 									<div class="h-16 w-full border-b border-dashed relative">
 										{#each pair[1] as schedule (schedule.id)}
-											<TimelineItem {schedule} />
+											{#if schedule.id !== editingSchedule?.id}
+												<TimelineItem {schedule} />
+											{:else if timeChanged}
+												<TimelineItem {schedule} placeholder />
+											{/if}
 										{/each}
 									</div>
 								{/each}

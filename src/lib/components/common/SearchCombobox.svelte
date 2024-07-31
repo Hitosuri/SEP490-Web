@@ -25,7 +25,6 @@
 	$: itemSearch(itemSearchInput);
 	$: showClear = !!(clearable && selected);
 	$: onSelectedChange(selected);
-	$: console.log(selected);
 
 	function onSelectedChange(newSelected: Selected<T> | undefined) {
 		if (!newSelected) {
@@ -70,8 +69,6 @@
 	}
 
 	function clear() {
-		console.log('clear');
-
 		itemSearchInput = '';
 		lastItemSearchInput = undefined;
 		selected = undefined;

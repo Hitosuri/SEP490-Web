@@ -8,8 +8,8 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { RecordStatus } from '$lib/constants/record-constant';
-	import { formatHourMinute } from '$lib/helpers/formatters';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import Container from '$lib/components/common/Container.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -103,42 +103,40 @@
 <svelte:head>
 	<title>Hồ sơ bệnh án - {record.patient.name}</title>
 </svelte:head>
-<div class="pt-header bg-stone-100 min-h-screen">
-	<div class="p-4 container mx-auto space-y-6">
-		<ExaminationContent
-			editRecordForm={data.editRecordForm}
-			recordId={data.recordId}
-			record={data.record}
+<Container paddingTopHeader heightFull class="py-4 space-y-6">
+	<ExaminationContent
+		editRecordForm={data.editRecordForm}
+		recordId={data.recordId}
+		record={data.record}
+	/>
+	{#if prescription}
+		<PrescriptionInRecord
+			{prescription}
+			editPrescriptionDetailForm={data.editPrescriptionDetailForm}
+			{record}
 		/>
-		{#if prescription}
-			<PrescriptionInRecord
-				{prescription}
-				editPrescriptionDetailForm={data.editPrescriptionDetailForm}
-				{record}
-			/>
-		{:else}
-			<p class="font-semibold text-surface-500 text-xl select-none mb-1">
-				<span>Đơn thuốc:</span>
-				<span class="text-error-400">Chưa có đơn thuốc</span>
-			</p>
-			{#if record.status === RecordStatus.PROCESSING}
-				<button
-					class="btn variant-soft-primary shadow-md btn-lg font-medium px-12 mx-auto block"
-					on:click={createPrescription}
-				>
-					<i class="fa-regular fa-prescription-bottle"></i>
-					<span>Tạo đơn thuốc</span>
-				</button>
-			{/if}
-		{/if}
+	{:else}
+		<p class="font-semibold text-surface-500 text-xl select-none mb-1">
+			<span>Đơn thuốc:</span>
+			<span class="text-error-400">Chưa có đơn thuốc</span>
+		</p>
 		{#if record.status === RecordStatus.PROCESSING}
 			<button
-				type="button"
-				class="btn variant-filled-tertiary btn-lg w-full rounded-container-token"
-				on:click={closeRecord}
+				class="btn variant-soft-primary shadow-md btn-lg font-medium px-12 mx-auto block"
+				on:click={createPrescription}
 			>
-				Đóng hồ sơ
+				<i class="fa-regular fa-prescription-bottle"></i>
+				<span>Tạo đơn thuốc</span>
 			</button>
 		{/if}
-	</div>
-</div>
+	{/if}
+	{#if record.status === RecordStatus.PROCESSING}
+		<button
+			type="button"
+			class="btn variant-filled-tertiary btn-lg w-full rounded-container-token"
+			on:click={closeRecord}
+		>
+			Đóng hồ sơ
+		</button>
+	{/if}
+</Container>

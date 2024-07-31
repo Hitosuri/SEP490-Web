@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Footer from '$lib/components/Footer.svelte';
+	import Footer from '$lib/components/layout/Footer.svelte';
 	import { reveal } from 'svelte-reveal';
 
 	const doctors: {

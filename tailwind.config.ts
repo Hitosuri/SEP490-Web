@@ -15,11 +15,12 @@ export default {
 	theme: {
 		extend: {
 			padding: {
-				'scroll-bar': 'var(--scrollbar-width, 0)',
-				header: '5.5rem'
+				'scroll-bar-dynamic': 'var(--scrollbar-width, 0)'
 			},
 			spacing: {
-				scrollBar: '0.5rem'
+				'scroll-bar': '0.5rem',
+				header: '5.5rem',
+				'side-bar': '18rem'
 			},
 			backgroundColor: ({ colors }) => ({
 				'schedule-pending': colors.orange[100],

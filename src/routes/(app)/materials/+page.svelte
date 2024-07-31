@@ -19,6 +19,7 @@
 	import endpoints from '$lib/endpoints';
 	import { uppercaseFirstLetter } from '$lib/helpers/utils';
 	import CreateMaterialForm from '$lib/components/materials/CreateMaterialForm.svelte';
+	import Container from '$lib/components/common/Container.svelte';
 
 	export let data: PageData;
 
@@ -151,7 +152,7 @@
 			align: 'left'
 		}
 	];
-	const sortableField = tableFields.filter((x) => x.sortable).map((x) => x.name);
+	const sortableField = tableFields.filter((x) => x?.sortable).map((x) => x!.name);
 	const singleFilterTypes: Selected<keyof Material>[] = [
 		{
 			label: 'Tên vật liệu',
@@ -325,7 +326,7 @@
 <svelte:head>
 	<title>Danh sách vật liệu</title>
 </svelte:head>
-<div class="px-4 pt-header h-full container mx-auto flex flex-col">
+<Container heightFull paddingTopHeader class="pt-4 flex flex-col">
 	<Breadcrumb crumbs={[{ label: 'Danh sách vật liệu' }]} />
 	<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Danh sách vật liệu</h1>
 	<div class="p-8 bg-slate-300 rounded-t-2xl space-y-6 flex-1">
@@ -630,7 +631,7 @@
 									</div>
 								{/each}
 								<p class="text-sm font-semibold text-surface-500 select-none">Giá</p>
-								<div class="flex input-group rounded-md w-full mt-1">
+								<div class="flex input-group border-surface-500/25 rounded-md w-full mt-1">
 									<Field {form} name="fromPrice">
 										<Control let:attrs>
 											<input
@@ -687,7 +688,7 @@
 									</div>
 								{/each}
 								<p class="text-sm font-semibold text-surface-500 select-none">Tồn kho</p>
-								<div class="flex input-group rounded-md w-full mt-1">
+								<div class="flex input-group border-surface-500/25 rounded-md w-full mt-1">
 									<Field {form} name="fromQuantity">
 										<Control let:attrs>
 											<input
@@ -724,7 +725,7 @@
 										items={materialTypes}
 										selected={materialTypes[0]}
 										onSelectedChange={(mt) => ($formData.materialType = mt?.value.id ?? 0)}
-										regionInput="!variant-soft-tertiary justify-between mt-1 w-full"
+										regionInput="input-group flex flex-row justify-between mt-1 w-full border-surface-500/40 py-2"
 										let:ValueComponent
 									>
 										<ValueComponent class="font-semibold px-2" />
@@ -782,4 +783,4 @@
 			on:sortField={(e) => selectSorting(e.detail)}
 		></DataTable>
 	</div>
-</div>
+</Container>

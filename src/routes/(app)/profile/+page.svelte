@@ -16,6 +16,7 @@
 	import { Tooltip } from 'bits-ui';
 	import { formatCompactDateTime } from '$lib/helpers/formatters';
 	import { recordStatusInfo } from '$lib/constants/record-constant';
+	import Container from '$lib/components/common/Container.svelte';
 
 	export let data: PageData;
 
@@ -49,9 +50,9 @@
 <svelte:head>
 	<title>Tài khoản</title>
 </svelte:head>
-<div class="p-4 pt-header container mx-auto">
-	<Breadcrumb crumbs={[{ label: 'Tài khoản cá nhân' }]} />
-	<div class="rounded-lg shadow-lg overflow-hidden border mt-4">
+<Container paddingTopHeader class="py-4">
+	<Breadcrumb crumbs={[{ label: 'Tài khoản cá nhân' }]} highlight />
+	<div class="rounded-lg shadow-lg overflow-hidden border mt-4 bg-white">
 		<div class="py-4 px-6 border-b flex">
 			<h3 class="h3 font-semibold">
 				{profileEditting ? 'Sửa thông tin tài khoản' : 'Thông tin tài khoản'}
@@ -86,7 +87,7 @@
 			/>
 		{/if}
 	</div>
-	<div class="rounded-lg shadow-lg overflow-hidden border mt-8">
+	<div class="rounded-lg shadow-lg overflow-hidden border mt-8 bg-white">
 		<div class="py-4 px-6 border-b">
 			<h3 class="h3 font-semibold">
 				{#if passwordEditting}
@@ -200,4 +201,4 @@
 			</div>
 		</div>
 	{/if}
-</div>
+</Container>

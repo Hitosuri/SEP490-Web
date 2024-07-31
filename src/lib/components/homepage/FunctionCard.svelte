@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Dotlottie from '$lib/components/Dotlottie.svelte';
+	import Dotlottie from '$lib/components/common/Dotlottie.svelte';
 	import { DotLottie } from '@lottiefiles/dotlottie-web';
 	import { twMerge } from 'tailwind-merge';
 

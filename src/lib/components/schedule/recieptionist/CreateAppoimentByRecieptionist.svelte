@@ -262,7 +262,7 @@
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
 			</div>
-			<div class="col-span-2">
+			<div class="col-span-2 flex flex-col">
 				<Field {form} name="description">
 					<Control let:attrs>
 						<Label class="font-semibold text-surface-500 select-none mb-1">

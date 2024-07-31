@@ -8,17 +8,24 @@
 	import { getContext, onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { Writable } from 'svelte/store';
+	import Container from '../common/Container.svelte';
+	import { scheduleStepInMinute } from '$lib/constants/schedule-constant';
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
+	const stepInMiliseconds = 1000 * 60 * scheduleStepInMinute;
 	let patientQueue: QueueItem[] | undefined = undefined;
 	let lastDataTime: Date = new Date();
 
-	$: console.log(patientQueue);
+	$: timeToNextPatient =
+		!patientQueue || patientQueue.length === 0
+			? undefined
+			: patientQueue[0].startAt.getTime() - new Date().getTime();
+	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > stepInMiliseconds);
+	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= stepInMiliseconds);
 
 	onMount(async () => {
 		await getPatientQueue();
-		lastDataTime = new Date();
 		MinuteTick.addEvent(getPatientQueue);
 	});
 
@@ -45,9 +52,7 @@
 
 		data.body.forEach((x) => {
 			x.startAt = new Date(x.startAt);
-			x.startAt.setMinutes(x.startAt.getMinutes() - x.startAt.getTimezoneOffset());
 			x.endAt = new Date(x.endAt);
-			x.endAt.setMinutes(x.endAt.getMinutes() - x.endAt.getTimezoneOffset());
 		});
 		data.body.sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
 
@@ -56,9 +61,10 @@
 	}
 
 	function pullSchedule() {
-		if (!$userStore?.roles.includes(Role.Doctor)) {
+		if (!$userStore?.roles.includes(Role.Doctor) || !patientQueue?.[0]) {
 			return;
 		}
+		const nextPatient = patientQueue[0];
 		const newStartAt = new Date();
 		const newMinutes = Math.ceil(newStartAt.getMinutes() / 15) * 15;
 		newStartAt.setMinutes(newMinutes);
@@ -66,8 +72,7 @@
 		const modalSetting: ModalSettings = {
 			type: 'confirm',
 			title: 'Xác nhận thay đổi thời gian',
-			// body: `Vui lòng xác nhận thay đổi thời gian bắt đầu lịch hẹn của bệnh nhân ${schedule.patient.name} từ ${formatHourMinute(schedule.startAt)} vào lúc ${formatHourMinute(newStartAt)}`,
-			body: '',
+			body: `Vui lòng xác nhận thay đổi thời gian bắt đầu lịch hẹn của bệnh nhân ${nextPatient.patientName} từ ${formatHourMinute(nextPatient.startAt)} thành ${formatHourMinute(newStartAt)}`,
 			response: (r) => {
 				if (!r || !$userStore) {
 					return;
@@ -99,6 +104,7 @@
 
 							return Promise.reject();
 						}
+						getPatientQueue();
 						return 'Cập nhật lịch hẹn thành công';
 					},
 					{
@@ -116,124 +122,133 @@
 <svelte:head>
 	<title>Bảng chức năng - Nha khoa Trịnh</title>
 </svelte:head>
-<div class="bg-stone-50 min-h-screen">
-	<div class="pt-[5.5rem] container mx-auto">
-		<div class="flex gap-8 p-4">
-			<div
-				class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 p-4 border rounded-xl flex-1 flex-shrink-0 bg-white"
-			>
-				<FunctionCard
-					lottieAnimUrl="/images/animations/user.lottie"
-					title="Nhân viên"
-					class="from-sky-400 to-indigo-400"
-					href="/users"
-				/>
-				<FunctionCard
-					lottieAnimUrl="/images/animations/treatment.lottie"
-					title="Phương pháp trị liệu"
-					class="from-yellow-400 to-orange-400"
-				/>
-				<FunctionCard
-					lottieAnimUrl="/images/animations/material.lottie"
-					title="Thuốc/Dụng cụ"
-					class="from-indigo-400 to-purple-400"
-					href="/materials"
-				/>
-				<FunctionCard
-					lottieAnimUrl="/images/animations/patient.lottie"
-					title="Bệnh nhân"
-					class="from-pink-400 to-red-400"
-					href="/patients"
-				/>
-				<FunctionCard
-					lottieAnimUrl="/images/animations/schedule.lottie"
-					title="Đặt lịch"
-					class="from-emerald-400 to-lime-400"
-					href="/schedule"
-				/>
-			</div>
-			<div class="flex-1 flex-shrink-0">
-				<div class="border rounded-xl bg-white h-fit overflow-hidden">
-					<div class="py-4 px-6 bg-tertiary-500 flex justify-between items-center">
-						<span class="text-2xl font-semibold text-white">Danh sách chờ khám</span>
-						{#if patientQueue && patientQueue.length > 0}
-							<button
-								type="button"
-								class="btn ring-4 ring-white py-1.5 px-3 text-white font-bold"
-								on:click={pullSchedule}>Gọi bệnh nhân tiếp theo</button
-							>
-						{/if}
-					</div>
-					<div>
-						<table class="w-full">
-							<thead>
-								<tr class="text-sm font-semibold">
-									<th class="py-2 px-4 border-r"> # </th>
-									<th class="py-2 px-4 text-start border-r"> Tên bệnh nhân </th>
-									<th class="py-2 px-4 text-start"> Lý do khám </th>
-								</tr>
-							</thead>
-							<tbody>
-								{#if patientQueue}
-									{#each patientQueue as queueItem, i (queueItem.id)}
-										<tr
-											class="group cursor-pointer odd:bg-slate-50 border-t {i === 0
-												? 'hover:bg-primary-50'
-												: ''}"
-											on:click={() => {
-												console.log(queueItem);
-											}}
-										>
-											<td class="p-0 border-r {i === 0 ? 'group-hover:border-primary-300' : ''}">
-												<svelte:element
-													this={i == 0 ? 'a' : 'div'}
-													href="/records/{queueItem.id}"
-													class="block px-4 py-4 text-center font-semibold"
-												>
-													{i + 1}
-												</svelte:element>
-											</td>
-											<td class="p-0 border-r {i === 0 ? 'group-hover:border-primary-300' : ''}">
-												<svelte:element
-													this={i == 0 ? 'a' : 'div'}
-													href="/records/{queueItem.id}"
-													class="block px-4 py-4"
-												>
-													{queueItem.patientName}
-												</svelte:element>
-											</td>
-											<td class="p-0">
-												<svelte:element
-													this={i == 0 ? 'a' : 'div'}
-													href="/records/{queueItem.id}"
-													class="block px-4 py-4"
-												>
-													{queueItem.reason}
-												</svelte:element>
-											</td>
-										</tr>
-									{/each}
-								{/if}
-							</tbody>
-						</table>
-						{#if !patientQueue}
-							<h3 class="h3 font-semibold text-center text-surface-400 py-4 border-t">
-								Đang tải thông tin
-							</h3>
-						{/if}
-						{#if patientQueue?.length === 0}
-							<h3 class="h3 font-semibold text-center text-tertiary-500 py-4 border-t">
-								Danh sách trống
-							</h3>
-						{/if}
-					</div>
-				</div>
-				{#if patientQueue}
-					<p class="text-end text-xs mt-2">
-						Dữ liệu được lấy lúc {formatHourMinute(lastDataTime)}
-					</p>
-				{/if}
-			</div>
-		</div>
+<Container paddingTopHeader class="pt-4 flex flex-col-reverse gap-4 p-4">
+	<div
+		class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 p-4 border rounded-xl flex-1 flex-shrink-0 bg-white"
+	>
+		<FunctionCard
+			lottieAnimUrl="/images/animations/user.lottie"
+			title="Nhân viên"
+			class="from-sky-400 to-indigo-400"
+			href="/users"
+		/>
+		<FunctionCard
+			lottieAnimUrl="/images/animations/treatment.lottie"
+			title="Phương pháp trị liệu"
+			class="from-yellow-400 to-orange-400"
+		/>
+		<FunctionCard
+			lottieAnimUrl="/images/animations/material.lottie"
+			title="Thuốc/Dụng cụ"
+			class="from-indigo-400 to-purple-400"
+			href="/materials"
+		/>
+		<FunctionCard
+			lottieAnimUrl="/images/animations/patient.lottie"
+			title="Bệnh nhân"
+			class="from-pink-400 to-red-400"
+			href="/patients"
+		/>
+		<FunctionCard
+			lottieAnimUrl="/images/animations/schedule.lottie"
+			title="Đặt lịch"
+			class="from-emerald-400 to-lime-400"
+			href="/schedule"
+		/>
 	</div>
-</div>
+	{#if $userStore?.roles.includes(Role.Doctor)}
+		<div class="flex-1 flex-shrink-0">
+			<div class="border rounded-xl bg-white h-fit overflow-hidden">
+				<div class="py-4 px-6 bg-tertiary-500 flex justify-between items-center">
+					<span class="text-2xl font-semibold text-white">Danh sách chờ khám</span>
+					{#if canPullSchedule}
+						<button
+							type="button"
+							class="btn ring-4 ring-white py-1.5 px-3 text-white font-bold hover:bg-white/10"
+							on:click={pullSchedule}>Gọi bệnh nhân tiếp theo</button
+						>
+					{/if}
+				</div>
+				<div>
+					<table class="w-full">
+						<thead>
+							<tr class="text-sm font-semibold">
+								<th class="py-2 px-4 border-r">#</th>
+								<th class="py-2 px-4 text-start border-r">Tên bệnh nhân</th>
+								<th class="py-2 px-4 text-start border-r">Thời gian khám</th>
+								<th class="py-2 px-4 text-start">Lý do khám</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#if patientQueue}
+								{#each patientQueue as queueItem, i (queueItem.id)}
+									{@const showLink = i === 0 && firstPatientReady}
+									{@const elementTag = showLink ? 'a' : 'div'}
+									<tr
+										class="group odd:bg-slate-50 border-t {showLink
+											? 'hover:bg-primary-50 cursor-pointer'
+											: ''}"
+									>
+										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
+											<svelte:element
+												this={elementTag}
+												href="/records/{queueItem.id}"
+												class="block px-4 py-4 text-center font-semibold"
+											>
+												{i + 1}
+											</svelte:element>
+										</td>
+										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
+											<svelte:element
+												this={elementTag}
+												href="/records/{queueItem.id}"
+												class="block px-4 py-4"
+											>
+												{queueItem.patientName}
+											</svelte:element>
+										</td>
+										<td class="p-0 border-r">
+											<svelte:element
+												this={elementTag}
+												href="/records/{queueItem.id}"
+												class="block px-4 py-4"
+											>
+												{formatHourMinute(queueItem.startAt)}
+												-
+												{formatHourMinute(queueItem.endAt)}
+											</svelte:element>
+										</td>
+										<td class="p-0">
+											<svelte:element
+												this={elementTag}
+												href="/records/{queueItem.id}"
+												class="block px-4 py-4"
+											>
+												{queueItem.reason}
+											</svelte:element>
+										</td>
+									</tr>
+								{/each}
+							{/if}
+						</tbody>
+					</table>
+					{#if !patientQueue}
+						<h3 class="h3 font-semibold text-center text-surface-400 py-4 border-t">
+							Đang tải thông tin
+						</h3>
+					{/if}
+					{#if patientQueue?.length === 0}
+						<h3 class="h3 font-semibold text-center text-tertiary-500 py-4 border-t">
+							Danh sách trống
+						</h3>
+					{/if}
+				</div>
+			</div>
+			{#if patientQueue}
+				<p class="text-end text-xs mt-2">
+					Dữ liệu được lấy lúc {formatHourMinute(lastDataTime)}
+				</p>
+			{/if}
+		</div>
+	{/if}
+</Container>

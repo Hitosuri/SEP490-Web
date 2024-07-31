@@ -489,7 +489,7 @@
 				<div
 					bind:this={scheduleListElement}
 					class="min-h-56 {scheduleMenuOpened
-						? 'overflow-hidden pr-scrollBar pb-scrollBar'
+						? 'overflow-hidden pr-scroll-bar pb-scroll-bar'
 						: 'overflow-x-scroll'} {scheduleGrabing ? 'select-none' : ''}"
 				>
 					<div class="h-fit w-fit pl-40">

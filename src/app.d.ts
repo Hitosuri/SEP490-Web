@@ -236,3 +236,11 @@ type TableField<T> = {
 		href?: (value: T) => string;
 	};
 }[keyof T];
+
+interface UserFeatureDetail {
+	id: import('$lib/constants/user-feature-constant').UserFeature;
+	title: string;
+	faIcon: string;
+	hasDuotone: boolean;
+	url: string;
+}

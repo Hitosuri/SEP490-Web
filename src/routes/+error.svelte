@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import Dotlottie from '$lib/components/Dotlottie.svelte';
+	import Dotlottie from '$lib/components/common/Dotlottie.svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 
 	let errorTypes: {

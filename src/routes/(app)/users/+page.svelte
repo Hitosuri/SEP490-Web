@@ -20,6 +20,7 @@
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
 	import { type Writable } from 'svelte/store';
 	import { getContext } from 'svelte';
+	import Container from '$lib/components/common/Container.svelte';
 
 	export let data: PageData;
 
@@ -268,8 +269,8 @@
 <svelte:head>
 	<title>Danh sách nhân viên</title>
 </svelte:head>
-<div class="px-4 pt-header h-full container mx-auto flex flex-col">
-	<Breadcrumb crumbs={[{ label: 'Danh sách nhân viên' }]} />
+<Container heightFull heightScreenMin paddingTopHeader class="pt-4 flex flex-col">
+	<Breadcrumb crumbs={[{ label: 'Danh sách nhân viên' }]} highlight />
 	<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Danh sách nhân viên</h1>
 	<div class="p-8 bg-slate-300 rounded-t-2xl space-y-6 flex-1">
 		<div class="p-2 rounded-xl bg-white shadow-md group">
@@ -597,4 +598,4 @@
 			{/if}
 		</DataTable>
 	</div>
-</div>
+</Container>
