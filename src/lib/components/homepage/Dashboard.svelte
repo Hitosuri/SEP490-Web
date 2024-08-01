@@ -10,12 +10,14 @@
 	import type { Writable } from 'svelte/store';
 	import Container from '../common/Container.svelte';
 	import { scheduleStepInMinute } from '$lib/constants/schedule-constant';
+	import { userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const stepInMiliseconds = 1000 * 60 * scheduleStepInMinute;
 	let patientQueue: QueueItem[] | undefined = undefined;
 	let lastDataTime: Date = new Date();
+	const allFeature = Object.values(userFeatureDetails);
 
 	$: timeToNextPatient =
 		!patientQueue || patientQueue.length === 0
@@ -126,35 +128,14 @@
 	<div
 		class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 p-4 border rounded-xl flex-1 flex-shrink-0 bg-white"
 	>
-		<FunctionCard
-			lottieAnimUrl="/images/animations/user.lottie"
-			title="Nhân viên"
-			class="from-sky-400 to-indigo-400"
-			href="/users"
-		/>
-		<FunctionCard
-			lottieAnimUrl="/images/animations/treatment.lottie"
-			title="Phương pháp trị liệu"
-			class="from-yellow-400 to-orange-400"
-		/>
-		<FunctionCard
-			lottieAnimUrl="/images/animations/material.lottie"
-			title="Thuốc/Dụng cụ"
-			class="from-indigo-400 to-purple-400"
-			href="/materials"
-		/>
-		<FunctionCard
-			lottieAnimUrl="/images/animations/patient.lottie"
-			title="Bệnh nhân"
-			class="from-pink-400 to-red-400"
-			href="/patients"
-		/>
-		<FunctionCard
-			lottieAnimUrl="/images/animations/schedule.lottie"
-			title="Đặt lịch"
-			class="from-emerald-400 to-lime-400"
-			href="/schedule"
-		/>
+		{#each allFeature as featureDetail (featureDetail.id)}
+			<FunctionCard
+				lottieAnimUrl={featureDetail.lottieAnim}
+				title={featureDetail.title}
+				class={featureDetail.class}
+				href={featureDetail.url}
+			/>
+		{/each}
 	</div>
 	{#if $userStore?.roles.includes(Role.Doctor)}
 		<div class="flex-1 flex-shrink-0">

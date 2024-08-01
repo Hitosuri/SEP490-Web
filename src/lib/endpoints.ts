@@ -49,7 +49,9 @@ export default {
 		deleteByRecieptionist: (id: number) => `${PUBLIC_API_HOST}/api/schedules/DeletedSchedule/${id}`,
 		checkin: (id: number) => `${PUBLIC_API_HOST}/api/schedules/CheckInSchedule?scheduleId=${id}`,
 		pullSchedule: (doctorId: number) =>
-			`${PUBLIC_API_HOST}/api/schedules/Reschedule?doctorId=${doctorId}`
+			`${PUBLIC_API_HOST}/api/schedules/Reschedule?doctorId=${doctorId}`,
+		confirmFromPatient: (token: string, confirmed: boolean) =>
+			`${PUBLIC_API_HOST}/api/schedules/ConfirmScheduleByPatient?token=${encodeURIComponent(token)}&confirm=${confirmed}`
 	},
 	records: {
 		get: (id: number) => `${PUBLIC_API_HOST}/api/record/all/${id}`,

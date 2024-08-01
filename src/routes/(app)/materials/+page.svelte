@@ -321,13 +321,17 @@
 			ignoreDelay ? 0 : 400
 		);
 	}
+
+	function importMaterial(material: Material) {
+		console.log(material);
+	}
 </script>
 
 <svelte:head>
 	<title>Danh sách vật liệu</title>
 </svelte:head>
-<Container heightFull paddingTopHeader class="pt-4 flex flex-col">
-	<Breadcrumb crumbs={[{ label: 'Danh sách vật liệu' }]} />
+<Container heightFull heightScreenMin paddingTopHeader class="pt-4 flex flex-col">
+	<Breadcrumb crumbs={[{ label: 'Danh sách vật liệu' }]} highlight />
 	<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Danh sách vật liệu</h1>
 	<div class="p-8 bg-slate-300 rounded-t-2xl space-y-6 flex-1">
 		<div class="p-2 rounded-xl bg-white shadow-md group">
@@ -520,12 +524,6 @@
 				>
 					<i class="fa-regular fa-sliders"></i>
 					<span class="pl-2">Tìm kiếm kết hợp</span>
-				</button>
-				<button class="btn variant-filled-warning rounded-md font-medium">
-					<i class="fa-regular fa-file-import"></i>
-				</button>
-				<button class="btn variant-filled-tertiary rounded-md font-medium">
-					<i class="fa-regular fa-file-export"></i>
 				</button>
 				<Dialog.Root>
 					<Dialog.Trigger class="btn variant-filled-primary rounded-md font-medium">
@@ -776,6 +774,13 @@
 			bind:sortingAscending
 			bind:loading
 			fields={tableFields}
+			actionMenu={[
+				{
+					icon: 'fa-regular fa-file-import',
+					label: 'Nhập vật tư',
+					click: importMaterial
+				}
+			]}
 			on:pageChange={(e) => {
 				currentPage = e.detail;
 				filtering(lastestFilterOption, e.detail, pageSize, true);

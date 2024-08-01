@@ -16,6 +16,11 @@
 	export let showEdit = true;
 	export let showDelete = true;
 	export let loading = false;
+	export let actionMenu: {
+		icon: string;
+		label: string;
+		click?: (item: T) => void;
+	}[] = [];
 
 	const dispatch = createEventDispatcher<{
 		pageChange: number;
@@ -196,7 +201,7 @@
 											easing: cubicOut
 										}}
 										sideOffset={8}
-										class="w-full max-w-36 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+										class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
 									>
 										{#if showDetail}
 											<DropdownMenu.Item
@@ -210,6 +215,20 @@
 											</DropdownMenu.Item>
 										{/if}
 										{#if showDetail && (showEdit || showDelete)}
+											<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
+										{/if}
+										{#if actionMenu.length > 0}
+											{#each actionMenu as action (action)}
+												<DropdownMenu.Item
+													on:click={() => action.click?.(extendedItem.item)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center">
+														<i class="{action.icon} block"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">{action.label}</span>
+												</DropdownMenu.Item>
+											{/each}
 											<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
 										{/if}
 										{#if showEdit}

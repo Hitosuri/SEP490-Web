@@ -12,34 +12,44 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		title: 'Nhân viên',
 		faIcon: 'fa-users',
 		hasDuotone: true,
-		url: '/users'
+		url: '/users',
+		lottieAnim: '/images/animations/user.lottie',
+		class: 'from-sky-400 to-indigo-400'
 	},
 	[UserFeature.SERVICES_MANAGEMENT]: {
 		id: UserFeature.SERVICES_MANAGEMENT,
 		title: 'Dịch vụ',
 		faIcon: 'fa-teeth-open',
 		hasDuotone: true,
-		url: '/services'
+		url: '/services',
+		lottieAnim: '/images/animations/treatment.lottie',
+		class: 'from-yellow-400 to-orange-400'
 	},
 	[UserFeature.MATERIALS_MANAGEMENT]: {
 		id: UserFeature.MATERIALS_MANAGEMENT,
 		title: 'Vật tư',
 		faIcon: 'fa-capsules',
 		hasDuotone: true,
-		url: '/materials'
+		url: '/materials',
+		lottieAnim: '/images/animations/material.lottie',
+		class: 'from-indigo-400 to-purple-400'
 	},
 	[UserFeature.PATIENTS_MANAGEMENT]: {
 		id: UserFeature.PATIENTS_MANAGEMENT,
 		title: 'Bệnh nhân',
 		faIcon: 'fa-bed-pulse',
 		hasDuotone: true,
-		url: '/patients'
+		url: '/patients',
+		lottieAnim: '/images/animations/patient.lottie',
+		class: 'from-pink-400 to-red-400'
 	},
 	[UserFeature.SCHEDULE_MANAGEMENT]: {
 		id: UserFeature.SCHEDULE_MANAGEMENT,
 		title: 'Đặt lịch',
 		faIcon: 'fa-calendar-range',
 		hasDuotone: true,
-		url: '/schedule'
+		url: '/schedule',
+		lottieAnim: '/images/animations/schedule.lottie',
+		class: 'from-emerald-400 to-lime-400'
 	}
 };

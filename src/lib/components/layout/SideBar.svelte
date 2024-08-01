@@ -3,6 +3,7 @@
 	import usingFeature from '$lib/stores/using-feature-store';
 	import { getContext } from 'svelte';
 	import type { Readable, Writable } from 'svelte/store';
+	import { fly } from 'svelte/transition';
 
 	const allFeature = Object.values(userFeatureDetails);
 	let sideBarOpenActive = getContext<Writable<boolean>>('sidebar-active');
@@ -21,6 +22,7 @@
 			.replace(/\p{Diacritic}/gu, '')
 			.includes(normalizedSearchInput)
 	);
+	$: usingFeatureIndex = filteredFeatures.findIndex((x) => x.id === $usingFeature);
 </script>
 
 <div
@@ -43,8 +45,8 @@
 				</button>
 			</div>
 		</div>
-		<div class="px-6 space-y-4">
-			<div class="relative my-4">
+		<div class="px-6 pt-4">
+			<div class="relative mb-6">
 				<div class="absolute top-[7px] left-4 text-lg text-surface-400">
 					<i class="fa-solid fa-magnifying-glass"></i>
 				</div>
@@ -55,27 +57,45 @@
 					class="input rounded-container-token bg-surface-200 border-transparent pl-11"
 				/>
 			</div>
-			{#each filteredFeatures as feature (feature.id)}
-				{@const active = $usingFeature && feature.id === userFeatureDetails[$usingFeature].id}
-				<a
-					href={feature.url}
-					class="flex items-center rounded-container-token text-black {active
-						? 'bg-slate-100'
-						: 'bg-white'}"
-				>
-					<div
-						class="size-16 text-2xl flex justify-center items-center mx-1 {active
-							? 'text-primary-500'
-							: 'text-surface-400'}"
-					>
-						<i class="fa-solid {!active && feature.hasDuotone ? 'fa-duotone' : ''} {feature.faIcon}"
-						></i>
-					</div>
-					<p class={active ? 'text-black font-bold' : 'text-surface-400 font-semibold'}>
-						{feature.title}
-					</p>
-				</a>
-			{/each}
+			<div class="space-y-4 relative">
+				<div
+					class="absolute w-full h-16 bg-slate-100 rounded-container-token transition-all duration-300 -z-10 {usingFeatureIndex >=
+					0
+						? 'opacity-100'
+						: 'opacity-0'}"
+					style="top: {(64 + 16) * Math.max(0, usingFeatureIndex)}px;"
+				></div>
+				{#each filteredFeatures as feature, i (feature.id)}
+					{@const active = usingFeatureIndex === i}
+					<a href={feature.url} class="flex items-center">
+						<div
+							class="size-16 text-2xl flex justify-center items-center mx-1 {active
+								? 'text-primary-500'
+								: 'text-surface-400'}"
+						>
+							<i
+								class="fa-solid {!active && feature.hasDuotone
+									? 'fa-duotone'
+									: ''} {feature.faIcon}"
+							></i>
+						</div>
+						<p class="flex-1 {active ? 'text-black font-bold' : 'text-surface-400 font-semibold'}">
+							{feature.title}
+						</p>
+						{#if active}
+							<div
+								transition:fly={{
+									duration: 200,
+									x: -16
+								}}
+								class="text-slate-500 -mr-3 ml-3"
+							>
+								<i class="fa-solid fa-caret-right"></i>
+							</div>
+						{/if}
+					</a>
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>

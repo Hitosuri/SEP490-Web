@@ -21,16 +21,16 @@
 		lottieAnim = dotLottie;
 	}
 
-	function onMouseEnter() {
-		lottieAnim?.setLoop(true);
-		if (!lottieAnim?.isPlaying) {
-			lottieAnim?.play();
-		}
-	}
+	// function onMouseEnter() {
+	// 	lottieAnim?.setLoop(true);
+	// 	if (!lottieAnim?.isPlaying) {
+	// 		lottieAnim?.play();
+	// 	}
+	// }
 
-	function onMouseLeave() {
-		lottieAnim?.setLoop(false);
-	}
+	// function onMouseLeave() {
+	// 	lottieAnim?.setLoop(false);
+	// }
 </script>
 
 <svelte:element
@@ -41,8 +41,6 @@
 	)}
 	role="link"
 	tabindex="-9999"
-	on:mouseenter={onMouseEnter}
-	on:mouseleave={onMouseLeave}
 	{...href ? { href } : {}}
 >
 	<Dotlottie

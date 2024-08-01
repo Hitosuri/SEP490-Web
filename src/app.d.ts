@@ -243,4 +243,6 @@ interface UserFeatureDetail {
 	faIcon: string;
 	hasDuotone: boolean;
 	url: string;
+	lottieAnim: string;
+	class: string;
 }

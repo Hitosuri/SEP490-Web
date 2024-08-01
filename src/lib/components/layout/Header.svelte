@@ -22,6 +22,7 @@
 	let loginForm: SuperValidated<z.infer<typeof loginSchema>> | undefined;
 	let logoutForm: HTMLFormElement;
 	let inLandingPage = false;
+	let inAuth = false;
 	let scrollStoreUnsub: Unsubscriber;
 	let userStoreUnsub: Unsubscriber;
 	let showHeader = false;
@@ -34,6 +35,7 @@
 
 	$: isStaff = $userStore && !$userStore.isPatient;
 	$: inLandingPage = $page.url.pathname === '/' && !isStaff;
+	$: inAuth = $page.url.pathname.startsWith('/auth');
 
 	onMount(async () => {
 		let lastScroll = 0;
@@ -101,7 +103,7 @@
 				: 'py-0'}"
 		>
 			<svelte:fragment slot="lead">
-				{#if !inLandingPage}
+				{#if !inLandingPage && !inAuth}
 					<button
 						type="button"
 						class="btn-icon size-10 text-2xl mr-4 transition-all hover:bg-surface-200 hover:text-surface-700 text-surface-500"
