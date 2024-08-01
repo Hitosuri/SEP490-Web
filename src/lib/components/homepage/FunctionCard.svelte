@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Dotlottie from '$lib/components/common/Dotlottie.svelte';
 	import { DotLottie } from '@lottiefiles/dotlottie-web';
 	import { twMerge } from 'tailwind-merge';
+	import lottie from 'lottie-web';
+	import { onMount } from 'svelte';
 
 	interface $$Props {
 		lottieAnimUrl: string;
@@ -16,6 +17,11 @@
 
 	let lottieAnim: DotLottie | undefined;
 	let tag = href ? 'a' : 'div';
+
+	onMount(async () => {
+		const defineElement = (await import('@lordicon/element')).defineElement;
+		defineElement(lottie.loadAnimation);
+	});
 
 	function dotLottieRefCallback(dotLottie: DotLottie) {
 		lottieAnim = dotLottie;
@@ -43,13 +49,16 @@
 	tabindex="-9999"
 	{...href ? { href } : {}}
 >
-	<Dotlottie
+	<div class="size-36 p-2 bg-white/30 rounded-full z-10 drop-shadow">
+		<lord-icon trigger="hover" src={lottieAnimUrl.slice(0, -6) + 'json'} class="size-32" />
+	</div>
+	<!-- <Dotlottie
 		class="size-36 p-2 max-w-full bg-white/30 rounded-full z-10 drop-shadow"
 		src={lottieAnimUrl}
 		autoResizeCanvas
 		autoplay
 		{dotLottieRefCallback}
-	/>
+	/> -->
 	<p
 		class="font-semibold w-full tracking-wide z-10 text-white drop-shadow-xl uppercase text-center relative"
 	>

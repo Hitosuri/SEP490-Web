@@ -3,7 +3,8 @@ export enum UserFeature {
 	SERVICES_MANAGEMENT = 2,
 	MATERIALS_MANAGEMENT = 3,
 	PATIENTS_MANAGEMENT = 4,
-	SCHEDULE_MANAGEMENT = 5
+	SCHEDULE_MANAGEMENT = 5,
+	PAYMENT_MANAGEMENT = 6
 }
 
 export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
@@ -56,5 +57,15 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		lottieAnim: '/images/animations/schedule.lottie',
 		class: 'from-emerald-400 to-lime-400',
 		routes: ['/(app)/schedule']
+	},
+	[UserFeature.PAYMENT_MANAGEMENT]: {
+		id: UserFeature.PAYMENT_MANAGEMENT,
+		title: 'Hoá đơn',
+		faIcon: 'fa-file-invoice',
+		hasDuotone: true,
+		url: '/invoices',
+		lottieAnim: '/images/animations/invoice.lottie',
+		class: 'from-teal-400 to-cyan-400',
+		routes: ['/(app)/invoices']
 	}
 };
