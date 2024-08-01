@@ -11,7 +11,7 @@
 	import type { PageData } from './(app)/$types';
 	import { setContext } from 'svelte';
 	import { browser } from '$app/environment';
-	import usingFeature from '$lib/stores/using-feature-store';
+	import usingSubFeature from '$lib/stores/using-subfeature-store';
 
 	export let data: PageData;
 
@@ -21,7 +21,7 @@
 		if ($navigating) {
 			nProgress.start();
 			if (browser) {
-				usingFeature.set(undefined);
+				usingSubFeature.set(undefined);
 			}
 		} else {
 			nProgress.done();

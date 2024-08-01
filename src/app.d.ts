@@ -245,4 +245,11 @@ interface UserFeatureDetail {
 	url: string;
 	lottieAnim: string;
 	class: string;
+	routes: string[];
+}
+
+interface UserSubFeatureDetail {
+	title: string;
+	faIcon: string;
+	active: boolean;
 }

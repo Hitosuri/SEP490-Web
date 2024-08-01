@@ -14,7 +14,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/users',
 		lottieAnim: '/images/animations/user.lottie',
-		class: 'from-sky-400 to-indigo-400'
+		class: 'from-sky-400 to-indigo-400',
+		routes: ['/(app)/users']
 	},
 	[UserFeature.SERVICES_MANAGEMENT]: {
 		id: UserFeature.SERVICES_MANAGEMENT,
@@ -23,7 +24,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/services',
 		lottieAnim: '/images/animations/treatment.lottie',
-		class: 'from-yellow-400 to-orange-400'
+		class: 'from-yellow-400 to-orange-400',
+		routes: ['/(app)/services']
 	},
 	[UserFeature.MATERIALS_MANAGEMENT]: {
 		id: UserFeature.MATERIALS_MANAGEMENT,
@@ -32,7 +34,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/materials',
 		lottieAnim: '/images/animations/material.lottie',
-		class: 'from-indigo-400 to-purple-400'
+		class: 'from-indigo-400 to-purple-400',
+		routes: ['/(app)/materials']
 	},
 	[UserFeature.PATIENTS_MANAGEMENT]: {
 		id: UserFeature.PATIENTS_MANAGEMENT,
@@ -41,7 +44,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/patients',
 		lottieAnim: '/images/animations/patient.lottie',
-		class: 'from-pink-400 to-red-400'
+		class: 'from-pink-400 to-red-400',
+		routes: ['/(app)/patients', '/(app)/records/[id]']
 	},
 	[UserFeature.SCHEDULE_MANAGEMENT]: {
 		id: UserFeature.SCHEDULE_MANAGEMENT,
@@ -50,6 +54,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/schedule',
 		lottieAnim: '/images/animations/schedule.lottie',
-		class: 'from-emerald-400 to-lime-400'
+		class: 'from-emerald-400 to-lime-400',
+		routes: ['/(app)/schedule']
 	}
 };

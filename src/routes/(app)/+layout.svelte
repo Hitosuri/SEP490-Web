@@ -13,7 +13,6 @@
 		return !!(user && !user.isPatient && sideBarState && !inAuth);
 	});
 
-	$: inLandingPage = $page.url.pathname;
 	$: inAuth = $page.url.pathname.startsWith('/auth');
 
 	setContext('sidebar-active', sideBarOpenActive);

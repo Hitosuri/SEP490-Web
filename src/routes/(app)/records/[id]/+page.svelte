@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import type { Writable } from 'svelte/store';
 	import PrescriptionInRecord from '$lib/components/prescriptions/PrescriptionInRecord.svelte';
@@ -10,6 +10,7 @@
 	import { RecordStatus } from '$lib/constants/record-constant';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import Container from '$lib/components/common/Container.svelte';
+	import usingSubFeature from '$lib/stores/using-subfeature-store';
 
 	export let data: PageData;
 	console.log(data);
@@ -18,6 +19,16 @@
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const record = data.record;
 	let prescription: Prescription | undefined = data.prescription;
+
+	onMount(() => {
+		usingSubFeature.set([
+			{
+				active: true,
+				title: 'Hồ sơ nha khoa',
+				faIcon: 'fa-solid fa-folder-open'
+			}
+		]);
+	});
 
 	async function createPrescription() {
 		if (!$userStore) {

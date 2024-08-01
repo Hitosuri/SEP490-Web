@@ -9,7 +9,7 @@
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
-	import { getContext, type ComponentEvents } from 'svelte';
+	import { getContext, onMount, type ComponentEvents } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
 	import { type Writable } from 'svelte/store';
@@ -17,6 +17,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { recordStatusInfo } from '$lib/constants/record-constant';
 	import Container from '$lib/components/common/Container.svelte';
+	import usingSubFeature from '$lib/stores/using-subfeature-store';
 
 	export let data: PageData;
 
@@ -81,6 +82,16 @@
 	let editting = false;
 
 	$: setDefaultData(patient);
+
+	onMount(() => {
+		usingSubFeature.set([
+			{
+				active: true,
+				title: `BN. ${patient.name ?? ''}`,
+				faIcon: 'fa-solid fa-square-info'
+			}
+		]);
+	});
 
 	function setDefaultData(patient: Patient) {
 		$formData.name = patient.name ?? undefined;
