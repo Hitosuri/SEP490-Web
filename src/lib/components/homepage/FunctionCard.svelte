@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { DotLottie } from '@lottiefiles/dotlottie-web';
 	import { twMerge } from 'tailwind-merge';
-	import lottie from 'lottie-web';
 	import { onMount } from 'svelte';
 
 	interface $$Props {
@@ -20,6 +19,7 @@
 
 	onMount(async () => {
 		const defineElement = (await import('@lordicon/element')).defineElement;
+		const lottie = (await import('lottie-web')).default;
 		defineElement(lottie.loadAnimation);
 	});
 
