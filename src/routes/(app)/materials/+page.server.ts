@@ -5,6 +5,9 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { materialFilterSchema } from '$lib/form-schemas/material-filter-schema';
 import endpoints from '$lib/endpoints';
 import { createMaterialSchema } from '$lib/form-schemas/create-material-schema';
+import { materialTypeCreateSchema } from '$lib/form-schemas/material-type-create-schema';
+import { createSupplierSchema } from '$lib/form-schemas/create-supplier-schema';
+import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, Role.Accountant);
@@ -19,6 +22,9 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	return {
 		materialFilterForm: await superValidate(zod(materialFilterSchema)),
 		createMaterialForm: await superValidate(zod(createMaterialSchema)),
+		materialTypeCreateForm: await superValidate(zod(materialTypeCreateSchema)),
+		createSupplierForm: await superValidate(zod(createSupplierSchema)),
+		importMaterialForm: await superValidate(zod(importMaterialSchema)),
 		materialListPage
 	};
 };

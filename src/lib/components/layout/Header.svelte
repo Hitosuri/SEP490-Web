@@ -83,7 +83,7 @@
 </script>
 
 <div
-	class="fixed top-0 right-0 shadow shadow-black/15 z-10 {$sideBarOpened
+	class="fixed top-0 right-0 shadow shadow-black/15 z-10 {$sideBarOpened && !inAuth
 		? 'left-side-bar'
 		: 'left-0'} {inLandingPage && !showHeader ? '-translate-y-24' : ''} {inLandingPage
 		? 'py-4'

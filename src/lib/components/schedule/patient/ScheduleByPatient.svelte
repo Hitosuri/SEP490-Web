@@ -101,7 +101,7 @@
 
 				toast.promise(
 					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.deleteByRecieptionist(schedule.id), {
+						const response = await fetch(endpoints.schedule.deleteByPatient(schedule.id), {
 							method: 'DELETE',
 							headers: {
 								'content-type': 'application/json',

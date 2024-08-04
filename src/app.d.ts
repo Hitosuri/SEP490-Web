@@ -98,9 +98,10 @@ interface MaterialType {
 	id: number;
 	name: string;
 	code: string;
+	description?: string;
 }
 
-interface Suppiler {
+interface Supplier {
 	id: number;
 	name: string;
 	email: string;
@@ -252,4 +253,33 @@ interface UserSubFeatureDetail {
 	title: string;
 	faIcon: string;
 	active: boolean;
+}
+
+interface PaymentMaterial {
+	id: number;
+	name: string;
+	price: number;
+	quantity: number;
+	totalCost: number;
+}
+
+interface PaymentDetail {
+	patient: Patient;
+	treatments: Treatment[];
+	extraMaterial: PaymentMaterial[];
+	totalTreatmentAmount: number;
+	totalMaterialAmount: number;
+	deduction: number;
+	totalAmount: number;
+}
+
+interface Payment {
+	recordId: number;
+	patientName?: string;
+	email?: string;
+	phone?: string;
+	dateOfBirth?: Date;
+	examinationDate: Date;
+	doctorName: string;
+	status: import('$lib/constants/record-constant').RecordStatus;
 }

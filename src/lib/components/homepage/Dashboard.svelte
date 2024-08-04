@@ -167,7 +167,7 @@
 									{@const elementTag = showLink ? 'a' : 'div'}
 									<tr
 										class="group odd:bg-slate-50 border-t {showLink
-											? 'hover:bg-primary-50 cursor-pointer'
+											? 'hover:bg-gradient-to-r from-sky-100  to-teal-100 cursor-pointer font-bold'
 											: ''}"
 									>
 										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
@@ -188,7 +188,7 @@
 												{queueItem.patientName}
 											</svelte:element>
 										</td>
-										<td class="p-0 border-r">
+										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
 											<svelte:element
 												this={elementTag}
 												href="/records/{queueItem.id}"

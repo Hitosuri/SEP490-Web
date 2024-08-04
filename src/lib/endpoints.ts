@@ -29,13 +29,18 @@ export default {
 		get: `${PUBLIC_API_HOST}/api/materials/all`,
 		create: `${PUBLIC_API_HOST}/api/materials/create`,
 		detail: (id: number) => `${PUBLIC_API_HOST}/api/materials/${id}`,
-		edit: (id: number) => `${PUBLIC_API_HOST}/api/materials/update/${id}`
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/materials/update/${id}`,
+		import: `${PUBLIC_API_HOST}/api/materials/import`
 	},
 	materialTypes: {
-		get: `${PUBLIC_API_HOST}/api/material-type/all`
+		get: `${PUBLIC_API_HOST}/api/material-type/all`,
+		create: `${PUBLIC_API_HOST}/api/material-type`,
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/material-type/${id}`
 	},
 	suppliers: {
-		get: `${PUBLIC_API_HOST}/api/Supplier/all`
+		get: `${PUBLIC_API_HOST}/api/Supplier/all`,
+		create: `${PUBLIC_API_HOST}/api/Supplier`,
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/Supplier/update/${id}`
 	},
 	schedule: {
 		getByRecieptionist: `${PUBLIC_API_HOST}/api/schedules/GetListScheduleByRecieptionist`,
@@ -47,6 +52,8 @@ export default {
 		editByRecieptionist: (id: number) =>
 			`${PUBLIC_API_HOST}/api/schedules/UpdateByRecieptionist?scheduleId=${id}`,
 		deleteByRecieptionist: (id: number) => `${PUBLIC_API_HOST}/api/schedules/DeletedSchedule/${id}`,
+		deleteByPatient: (id: number) =>
+			`${PUBLIC_API_HOST}/api/schedules/DeletedScheduleByPatient/${id}`,
 		checkin: (id: number) => `${PUBLIC_API_HOST}/api/schedules/CheckInSchedule?scheduleId=${id}`,
 		pullSchedule: (doctorId: number) =>
 			`${PUBLIC_API_HOST}/api/schedules/Reschedule?doctorId=${doctorId}`,
@@ -75,5 +82,11 @@ export default {
 	},
 	queue: {
 		get: `${PUBLIC_API_HOST}/api/record/getbyDoctorId`
+	},
+	payment: {
+		get: `${PUBLIC_API_HOST}/api/payment`,
+		detail: (id: number) => `${PUBLIC_API_HOST}/api/payment/${id}`,
+		confirm: (id: number) => `${PUBLIC_API_HOST}/api/payment/confirm/${id}`,
+		reset: (id: number) => `${PUBLIC_API_HOST}/api/payment/reset/${id}`
 	}
 };

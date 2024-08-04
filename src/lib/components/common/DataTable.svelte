@@ -1,9 +1,10 @@
-<script lang="ts" generics="T extends Record<string, any>">
+<script lang="ts" generics="T extends Record<string, any>, K">
 	import { Checkbox, DropdownMenu, Pagination } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
 	import { fade, fly } from 'svelte/transition';
 	import { createEventDispatcher } from 'svelte';
 	import Loading from './Loading.svelte';
+	import CustomPagination from './CustomPagination.svelte';
 
 	export let items: T[];
 	export let fields: TableField<T>[];
@@ -21,6 +22,8 @@
 		label: string;
 		click?: (item: T) => void;
 	}[] = [];
+	export let groupFn: ((item: T) => K) | undefined = undefined;
+	export let shadow = true;
 
 	const dispatch = createEventDispatcher<{
 		pageChange: number;
@@ -35,8 +38,9 @@
 		selected: false
 	}));
 	let first = true;
+	let topGroupItem: Map<T, K> | undefined;
 
-	$: paginationBinding = currentPage;
+	$: topGroupItem = extractTopGroupItem(items);
 	$: selectedUserCount = extendedItems.filter((x) => x.selected).length;
 	$: openBatchMenu = selectedUserCount > 0;
 	$: {
@@ -49,6 +53,25 @@
 		}
 	}
 	$: changeItems(items);
+
+	function extractTopGroupItem(items: T[]): Map<T, K> | undefined {
+		if (!groupFn) {
+			return;
+		}
+		const result: Map<T, K> = new Map();
+		const groups: Set<K> = new Set();
+
+		items.forEach((item) => {
+			const group = groupFn(item);
+
+			if (!groups.has(group)) {
+				groups.add(group);
+				result.set(item, group);
+			}
+		});
+
+		return result;
+	}
 
 	function changeItems(items: T[]) {
 		if (first) {
@@ -73,9 +96,9 @@
 
 <div class="relative">
 	<div
-		class="bg-white p-2 rounded-xl shadow-md relative transition-all duration-200 {loading
-			? 'blur-[2px]'
-			: 'blur-0'}"
+		class="bg-white p-2 rounded-xl {shadow
+			? 'shadow-md'
+			: ''} relative transition-all duration-200 {loading ? 'blur-[2px]' : 'blur-0'}"
 	>
 		<table class="w-full">
 			<thead>
@@ -132,7 +155,7 @@
 								</button>
 							</th>
 						{:else}
-							<th class="select-none">Vai trò</th>
+							<th class="select-none">{field.displayName}</th>
 						{/if}
 					{/each}
 					<th class="rounded-tr-lg rounded-br-lg w-0">
@@ -146,7 +169,24 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each extendedItems as extendedItem (extendedItem.id)}
+				{#each extendedItems as extendedItem, i (extendedItem.id)}
+					{@const group = topGroupItem?.get(extendedItem.item)}
+					{#if group && !sortingField}
+						<tr></tr>
+						<tr>
+							<td colspan={fields.length + 2}>
+								<slot name="group-label" {group} item={extendedItem.item}>
+									<div
+										class="text-center pt-4 pb-1 font-semibold text-sm mx-4 {i % 2 == 0
+											? 'border-b'
+											: ''}"
+									>
+										{String(group)}
+									</div>
+								</slot>
+							</td>
+						</tr>
+					{/if}
 					{@const href = showDetail ? { detailUrl: showDetail(extendedItem.item) } : {}}
 					<tr class="*:even:bg-slate-100 *:py-4 *:px-4 group">
 						<td class="rounded-tl-lg rounded-bl-lg text-[0] relative overflow-hidden !pl-6">
@@ -185,78 +225,80 @@
 								</td>
 							</slot>
 						{/each}
-						{#if showDetail || showEdit || showDelete}
-							<td class="rounded-tr-lg rounded-br-lg !py-0">
-								<DropdownMenu.Root preventScroll={false}>
-									<DropdownMenu.Trigger
-										class="btn text-xl p-0 size-9 text-surface-400 hover:variant-soft-primary transition-all"
-									>
-										<i class="fa-solid fa-ellipsis"></i>
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content
-										transition={fly}
-										transitionConfig={{
-											duration: 200,
-											y: 30,
-											easing: cubicOut
-										}}
-										sideOffset={8}
-										class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
-									>
-										{#if showDetail}
-											<DropdownMenu.Item
-												href={href.detailUrl}
-												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-											>
-												<div class="size-4 text-center">
-													<i class="fa-solid fa-circle-info block"></i>
-												</div>
-												<span class="font-semibold text-sm leading-4">Chi tiết</span>
-											</DropdownMenu.Item>
-										{/if}
-										{#if showDetail && (showEdit || showDelete)}
-											<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
-										{/if}
-										{#if actionMenu.length > 0}
-											{#each actionMenu as action (action)}
+						<td class="rounded-tr-lg rounded-br-lg !py-0">
+							<slot name="action-cell" item={extendedItem.item}>
+								{#if showDetail || showEdit || showDelete}
+									<DropdownMenu.Root preventScroll={false}>
+										<DropdownMenu.Trigger
+											class="btn text-xl p-0 size-9 text-surface-400 hover:variant-soft-primary transition-all"
+										>
+											<i class="fa-solid fa-ellipsis"></i>
+										</DropdownMenu.Trigger>
+										<DropdownMenu.Content
+											transition={fly}
+											transitionConfig={{
+												duration: 200,
+												y: 30,
+												easing: cubicOut
+											}}
+											sideOffset={8}
+											class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+										>
+											{#if showDetail}
 												<DropdownMenu.Item
-													on:click={() => action.click?.(extendedItem.item)}
+													href={href.detailUrl}
 													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 												>
 													<div class="size-4 text-center">
-														<i class="{action.icon} block"></i>
+														<i class="fa-solid fa-circle-info block"></i>
 													</div>
-													<span class="font-semibold text-sm leading-4">{action.label}</span>
+													<span class="font-semibold text-sm leading-4">Chi tiết</span>
 												</DropdownMenu.Item>
-											{/each}
-											<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
-										{/if}
-										{#if showEdit}
-											<DropdownMenu.Item
-												on:click={() => dispatch('edit', extendedItem.item)}
-												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-											>
-												<div class="size-4 text-center">
-													<i class="fa-regular fa-pen-to-square block"></i>
-												</div>
-												<span class="font-semibold text-sm leading-4">Sửa</span>
-											</DropdownMenu.Item>
-										{/if}
-										{#if showDelete}
-											<DropdownMenu.Item
-												on:click={() => dispatch('delete', extendedItem.item)}
-												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-											>
-												<div class="size-4 text-center">
-													<i class="fa-regular fa-trash-can block"></i>
-												</div>
-												<span class="font-semibold text-sm leading-4">Xoá</span>
-											</DropdownMenu.Item>
-										{/if}
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
-							</td>
-						{/if}
+											{/if}
+											{#if showDetail && (showEdit || showDelete)}
+												<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
+											{/if}
+											{#if actionMenu.length > 0}
+												{#each actionMenu as action (action)}
+													<DropdownMenu.Item
+														on:click={() => action.click?.(extendedItem.item)}
+														class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													>
+														<div class="size-4 text-center">
+															<i class="{action.icon} block"></i>
+														</div>
+														<span class="font-semibold text-sm leading-4">{action.label}</span>
+													</DropdownMenu.Item>
+												{/each}
+												<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
+											{/if}
+											{#if showEdit}
+												<DropdownMenu.Item
+													on:click={() => dispatch('edit', extendedItem.item)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center">
+														<i class="fa-regular fa-pen-to-square block"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">Sửa</span>
+												</DropdownMenu.Item>
+											{/if}
+											{#if showDelete}
+												<DropdownMenu.Item
+													on:click={() => dispatch('delete', extendedItem.item)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center">
+														<i class="fa-regular fa-trash-can block"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">Xoá</span>
+												</DropdownMenu.Item>
+											{/if}
+										</DropdownMenu.Content>
+									</DropdownMenu.Root>
+								{/if}
+							</slot>
+						</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -278,7 +320,8 @@
 	{/if}
 </div>
 {#if totalItems > pageSize}
-	<Pagination.Root
+	<CustomPagination {totalItems} {pageSize} bind:currentPage on:pageChange />
+	<!-- <Pagination.Root
 		count={totalItems}
 		bind:page={paginationBinding}
 		perPage={pageSize}
@@ -315,7 +358,7 @@
 		<p class="text-center text-[13px] text-muted-foreground mt-6">
 			Hiển thị {range.start} - {range.end}
 		</p>
-	</Pagination.Root>
+	</Pagination.Root> -->
 {/if}
 {#if openBatchMenu}
 	<div

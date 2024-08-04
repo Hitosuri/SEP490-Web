@@ -134,7 +134,7 @@
 		</div>
 	</div>
 	{#if $userStore?.isPatient && data.records}
-		<div class="rounded-lg shadow-lg overflow-hidden border mt-8">
+		<div class="rounded-lg shadow-lg overflow-hidden border mt-8 bg-white">
 			<div class="py-4 px-6 border-b">
 				<h3 class="h3 font-semibold">Hồ sơ khám bệnh</h3>
 			</div>

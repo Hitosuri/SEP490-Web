@@ -349,7 +349,7 @@
 			<Field {form} name="treatmentId">
 				<Control let:attrs>
 					<Label class="font-semibold text-surface-500 select-none text-lg mb-1">
-						Vật liệu tiêu hao được sử dụng
+						Vật tư tiêu hao được sử dụng
 					</Label>
 					<div class="flex flex-wrap gap-y-4 gap-x-6">
 						{#if canEdit}
@@ -391,7 +391,7 @@
 							<SearchCombobox
 								searchFn={searchMaterialsFn}
 								bind:selected={selectedMaterial}
-								placeholder="Tên vật liệu..."
+								placeholder="Tên vật tư..."
 								clearable
 							/>
 							<NumberInput placeholder="Số lượng" bind:value={selectedMaterialQuantity} />

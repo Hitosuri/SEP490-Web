@@ -10,6 +10,8 @@
 	let sideBarOpenActive = getContext<Writable<boolean>>('sidebar-active');
 	let sideBarOpened = getContext<Readable<boolean>>('sidebar-state');
 	let searchInput = '';
+	let usingFeatureIndex = -1;
+	let lastUsingFeatureIndex = 0;
 
 	$: normalizedSearchInput = searchInput
 		.trim()
@@ -26,6 +28,7 @@
 	$: usingFeatureIndex = filteredFeatures.findIndex((feature) =>
 		feature.routes.some((route) => $page.route.id?.startsWith(route))
 	);
+	$: lastUsingFeatureIndex = usingFeatureIndex < 0 ? lastUsingFeatureIndex : usingFeatureIndex;
 </script>
 
 <div
@@ -65,7 +68,7 @@
 					class="absolute w-full transition-all duration-300 -z-10 {usingFeatureIndex >= 0
 						? 'opacity-100'
 						: 'opacity-0'}"
-					style="top: {(64 + 16) * Math.max(0, usingFeatureIndex)}px;"
+					style="top: {(64 + 16) * lastUsingFeatureIndex}px;"
 				>
 					<div
 						class="h-16 bg-slate-200/60 rounded-container-token {$usingSubFeature &&
