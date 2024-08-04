@@ -91,6 +91,9 @@ interface Material {
 	quantity: number;
 	supplierName: string;
 	materialTypeName: string;
+	basicUnit: string;
+	smallestUnit: string;
+	smallestUnitQuantity: number;
 	medicine?: Medicine;
 }
 
@@ -161,12 +164,12 @@ interface RecordPatient {
 		actionAt: Date;
 		number: number;
 	}[];
-	usedMaterials: {
-		materialId: number;
-		materialName: string;
-		quantity: number;
-		unit: string;
-	}[];
+	// extraMaterials: {
+	// 	materialId: number;
+	// 	materialName: string;
+	// 	quantity: number;
+	// 	unit: string;
+	// }[];
 }
 
 interface Prescription {
@@ -225,6 +228,14 @@ interface Treatment {
 	name: string;
 	price: number;
 	deleted: boolean;
+	materials?: MaterialInRelation[];
+}
+
+interface MaterialInRelation {
+	materialId: number;
+	materialName: string;
+	quantity: number;
+	unit: string;
 }
 
 type TableField<T> = {

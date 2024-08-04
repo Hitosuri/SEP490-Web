@@ -6,16 +6,20 @@
 
 	interface $$Props extends ComponentProps<Select.Root<T, Multiple>> {
 		regionInput?: string;
+		regionContent?: string;
 	}
 
 	export let items: Selected<T>[] | undefined = undefined;
 	export let open: ComponentProps<Select.Root<T, Multiple>>['open'] = undefined;
 	export let selected: ComponentProps<Select.Root<T, Multiple>>['selected'] = undefined;
 	export let regionInput = '';
+	export let regionContent = '';
 
 	const cRegionInput = 'btn bg-white rounded-md';
+	const cRegionContent = 'w-fit rounded-md border border-surface-50 bg-white p-1 shadow-lg z-10';
 
 	$: classesRegionInput = twMerge(cRegionInput, regionInput);
+	$: classesContent = twMerge(cRegionContent, regionContent);
 </script>
 
 <Select.Root {items} bind:selected bind:open {...$$restProps}>
@@ -25,10 +29,7 @@
 		</slot>
 	</Select.Trigger>
 
-	<Select.Content
-		class="w-full !min-w-40 rounded-md border border-surface-50 bg-white p-1 shadow-lg z-10"
-		sideOffset={8}
-	>
+	<Select.Content class={classesContent} sideOffset={8}>
 		{#each items ?? [] as item}
 			<Select.Item
 				value={item.value}

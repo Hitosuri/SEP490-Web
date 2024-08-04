@@ -82,19 +82,19 @@
 	);
 	let selectedMaterial: Selected<Material> | undefined;
 	let selectedMaterialQuantity = 0;
-	let materials: Record<number, Material> = Object.fromEntries(
-		record.usedMaterials.map((x) => [
-			x.materialId,
-			{
-				id: x.materialId,
-				name: x.materialName,
-				price: 0,
-				quantity: 0,
-				supplierName: '',
-				materialTypeName: ''
-			}
-		])
-	);
+	// let materials: Record<number, Material> = Object.fromEntries(
+	// 	record.usedMaterials.map((x) => [
+	// 		x.materialId,
+	// 		{
+	// 			id: x.materialId,
+	// 			name: x.materialName,
+	// 			price: 0,
+	// 			quantity: 0,
+	// 			supplierName: '',
+	// 			materialTypeName: ''
+	// 		}
+	// 	])
+	// );
 
 	$: selectedMaterialQuantityCap(selectedMaterialQuantity);
 
@@ -108,10 +108,10 @@
 
 	function resetValue() {
 		$formData.treatmentId = record.recordTreatmentListItemDtos.map((x) => x.treatmentId);
-		$formData.extraMaterials = record.usedMaterials.map((x) => ({
-			materialId: x.materialId,
-			quantity: x.quantity
-		}));
+		// $formData.extraMaterials = record.usedMaterials.map((x) => ({
+		// 	materialId: x.materialId,
+		// 	quantity: x.quantity
+		// }));
 		$formData.reason = record.reason;
 		$formData.diagnosis = record.diagnostic;
 	}
@@ -121,10 +121,10 @@
 		selectedTreatment = undefined;
 	}
 
-	function removeMaterial(id: number) {
-		$formData.extraMaterials = $formData.extraMaterials.filter((x) => x.materialId !== id);
-		selectedMaterial = undefined;
-	}
+	// function removeMaterial(id: number) {
+	// 	$formData.extraMaterials = $formData.extraMaterials.filter((x) => x.materialId !== id);
+	// 	selectedMaterial = undefined;
+	// }
 
 	async function searchTreatmentsFn(keyword: string): Promise<Selected<Treatment>[] | undefined> {
 		if (!$userStore) {
@@ -173,9 +173,9 @@
 		searchParams.set('size', '5');
 		searchParams.set('materialName', keyword);
 
-		$formData.extraMaterials.forEach((x) => {
-			searchParams.append('excludeIds', String(x.materialId));
-		});
+		// $formData.extraMaterials.forEach((x) => {
+		// 	searchParams.append('excludeIds', String(x.materialId));
+		// });
 
 		const url = `${endpoints.materials.get}?${searchParams}`;
 		const response = await fetch(url, {
@@ -211,21 +211,21 @@
 			return;
 		}
 
-		materials[selectedMaterial.value.id] = selectedMaterial.value;
-		$formData.extraMaterials = [
-			...$formData.extraMaterials,
-			{
-				materialId: selectedMaterial.value.id,
-				quantity: Math.max(1, Math.round(selectedMaterialQuantity))
-			}
-		];
+		// materials[selectedMaterial.value.id] = selectedMaterial.value;
+		// $formData.extraMaterials = [
+		// 	...$formData.extraMaterials,
+		// 	{
+		// 		materialId: selectedMaterial.value.id,
+		// 		quantity: Math.max(1, Math.round(selectedMaterialQuantity))
+		// 	}
+		// ];
 		selectedMaterial = undefined;
 	}
 </script>
 
 <form method="post" use:enhance class="bg-white rounded-container-token shadow-md p-6 border">
 	<p class="font-semibold text-2xl select-none mb-4">Nội dung khám</p>
-	<div class="space-y-6 pl-4">
+	<div class="space-y-4 pl-4">
 		<div>
 			<Field {form} name="reason">
 				<Control let:attrs>
@@ -345,7 +345,7 @@
 				<FieldErrors class="text-sm mt-1" />
 			</Field>
 		</div>
-		<div>
+		<!-- <div>
 			<Field {form} name="treatmentId">
 				<Control let:attrs>
 					<Label class="font-semibold text-surface-500 select-none text-lg mb-1">
@@ -408,7 +408,7 @@
 				</Control>
 				<FieldErrors class="text-sm mt-1" />
 			</Field>
-		</div>
+		</div> -->
 		{#if canEdit}
 			<div>
 				{#if !dataChanged}

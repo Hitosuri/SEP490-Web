@@ -4,6 +4,7 @@ import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import { treatmentFilterSchema } from '$lib/form-schemas/treatment-filter-schema';
+import { createTreatmentSchema } from '$lib/form-schemas/create-treatment-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, Role.Doctor, Role.Nurse);
@@ -23,6 +24,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 
 	return {
 		treatmentListPage: data.body!,
-		treatmentFilterForm: await superValidate(zod(treatmentFilterSchema))
+		treatmentFilterForm: await superValidate(zod(treatmentFilterSchema)),
+		createTreatmentForm: await superValidate(zod(createTreatmentSchema))
 	};
 };

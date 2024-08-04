@@ -78,7 +78,11 @@ export default {
 		pdf: (id: number) => `${PUBLIC_API_HOST}/api/Prescription/generate-pdf/${id}`
 	},
 	treatments: {
-		get: `${PUBLIC_API_HOST}/api/Treatments`
+		get: `${PUBLIC_API_HOST}/api/Treatments`,
+		create: `${PUBLIC_API_HOST}/api/Treatments`,
+		detail: (id: number) => `${PUBLIC_API_HOST}/api/Treatments/${id}`,
+		edit: (id: number) => `${PUBLIC_API_HOST}/api/Treatments/${id}`,
+		delete: (id: number) => `${PUBLIC_API_HOST}/api/Treatments/${id}`
 	},
 	queue: {
 		get: `${PUBLIC_API_HOST}/api/record/getbyDoctorId`

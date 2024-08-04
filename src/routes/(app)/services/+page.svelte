@@ -79,7 +79,6 @@
 					break;
 				}
 				case 'toPrice': {
-					// const fromValue = get('fromPrice');
 					const toValue = get('toPrice');
 
 					if (!toValue || (typeof toValue === 'number' && toValue < 1)) {
@@ -240,7 +239,15 @@
 		const modalSetting: ModalSettings = {
 			type: 'component',
 			component: {
-				ref: CreateServiceForm
+				ref: CreateServiceForm,
+				props: {
+					createTreatmentForm: data.createTreatmentForm
+				}
+			},
+			response: (r) => {
+				if (r) {
+					filtering(lastestFilterOption, currentPage, pageSize, true, true);
+				}
 			}
 		};
 
@@ -469,11 +476,13 @@
 			bind:sortingAscending
 			bind:loading
 			fields={tableFields}
+			detailEmitEvent
 			on:pageChange={(e) => {
 				currentPage = e.detail;
 				filtering(lastestFilterOption, e.detail, pageSize, true);
 			}}
 			on:sortField={(e) => selectSorting(e.detail)}
+			on:detail={(e) => console.log(e.detail)}
 		></DataTable>
 	</div>
 </Container>

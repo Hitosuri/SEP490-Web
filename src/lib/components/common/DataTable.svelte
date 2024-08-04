@@ -14,6 +14,7 @@
 	export let sortingField: keyof T | undefined = undefined;
 	export let sortingAscending = false;
 	export let showDetail: ((item: T) => string) | undefined = undefined;
+	export let detailEmitEvent = false;
 	export let showEdit = true;
 	export let showDelete = true;
 	export let loading = false;
@@ -28,6 +29,7 @@
 	const dispatch = createEventDispatcher<{
 		pageChange: number;
 		sortField: keyof T | undefined;
+		detail: T;
 		edit: T;
 		delete: T;
 	}>();
@@ -187,7 +189,8 @@
 							</td>
 						</tr>
 					{/if}
-					{@const href = showDetail ? { detailUrl: showDetail(extendedItem.item) } : {}}
+					{@const href =
+						showDetail && !detailEmitEvent ? { detailUrl: showDetail(extendedItem.item) } : {}}
 					<tr class="*:even:bg-slate-100 *:py-4 *:px-4 group">
 						<td class="rounded-tl-lg rounded-bl-lg text-[0] relative overflow-hidden !pl-6">
 							<input
@@ -227,7 +230,7 @@
 						{/each}
 						<td class="rounded-tr-lg rounded-br-lg !py-0">
 							<slot name="action-cell" item={extendedItem.item}>
-								{#if showDetail || showEdit || showDelete}
+								{#if showDetail || detailEmitEvent || showEdit || showDelete}
 									<DropdownMenu.Root preventScroll={false}>
 										<DropdownMenu.Trigger
 											class="btn text-xl p-0 size-9 text-surface-400 hover:variant-soft-primary transition-all"
@@ -244,7 +247,7 @@
 											sideOffset={8}
 											class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
 										>
-											{#if showDetail}
+											{#if showDetail && !detailEmitEvent}
 												<DropdownMenu.Item
 													href={href.detailUrl}
 													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
@@ -255,7 +258,18 @@
 													<span class="font-semibold text-sm leading-4">Chi tiết</span>
 												</DropdownMenu.Item>
 											{/if}
-											{#if showDetail && (showEdit || showDelete)}
+											{#if detailEmitEvent}
+												<DropdownMenu.Item
+													on:click={() => dispatch('detail', extendedItem.item)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center">
+														<i class="fa-solid fa-circle-info block"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">Chi tiết</span>
+												</DropdownMenu.Item>
+											{/if}
+											{#if (showDetail || detailEmitEvent) && (showEdit || showDelete)}
 												<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
 											{/if}
 											{#if actionMenu.length > 0}

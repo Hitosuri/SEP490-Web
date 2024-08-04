@@ -327,6 +327,22 @@
 					</Field>
 				</div>
 				<div>
+					<Field {form} name="smallestUnitQuantity">
+						<Control let:attrs>
+							<Label class="font-semibold text-surface-500 select-none">
+								Số lượng đơn vị nhỏ nhất<sup class="text-red-500">*</sup>
+							</Label>
+							<input
+								{...attrs}
+								type="number"
+								class="input rounded-container-token mt-1"
+								bind:value={$formData.smallestUnitQuantity}
+							/>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+				<div>
 					<Field {form} name="isSurcharge">
 						<Control let:attrs>
 							<Label class="font-semibold text-surface-500 select-none mb-2">
