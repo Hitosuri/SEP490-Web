@@ -163,13 +163,9 @@ interface RecordPatient {
 		treatmentId: number;
 		actionAt: Date;
 		number: number;
+		defaultMaterials: MaterialInRelation[];
 	}[];
-	// extraMaterials: {
-	// 	materialId: number;
-	// 	materialName: string;
-	// 	quantity: number;
-	// 	unit: string;
-	// }[];
+	extraMaterials: MaterialInRelation[];
 }
 
 interface Prescription {
@@ -228,7 +224,7 @@ interface Treatment {
 	name: string;
 	price: number;
 	deleted: boolean;
-	materials?: MaterialInRelation[];
+	materials: MaterialInRelation[];
 }
 
 interface MaterialInRelation {
@@ -236,6 +232,7 @@ interface MaterialInRelation {
 	materialName: string;
 	quantity: number;
 	unit: string;
+	isBasicUnit: boolean;
 }
 
 type TableField<T> = {

@@ -49,11 +49,30 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 		prescription.indication = prescription.indication === '-' ? '' : prescription.indication;
 	}
 
+	let prefetchExtraMaterials: Material[] = [];
+
+	if (recordData.body.extraMaterials.length > 0) {
+		const searchParams = new URLSearchParams();
+		searchParams.set('page', '1');
+		searchParams.set('size', String(recordData.body.extraMaterials.length));
+		recordData.body.extraMaterials.forEach((x) => {
+			searchParams.append('includeIds', String(x.materialId));
+		});
+		const r3 = await fetch(`${endpoints.materials.get}?${searchParams}`, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		});
+		const data: Pagination<Material[]> = await r3.json();
+		prefetchExtraMaterials = data.data;
+	}
+
 	return {
 		record: recordData.body,
 		prescription,
 		editPrescriptionDetailForm: await superValidate(zod(editPrescriptionDetailSchema)),
 		editRecordForm: await superValidate(zod(editRecordSchema)),
-		recordId: recordId
+		recordId: recordId,
+		prefetchExtraMaterials
 	};
 };

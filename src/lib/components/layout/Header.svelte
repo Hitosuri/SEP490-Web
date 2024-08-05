@@ -87,7 +87,7 @@
 		? 'left-side-bar'
 		: 'left-0'} {inLandingPage && !showHeader ? '-translate-y-24' : ''} {inLandingPage
 		? 'py-4'
-		: 'py-6 bg-white'} pr-scroll-bar-dynamic transition-all duration-300 ease-out"
+		: 'py-6 bg-white'} pr-scroll-bar-dynamic transition-[left] duration-300 ease-out"
 	style="--tw-shadow-colored: 0 {shadowVal[0]}px {shadowVal[1]}px {shadowVal[2]}px var(--tw-shadow-color), 0 {shadowVal[3]}px {shadowVal[4]}px {shadowVal[5]}px var(--tw-shadow-color); --tw-shadow: var(--tw-shadow-colored)"
 >
 	<Container>

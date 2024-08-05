@@ -9,6 +9,7 @@
 	export let selected: Selected<T> | undefined = undefined;
 	export let clearable = false;
 	export let regionInput: string | undefined = undefined;
+	export let regionWrapper: string | undefined = undefined;
 	export let placeholder: string = '';
 
 	let items: Selected<T>[] = [];
@@ -20,7 +21,9 @@
 	let trigger: number = Math.random();
 
 	$: cRegionInput = `input rounded-container-token ${showClear ? 'pr-[42px]' : ''}`;
+	$: cRegionWrapper = 'relative';
 	$: classesRegionInput = twMerge(cRegionInput, regionInput);
+	$: classesRegionWrapper = twMerge(cRegionWrapper, regionWrapper);
 	$: onItemSearchOpen(itemSearchOpen);
 	$: itemSearch(itemSearchInput);
 	$: showClear = !!(clearable && selected);
@@ -80,7 +83,7 @@
 
 {#key trigger}
 	<Combobox.Root {items} bind:inputValue={itemSearchInput} bind:open={itemSearchOpen} bind:selected>
-		<div class="relative">
+		<div class={classesRegionWrapper}>
 			<Combobox.Input class={classesRegionInput} {placeholder} />
 			{#if showClear}
 				<div

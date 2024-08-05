@@ -7,16 +7,17 @@
 	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
-	import SearchCombobox from '../common/SearchCombobox.svelte';
+	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
 	import type { Selected } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { RecordStatus } from '$lib/constants/record-constant';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
-	import NumberInput from '../common/NumberInput.svelte';
+	import ExtraMaterialEditRow from '$lib/components/records/ExtraMaterialEditRow.svelte';
 
 	export let editRecordForm: SuperValidated<z.infer<typeof editRecordSchema>>;
 	export let record: RecordPatient;
 	export let recordId: number;
+	export let extraMaterials: Material[] = [];
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{
@@ -65,7 +66,7 @@
 			}
 		}
 	});
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, errors } = form;
 	let dataChanged = true;
 	let canEdit = record.status === RecordStatus.PROCESSING && $userStore?.id === record.doctor.id;
 	let selectedTreatment: Selected<Treatment> | undefined;
@@ -76,42 +77,27 @@
 				id: x.treatmentId,
 				name: x.treatmentName,
 				deleted: false,
-				price: 0
+				price: 0,
+				materials: [...x.defaultMaterials]
 			}
 		])
 	);
-	let selectedMaterial: Selected<Material> | undefined;
-	let selectedMaterialQuantity = 0;
-	// let materials: Record<number, Material> = Object.fromEntries(
-	// 	record.usedMaterials.map((x) => [
-	// 		x.materialId,
-	// 		{
-	// 			id: x.materialId,
-	// 			name: x.materialName,
-	// 			price: 0,
-	// 			quantity: 0,
-	// 			supplierName: '',
-	// 			materialTypeName: ''
-	// 		}
-	// 	])
-	// );
+	let usedMaterials: z.infer<typeof editRecordSchema>['recordExtraMaterialRequests'] = [
+		...record.extraMaterials.map((x) => ({
+			materialId: x.materialId,
+			quantity: x.quantity,
+			isBasicUnit: x.isBasicUnit
+		}))
+	];
 
-	$: selectedMaterialQuantityCap(selectedMaterialQuantity);
+	$: allMaterialId = usedMaterials.map((x) => x.materialId).filter((x) => x > 0);
+	$: $formData.recordExtraMaterialRequests = [...usedMaterials];
+	$: console.log(dataChanged);
 
 	resetValue();
 
-	function selectedMaterialQuantityCap(value: number) {
-		if (!Number(value) || value < 1) {
-			selectedMaterialQuantity = 1;
-		}
-	}
-
 	function resetValue() {
 		$formData.treatmentId = record.recordTreatmentListItemDtos.map((x) => x.treatmentId);
-		// $formData.extraMaterials = record.usedMaterials.map((x) => ({
-		// 	materialId: x.materialId,
-		// 	quantity: x.quantity
-		// }));
 		$formData.reason = record.reason;
 		$formData.diagnosis = record.diagnostic;
 	}
@@ -121,10 +107,11 @@
 		selectedTreatment = undefined;
 	}
 
-	// function removeMaterial(id: number) {
-	// 	$formData.extraMaterials = $formData.extraMaterials.filter((x) => x.materialId !== id);
-	// 	selectedMaterial = undefined;
-	// }
+	function removeMaterial(index: number) {
+		const m = usedMaterials[index];
+		usedMaterials = usedMaterials.filter((_, i) => i !== index);
+		extraMaterials = extraMaterials.filter((x) => x.id === m.materialId);
+	}
 
 	async function searchTreatmentsFn(keyword: string): Promise<Selected<Treatment>[] | undefined> {
 		if (!$userStore) {
@@ -207,19 +194,14 @@
 	}
 
 	function addMaterial() {
-		if (!selectedMaterial) {
-			return;
-		}
-
-		// materials[selectedMaterial.value.id] = selectedMaterial.value;
-		// $formData.extraMaterials = [
-		// 	...$formData.extraMaterials,
-		// 	{
-		// 		materialId: selectedMaterial.value.id,
-		// 		quantity: Math.max(1, Math.round(selectedMaterialQuantity))
-		// 	}
-		// ];
-		selectedMaterial = undefined;
+		usedMaterials = [
+			...usedMaterials,
+			{
+				materialId: 0,
+				quantity: 0,
+				isBasicUnit: true
+			}
+		];
 	}
 </script>
 
@@ -288,127 +270,193 @@
 				<FieldErrors class="text-sm mt-1" />
 			</Field>
 		</div>
-		<div>
-			<Field {form} name="treatmentId">
-				<Control let:attrs>
-					<Label class="font-semibold text-surface-500 select-none text-lg mb-1"
-						>Thủ thuật được sử dụng</Label
-					>
-					<div class="flex flex-wrap gap-y-4 gap-x-6">
-						{#if canEdit}
+		<div class="grid grid-cols-1 xl:grid-cols-2 gap-x-8 gap-y-4">
+			<div>
+				<Field {form} name="treatmentId">
+					<Control let:attrs>
+						<Label class="font-semibold text-surface-500 select-none text-lg mb-1">
+							Sử dụng dịch vụ
+						</Label>
+						<div class="flex flex-col gap-y-4">
 							{#each $formData.treatmentId as treatmentId}
 								{@const treatment = treatments[treatmentId]}
 								{#if treatment}
-									<div class="variant-ghost-tertiary py-3 px-6 rounded-md relative">
-										<button
-											on:click={() => removeTreatment(treatment.id)}
-											type="button"
-											class="btn p-0 absolute -right-3 -top-1 bg-error-400 size-6 flex justify-center items-center rounded-full"
+									<div class="grid grid-cols-[2fr_1fr_1fr]">
+										<div
+											class="flex justify-between items-center col-span-3 overflow-hidden bg-gradient-to-r from-indigo-500 to-sky-500 text-white pl-3 p-2 {treatment
+												.materials.length > 0
+												? 'rounded-t-md'
+												: 'rounded-md'}"
 										>
-											<i class="fa-solid fa-xmark"></i>
-										</button>
-										<span class="text-lg font-semibold">{treatment.name}</span>
+											<span class="text-lg font-semibold">{treatment.name}</span>
+											{#if canEdit}
+												<button
+													type="button"
+													class="btn-icon btn-icon-sm rounded text-xl h-fit bg-white text-error-500"
+													on:click={() => removeTreatment(treatmentId)}
+												>
+													<i class="fa-solid fa-xmark"></i>
+												</button>
+											{/if}
+										</div>
+										{#if treatment.materials.length > 0}
+											<div
+												class="text-sm bg-slate-200 font-semibold text-start px-2 py-1 border-b border-l"
+											>
+												Vật tư
+											</div>
+											<div class="text-sm bg-slate-200 font-semibold text-start px-2 py-1 border-b">
+												Đơn vị
+											</div>
+											<div
+												class="text-sm bg-slate-200 font-semibold text-end px-2 py-1 border-b border-r"
+											>
+												Số lượng
+											</div>
+											{#each treatment.materials as material, i (material.materialId)}
+												{@const lastItem = i === treatment.materials.length - 1}
+												<div
+													class="text-start px-2 py-1.5 bg-slate-100 border-b border-l {lastItem
+														? 'overflow-hidden rounded-bl-md'
+														: ''}"
+												>
+													{material.materialName}
+												</div>
+												<div class="text-start px-2 py-1.5 border-b border-r">
+													{material.unit}
+												</div>
+												<div
+													class="text-end px-2 py-1.5 border-r border-b {lastItem
+														? 'overflow-hidden rounded-br-md'
+														: ''}"
+												>
+													{material.quantity}
+												</div>
+											{/each}
+										{/if}
 									</div>
 								{/if}
 							{/each}
-						{:else}
-							{#each record.recordTreatmentListItemDtos as treatment (treatment.treatmentId)}
-								<div class="variant-ghost-tertiary py-3 px-6 rounded-md">
-									<span class="text-lg font-semibold">{treatment.treatmentName}</span>
-								</div>
-							{:else}
-								<h4 class="h4 font-semibold text-center text-surface-400 w-full">
-									Danh sách trống
-								</h4>
-							{/each}
-						{/if}
-					</div>
-					{#if canEdit}
-						<div class="flex gap-2 mt-2">
-							<SearchCombobox
-								searchFn={searchTreatmentsFn}
-								bind:selected={selectedTreatment}
-								placeholder="Tên thủ thuật"
-								clearable
-							/>
-							<button
-								type="button"
-								class="btn variant-filled-primary rounded-container-token"
-								on:click={addTreatment}
-							>
-								<i class="fa-solid fa-plus"></i>
-								<span class="pl-2">Thêm</span>
-							</button>
 						</div>
-					{/if}
-				</Control>
-				<FieldErrors class="text-sm mt-1" />
-			</Field>
-		</div>
-		<!-- <div>
-			<Field {form} name="treatmentId">
-				<Control let:attrs>
-					<Label class="font-semibold text-surface-500 select-none text-lg mb-1">
-						Vật tư tiêu hao được sử dụng
-					</Label>
-					<div class="flex flex-wrap gap-y-4 gap-x-6">
 						{#if canEdit}
-							{#each $formData.extraMaterials as m}
-								{@const material = materials[m.materialId]}
-								{#if material}
-									<div class="variant-ghost-tertiary py-3 px-6 rounded-md relative">
-										<button
-											on:click={() => removeMaterial(material.id)}
-											type="button"
-											class="btn p-0 absolute -right-3 -top-1 bg-error-400 size-6 flex justify-center items-center rounded-full"
-										>
-											<i class="fa-solid fa-xmark"></i>
-										</button>
-										<p class="text-lg font-semibold">{material.name}</p>
-										<input
-											type="number"
-											bind:value={m.quantity}
-											class="input bg-white/50 rounded-container-token py-1 px-2 w-20 mt-1"
-										/>
-									</div>
-								{/if}
-							{/each}
-						{:else}
-							{#each record.usedMaterials as material (material.materialId)}
-								<div class="variant-ghost-tertiary py-3 px-6 rounded-md">
-									<p class="text-lg font-semibold">{material.materialName}</p>
-									<span class="text-sm"> x{material.quantity}</span>
-								</div>
-							{:else}
-								<h4 class="h4 font-semibold text-center text-surface-400 w-full">
-									Danh sách trống
-								</h4>
-							{/each}
+							<div class="flex gap-2 mt-4">
+								<SearchCombobox
+									searchFn={searchTreatmentsFn}
+									bind:selected={selectedTreatment}
+									placeholder="Tên thủ thuật"
+									clearable
+									regionWrapper="w-full"
+								/>
+								<button
+									type="button"
+									class="btn variant-filled-primary rounded-container-token"
+									on:click={addTreatment}
+								>
+									<i class="fa-solid fa-plus"></i>
+									<span class="pl-2">Thêm</span>
+								</button>
+							</div>
 						{/if}
-					</div>
-					{#if canEdit}
-						<div class="flex gap-2 mt-2">
-							<SearchCombobox
-								searchFn={searchMaterialsFn}
-								bind:selected={selectedMaterial}
-								placeholder="Tên vật tư..."
-								clearable
-							/>
-							<NumberInput placeholder="Số lượng" bind:value={selectedMaterialQuantity} />
-							<button
-								type="button"
-								class="btn variant-filled-primary rounded-container-token"
-								on:click={addMaterial}
-							>
-								<i class="fa-solid fa-plus"></i>
-								<span class="pl-2">Thêm</span>
-							</button>
-						</div>
-					{/if}
-				</Control>
-				<FieldErrors class="text-sm mt-1" />
-			</Field>
-		</div> -->
+					</Control>
+					<FieldErrors class="text-sm mt-1" />
+				</Field>
+			</div>
+			<div>
+				<Field {form} name="treatmentId">
+					<Control let:attrs>
+						<Label class="font-semibold text-surface-500 select-none text-lg mb-1">
+							Vật tư được sử dụng thêm
+						</Label>
+						<table class="w-full">
+							<colgroup>
+								<col class="w-10" />
+								<col />
+								<col />
+								<col class="w-40" />
+								<col class="w-10" />
+							</colgroup>
+							<thead>
+								<tr class="border-b">
+									<th class="">#</th>
+									<th class="text-start px-2 py-2">Vật tư</th>
+									<th class="px-2 py-2">Đơn vị</th>
+									<th class="text-end px-2 py-2">Số lượng</th>
+									<th class=""></th>
+								</tr>
+							</thead>
+							<tbody>
+								{#if canEdit}
+									{#each usedMaterials as material, i (material)}
+										{@const foundInExtra = extraMaterials.find((x) => x.id === material.materialId)}
+										{@const foundInExtra2 = foundInExtra
+											? record.extraMaterials.find((x) => x.materialId === material.materialId)
+											: undefined}
+										{#if foundInExtra && foundInExtra2}
+											<ExtraMaterialEditRow
+												bind:selectedMaterialId={material.materialId}
+												bind:quantity={material.quantity}
+												bind:isBasicUnit={material.isBasicUnit}
+												{errors}
+												index={i}
+												excludeIds={allMaterialId}
+												initMaterial={foundInExtra}
+												initUnit={foundInExtra2.isBasicUnit}
+												initQuantity={foundInExtra2.quantity}
+												on:remove={() => removeMaterial(i)}
+											/>
+										{:else}
+											<ExtraMaterialEditRow
+												bind:selectedMaterialId={material.materialId}
+												bind:quantity={material.quantity}
+												bind:isBasicUnit={material.isBasicUnit}
+												{errors}
+												index={i}
+												excludeIds={allMaterialId}
+												on:remove={() => removeMaterial(i)}
+											/>
+										{/if}
+									{:else}
+										<tr>
+											<td colspan="5" class="border-b py-3">
+												<h3 class="h3 font-semibold text-center text-tertiary-500">
+													Danh sách trống
+												</h3>
+											</td>
+										</tr>
+									{/each}
+									<tr>
+										<td colspan="4" class="py-2">
+											<div class="w-10">
+												<button
+													type="button"
+													class="btn-icon btn-icon-sm rounded-container-token variant-filled-primary block mx-auto"
+													on:click={addMaterial}
+												>
+													<i class="fa-solid fa-plus"></i>
+												</button>
+											</div>
+										</td>
+									</tr>
+								{:else}
+									{#each usedMaterials as material (material.materialId)}
+										<tr></tr>
+									{:else}
+										<tr>
+											<td colspan="5" class="border-b py-3">
+												<h3 class="h3 font-semibold text-center text-tertiary-500">
+													Danh sách trống
+												</h3>
+											</td>
+										</tr>
+									{/each}
+								{/if}
+							</tbody>
+						</table>
+					</Control>
+					<FieldErrors class="text-sm mt-1" />
+				</Field>
+			</div>
+		</div>
 		{#if canEdit}
 			<div>
 				{#if !dataChanged}
