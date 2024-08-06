@@ -1,7 +1,8 @@
 export enum ScheduleStatus {
 	PENDING = 1,
 	CONFIRMED = 2,
-	DONE = 3
+	DONE = 3,
+	CANCEL = 4
 }
 
 export const scheduleStatusInfo = {
@@ -15,6 +16,10 @@ export const scheduleStatusInfo = {
 	},
 	[ScheduleStatus.DONE]: {
 		label: 'Đã tới',
+		styleClasses: ['bg-schedule-done', 'border-schedule-done', 'text-schedule-done']
+	},
+	[ScheduleStatus.CANCEL]: {
+		label: 'Đã huỷ',
 		styleClasses: ['bg-schedule-done', 'border-schedule-done', 'text-schedule-done']
 	}
 } as const;

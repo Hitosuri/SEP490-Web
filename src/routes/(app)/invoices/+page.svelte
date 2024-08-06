@@ -232,6 +232,8 @@
 			},
 			response: (r) => {
 				if (r) {
+					console.log(123);
+
 					filtering(lastestFilterOption, currentPage, pageSize, true, true);
 				}
 			}

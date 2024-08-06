@@ -5,17 +5,18 @@
 	import Loading from '../common/Loading.svelte';
 	import { RecordStatus } from '$lib/constants/record-constant';
 	import { formatCurrency } from '$lib/helpers/formatters';
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { toast } from 'svelte-sonner';
 
 	export let payment: Payment;
+	export let initInvoice: PaymentDetail | undefined = undefined;
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let invoice: Promise<PaymentDetail> | undefined;
 
 	onMount(() => {
-		invoice = getInvoice(payment.recordId);
+		invoice = initInvoice ? Promise.resolve(initInvoice) : getInvoice(payment.recordId);
 	});
 
 	async function getInvoice(id: number): Promise<PaymentDetail> {
@@ -38,37 +39,84 @@
 	}
 
 	async function confirm() {
-		if (!$userStore) {
-			return;
-		}
-
-		toast.promise(
-			async (): Promise<string> => {
-				const response = await fetch(endpoints.payment.confirm(payment.recordId), {
-					method: 'PUT',
-					headers: {
-						Authorization: `Bearer ${$userStore.token}`
-					}
-				});
-
-				if (!response.ok) {
-					return Promise.reject();
+		const cb = $modalStore[0]?.response;
+		const modalSetting: ModalSettings = {
+			type: 'confirm',
+			title: 'Xác nhận',
+			body: 'Xác nhận đã thanh toán',
+			response: (r) => {
+				if (!r || !$userStore) {
+					return;
 				}
-				closeModal(true);
-				return 'Xác nhận thanh toán thành công';
-			},
-			{
-				loading: 'Đang xử lý...',
-				success: (msg) => msg ?? 'Xác nhận thanh toán thành công',
-				error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình xác nhận thanh toán'
+
+				toast.promise(
+					async (): Promise<string> => {
+						const response = await fetch(endpoints.payment.confirm(payment.recordId), {
+							method: 'PUT',
+							headers: {
+								Authorization: `Bearer ${$userStore.token}`
+							}
+						});
+
+						if (!response.ok) {
+							return Promise.reject();
+						}
+
+						cb?.(true);
+						return 'Xác nhận thanh toán thành công';
+					},
+					{
+						loading: 'Đang xử lý...',
+						success: (msg) => msg ?? 'Xác nhận thanh toán thành công',
+						error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình xác nhận thanh toán'
+					}
+				);
 			}
-		);
+		};
+		modalStore.trigger(modalSetting);
+		closeModal();
 	}
 
-	async function reset() {}
+	async function reset() {
+		const cb = $modalStore[0]?.response;
+		const modalSetting: ModalSettings = {
+			type: 'confirm',
+			title: 'Xác nhận',
+			body: 'Xác nhận chuyển bệnh án trở về cho bác sĩ, bác sĩ có thể chỉnh sửa hồ sơ bệnh án.',
+			response: (r) => {
+				if (!r || !$userStore) {
+					return;
+				}
 
-	function closeModal(state: boolean = false) {
-		$modalStore[0]?.response?.(state);
+				toast.promise(
+					async (): Promise<string> => {
+						const response = await fetch(endpoints.payment.reset(payment.recordId), {
+							method: 'PUT',
+							headers: {
+								Authorization: `Bearer ${$userStore.token}`
+							}
+						});
+
+						if (!response.ok) {
+							return Promise.reject();
+						}
+
+						cb?.(true);
+						return 'Đã chuyển bệnh án trở về cho bác sĩ';
+					},
+					{
+						loading: 'Đang xử lý...',
+						success: (msg) => msg ?? 'Đã chuyển bệnh án trở về cho bác sĩ',
+						error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi'
+					}
+				);
+			}
+		};
+		modalStore.trigger(modalSetting);
+		closeModal();
+	}
+
+	function closeModal() {
 		modalStore.close();
 	}
 </script>
@@ -80,7 +128,8 @@
 		{:then data}
 			<div class="flex gap-4">
 				<div
-					class="flex-1 flex-shrink-0 space-y-6 {payment.status === RecordStatus.WAITTINGPAYMENT
+					class="flex-1 flex-shrink-0 space-y-6 {payment.status === RecordStatus.WAITTINGPAYMENT &&
+					data.totalAmount > 0
 						? 'border-r pr-4'
 						: ''}"
 				>
@@ -111,7 +160,7 @@
 								{/if}
 							</p>
 						</div>
-						{#if payment.status === RecordStatus.END}
+						{#if payment.status === RecordStatus.END || data.totalAmount <= 0}
 							<div>
 								<button
 									type="button"
@@ -123,72 +172,76 @@
 							</div>
 						{/if}
 					</div>
-					<div>
-						<table class="w-full">
-							<thead>
-								<tr class="bg-slate-200">
-									<th class="p-2">#</th>
-									<th class="p-2 text-start">Dịch vụ</th>
-									<th class="p-2 text-end">Đơn giá</th>
-									<th class="p-2 text-end">Số lượng</th>
-									<th class="p-2 text-end">Thành tiền</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each data.treatments as treatment, i (treatment.id)}
-									<tr class="border-b">
-										<td class="p-2 text-center">{i + 1}</td>
-										<td class="p-2">{treatment.name}</td>
-										<td class="p-2 text-end">{formatCurrency(treatment.price)}</td>
-										<td class="p-2 text-end">{treatment.quantity}</td>
-										<td class="p-2 text-end font-bold text-black/60">
-											{formatCurrency(treatment.totalCost)}
+					{#if data.treatments.length > 0}
+						<div>
+							<table class="w-full">
+								<thead>
+									<tr class="bg-slate-200">
+										<th class="p-2">#</th>
+										<th class="p-2 text-start">Dịch vụ</th>
+										<th class="p-2 text-end">Đơn giá</th>
+										<th class="p-2 text-end">Số lượng</th>
+										<th class="p-2 text-end">Thành tiền</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each data.treatments as treatment, i (treatment.id)}
+										<tr class="border-b">
+											<td class="p-2 text-center">{i + 1}</td>
+											<td class="p-2">{treatment.name}</td>
+											<td class="p-2 text-end">{formatCurrency(treatment.price)}</td>
+											<td class="p-2 text-end">{treatment.quantity}</td>
+											<td class="p-2 text-end font-bold text-black/60">
+												{formatCurrency(treatment.totalCost)}
+											</td>
+										</tr>
+									{/each}
+									<tr>
+										<td colspan="3"></td>
+										<td class="p-2 text-end text-lg font-bold text-sky-500">Tổng</td>
+										<td class="p-2 text-end font-bold text-lg text-primary-700">
+											{formatCurrency(data.totalTreatmentAmount)}
 										</td>
 									</tr>
-								{/each}
-								<tr>
-									<td colspan="3"></td>
-									<td class="p-2 text-end text-lg font-bold text-sky-500">Tổng</td>
-									<td class="p-2 text-end font-bold text-lg text-primary-700">
-										{formatCurrency(data.totalTreatmentAmount)}
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<div>
-						<table class="w-full">
-							<thead>
-								<tr class="bg-slate-200">
-									<th class="p-2">#</th>
-									<th class="p-2 text-start">Vật tư</th>
-									<th class="p-2 text-start">Đơn vị</th>
-									<th class="p-2 text-end">Số lượng</th>
-									<th class="p-2 text-end">Thành tiền</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each data.extraMaterials as material, i (material.id)}
-									<tr class="border-b">
-										<td class="p-2 text-center">{i + 1}</td>
-										<td class="p-2">{material.name}</td>
-										<td class="p-2">{material.unit}</td>
-										<td class="p-2 text-end">{material.quantity}</td>
-										<td class="p-2 text-end font-bold text-black/60">
-											{formatCurrency(material.price)}
+								</tbody>
+							</table>
+						</div>
+					{/if}
+					{#if data.extraMaterials.length > 0}
+						<div>
+							<table class="w-full">
+								<thead>
+									<tr class="bg-slate-200">
+										<th class="p-2">#</th>
+										<th class="p-2 text-start">Vật tư</th>
+										<th class="p-2 text-start">Đơn vị</th>
+										<th class="p-2 text-end">Số lượng</th>
+										<th class="p-2 text-end">Thành tiền</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each data.extraMaterials as material, i (material.id)}
+										<tr class="border-b">
+											<td class="p-2 text-center">{i + 1}</td>
+											<td class="p-2">{material.name}</td>
+											<td class="p-2">{material.unit}</td>
+											<td class="p-2 text-end">{material.quantity}</td>
+											<td class="p-2 text-end font-bold text-black/60">
+												{formatCurrency(material.price)}
+											</td>
+										</tr>
+									{/each}
+									<tr>
+										<td colspan="3"></td>
+										<td class="p-2 text-end text-lg font-bold text-sky-500">Tổng</td>
+										<td class="p-2 text-end font-bold text-lg text-primary-700">
+											{formatCurrency(data.totalExtraMaterial)}
 										</td>
 									</tr>
-								{/each}
-								<tr>
-									<td colspan="3"></td>
-									<td class="p-2 text-end text-lg font-bold text-sky-500">Tổng</td>
-									<td class="p-2 text-end font-bold text-lg text-primary-700">
-										{formatCurrency(data.totalExtraMaterial)}
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+								</tbody>
+							</table>
+						</div>
+					{/if}
 					<div class="border-t">
 						<table class="mx-auto">
 							<thead>
@@ -210,7 +263,7 @@
 						</table>
 					</div>
 				</div>
-				{#if payment.status === RecordStatus.WAITTINGPAYMENT}
+				{#if payment.status === RecordStatus.WAITTINGPAYMENT && data.totalAmount > 0}
 					<div class="h-full flex flex-col gap-y-4">
 						<button
 							type="button"
