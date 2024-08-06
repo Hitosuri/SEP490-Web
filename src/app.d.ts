@@ -94,6 +94,7 @@ interface Material {
 	basicUnit: string;
 	smallestUnit: string;
 	smallestUnitQuantity: number;
+	isSurcharge: boolean;
 	medicine?: Medicine;
 }
 
@@ -182,6 +183,8 @@ interface Prescription {
 interface PrescriptionDetail {
 	id: number;
 	quantiy: number;
+	unit: string;
+	isBasicUnit: boolean;
 	medicineDetail: MedicineDetail;
 }
 
@@ -224,6 +227,8 @@ interface Treatment {
 	name: string;
 	price: number;
 	deleted: boolean;
+	quantity?: number;
+	totalCost?: number;
 	materials: MaterialInRelation[];
 }
 
@@ -268,15 +273,15 @@ interface PaymentMaterial {
 	name: string;
 	price: number;
 	quantity: number;
-	totalCost: number;
+	unit: string;
 }
 
 interface PaymentDetail {
 	patient: Patient;
 	treatments: Treatment[];
-	extraMaterial: PaymentMaterial[];
+	extraMaterials: PaymentMaterial[];
 	totalTreatmentAmount: number;
-	totalMaterialAmount: number;
+	totalExtraMaterial: number;
 	deduction: number;
 	totalAmount: number;
 }

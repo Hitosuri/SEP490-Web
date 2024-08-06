@@ -847,7 +847,7 @@
 											<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
 										</DropdownMenu.Item>
 									{:else}
-										{#if schedule.endAt && schedule.endAt > new Date()}
+										{#if schedule.endAt && schedule.endAt > new Date() && schedule.status !== ScheduleStatus.DONE}
 											<DropdownMenu.Item
 												on:click={() => editSchedule(schedule)}
 												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
@@ -878,16 +878,6 @@
 													<i class="fa-regular fa-trash-can"></i>
 												</div>
 												<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
-											</DropdownMenu.Item>
-										{:else if schedule.status === ScheduleStatus.DONE && schedule.startAt > new Date()}
-											<DropdownMenu.Item
-												on:click={() => pullSchedule(schedule)}
-												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-											>
-												<div class="size-4 text-center *:block">
-													<i class="fa-regular fa-trash-can"></i>
-												</div>
-												<span class="font-semibold text-sm leading-4">Kéo lịch lên hiện tại</span>
 											</DropdownMenu.Item>
 										{/if}
 									{/if}

@@ -11,7 +11,7 @@
 	import { Combobox, type Selected } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { formatFullDate } from '$lib/helpers/formatters';
+	import { formatFullDate, formatISODateWithOffset } from '$lib/helpers/formatters';
 	import { type Writable } from 'svelte/store';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
@@ -38,13 +38,18 @@
 
 			toast.promise(
 				async (): Promise<string> => {
+					const { startAt, endAt, ...others } = form.data;
 					const response = await fetch(endpoints.schedule.createByRecieptionist, {
 						method: 'POST',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
-						body: JSON.stringify(form.data)
+						body: JSON.stringify({
+							...others,
+							startAt: startAt,
+							endAt: endAt
+						})
 					});
 					const data = await response.json();
 

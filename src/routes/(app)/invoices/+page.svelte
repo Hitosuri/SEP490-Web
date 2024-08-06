@@ -221,13 +221,18 @@
 		filtering(lastestFilterOption, currentPage, pageSize, true);
 	}
 
-	function showDetail(id: number) {
+	function showDetail(payment: Payment) {
 		const modalSetting: ModalSettings = {
 			type: 'component',
 			component: {
 				ref: InvoiceDetail,
 				props: {
-					recordId: id
+					payment
+				}
+			},
+			response: (r) => {
+				if (r) {
+					filtering(lastestFilterOption, currentPage, pageSize, true, true);
 				}
 			}
 		};
@@ -432,7 +437,7 @@
 						? 'variant-filled-primary'
 						: 'variant-outline-tertiary text-tertiary-500 bg-white'}"
 					on:click={() => {
-						showDetail(item.recordId);
+						showDetail(item);
 					}}
 				>
 					{item.status === RecordStatus.WAITTINGPAYMENT ? 'Thanh toán' : 'Chi tiết'}

@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 	});
 
 	const data: Pagination<Payment[]> = await r.json();
+	console.log(data);
 
 	data.data.forEach((x) => {
 		x.examinationDate = new Date(x.examinationDate);

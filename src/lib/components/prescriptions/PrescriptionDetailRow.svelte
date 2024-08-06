@@ -3,7 +3,7 @@
 	import { editPrescriptionDetailSchema } from '$lib/form-schemas/edit-prescription-detail-schema';
 	import type { Selected } from 'bits-ui';
 	import { Control, Field, FieldErrors } from 'formsnap';
-	import { createEventDispatcher, getContext } from 'svelte';
+	import { createEventDispatcher, getContext, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -11,6 +11,9 @@
 	import SearchCombobox from '../common/SearchCombobox.svelte';
 	import NumberInput from '../common/NumberInput.svelte';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
+	import DropdownSelect from '../common/DropdownSelect.svelte';
+	import Loading from '../common/Loading.svelte';
+	import { browser } from '$app/environment';
 
 	export let prescriptionDetail: PrescriptionDetail;
 	export let editPrescriptionDetailForm: SuperValidated<
@@ -70,12 +73,88 @@
 	const { form: formData, enhance } = form;
 	let selectedMedicine: Selected<Material> | undefined;
 	let editing = false;
+	let materialUnits: Selected<boolean>[] = [];
+	let firstEdit = false;
+	let refreshTrigger = Math.random();
+	let selectedUnit: Selected<boolean> | undefined;
+	let loadStatus: 'init' | 'loading' | 'fail' | 'success' = 'init';
 
 	$: $formData.materialId = selectedMedicine?.value.id ?? 1;
 	$: $formData.dosage = selectedMedicine?.value.medicine?.dosage ?? '';
 	$: $formData.quantiy = prescriptionDetail.quantiy;
+	$: $formData.isBasicUnit = selectedUnit?.value ?? true;
+	$: onEditingChanged(editing);
+	$: onSelectedMaterialChanged(selectedMedicine);
 
-	resetValue();
+	async function loadDefaultMaterial() {
+		if (!$userStore) {
+			loadStatus = 'fail';
+			return;
+		}
+		loadStatus = 'loading';
+		const searchParams = new URLSearchParams();
+		searchParams.set('page', '1');
+		searchParams.set('size', '1');
+		searchParams.set('includeIds', String(prescriptionDetail.medicineDetail.id));
+		const r = await fetch(`${endpoints.materials.get}?${searchParams}`, {
+			headers: {
+				Authorization: `Bearer ${$userStore.token}`
+			}
+		});
+
+		if (!r.ok) {
+			loadStatus = 'fail';
+			return;
+		}
+
+		const data: Pagination<Material[]> = await r.json();
+
+		if (!data.data[0]) {
+			loadStatus = 'fail';
+			return;
+		}
+
+		selectedMedicine = {
+			value: data.data[0],
+			label: data.data[0].name
+		};
+		loadStatus = 'success';
+	}
+
+	function onSelectedMaterialChanged(selectedMaterial: Selected<Material> | undefined) {
+		if (selectedMaterial) {
+			materialUnits = selectedMaterial.value.isSurcharge
+				? [
+						{
+							label: selectedMaterial.value.basicUnit,
+							value: true
+						},
+						{
+							label: selectedMaterial.value.smallestUnit,
+							value: false
+						}
+					]
+				: [
+						{
+							label: selectedMaterial.value.basicUnit,
+							value: true
+						}
+					];
+			selectedUnit = materialUnits[0];
+		} else {
+			materialUnits = [];
+			selectedUnit = undefined;
+		}
+		refreshTrigger = Math.random();
+	}
+
+	function onEditingChanged(value: boolean) {
+		if (firstEdit || !value || !browser) {
+			return;
+		}
+		firstEdit = true;
+		loadDefaultMaterial();
+	}
 
 	async function deletePrescriptionDetail() {
 		if (!$userStore) {
@@ -93,84 +172,106 @@
 			dispatch('finishDelete', prescriptionDetail.id);
 		}
 	}
-
-	function resetValue() {
-		selectedMedicine = {
-			label: prescriptionDetail.medicineDetail.name,
-			value: {
-				id: prescriptionDetail.medicineDetail.id,
-				name: prescriptionDetail.medicineDetail.name,
-				materialTypeName: 'Thuốc',
-				price: prescriptionDetail.medicineDetail.price,
-				quantity: prescriptionDetail.medicineDetail.quantity,
-				supplierName: '',
-				medicine: {
-					id: prescriptionDetail.medicineDetail.id,
-					dosage: prescriptionDetail.medicineDetail.dosage,
-					uses: prescriptionDetail.medicineDetail.uses
-				}
-			}
-		};
-	}
 </script>
 
 <tr class="border-b {editing ? '*:align-top' : ''}">
-	<td class="px-4 py-2 text-center leading-[42px]">{index + 1}</td>
-	<td class="px-4 py-2 text-start">
-		{#if editing}
-			<div>
-				<Field {form} name="materialId">
-					<Control>
-						<SearchCombobox
-							placeholder="Tên thuốc..."
-							searchFn={searchMaterialFn}
-							bind:selected={selectedMedicine}
-						></SearchCombobox>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-		{:else}
+	<td class="p-2 text-center leading-[42px]">{index + 1}</td>
+	{#if editing}
+		{#if loadStatus === 'init'}
+			<td colspan="4" class="p-2">-</td>
+		{/if}
+		{#if loadStatus === 'fail'}
+			<td colspan="4" class="p-2">
+				<button
+					type="button"
+					class="btn variant-filled-error rounded-container-token block mx-auto"
+					on:click={() => loadDefaultMaterial()}
+				>
+					<i class="fa-solid fa-rotate"></i>
+					<span>Tải lại</span>
+				</button>
+			</td>
+		{/if}
+		{#if loadStatus === 'loading'}
+			<td colspan="4" class="p-2">
+				<Loading class="w-full justify-center items-center h-[42px]" />
+			</td>
+		{/if}
+		{#if loadStatus === 'success'}
+			<td class="p-2 text-start">
+				<div>
+					<Field {form} name="materialId">
+						<Control>
+							<SearchCombobox
+								placeholder="Tên thuốc..."
+								searchFn={searchMaterialFn}
+								bind:selected={selectedMedicine}
+							></SearchCombobox>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+			</td>
+			<td class="p-2 text-center">
+				<DropdownSelect
+					disabled={materialUnits.length === 0}
+					items={materialUnits}
+					bind:selected={selectedUnit}
+					regionInput="border border-surface-500/35 h-[42px] px-3 focus:ring-primary justify-between w-full"
+					regionContent="z-[1000]"
+					let:ValueComponent
+				>
+					<ValueComponent class="font-semibold" />
+					<div class="flex flex-col text-[0.55rem] pl-6 text-surface-400">
+						<i class="fa-solid fa-chevron-up"></i>
+						<i class="fa-solid fa-chevron-down"></i>
+					</div>
+				</DropdownSelect>
+			</td>
+			<td class="p-2 text-end">
+				<div>
+					<Field {form} name="quantiy">
+						<Control let:attrs>
+							<NumberInput {...attrs} bind:value={$formData.quantiy} />
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+			</td>
+			<td class="p-2 text-start">
+				<div>
+					<Field {form} name="dosage">
+						<Control let:attrs>
+							<textarea
+								class="textarea flex-1 bg-white"
+								rows="1"
+								{...attrs}
+								placeholder="Liều dùng..."
+								bind:value={$formData.dosage}
+								use:autoHeightTextArea={{
+									value: $formData.dosage
+								}}
+							></textarea>
+						</Control>
+						<FieldErrors class="text-sm mt-1" />
+					</Field>
+				</div>
+			</td>
+		{/if}
+	{:else if !editing}
+		<td class="p-2 text-start">
 			{prescriptionDetail.medicineDetail.name}
-		{/if}
-	</td>
-	<td class="px-4 py-2 text-end">
-		{#if editing}
-			<div>
-				<Field {form} name="quantiy">
-					<Control let:attrs>
-						<NumberInput {...attrs} bind:value={$formData.quantiy} />
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-		{:else}
+		</td>
+		<td class="p-2 text-center">
+			{prescriptionDetail.unit}
+		</td>
+		<td class="p-2 text-end">
 			{prescriptionDetail.quantiy}
-		{/if}
-	</td>
-	<td class="px-4 py-2 text-start">
-		{#if editing}
-			<div>
-				<Field {form} name="dosage">
-					<Control let:attrs>
-						<textarea
-							class="textarea flex-1 bg-white"
-							rows="1"
-							{...attrs}
-							placeholder="Liều dùng..."
-							bind:value={$formData.dosage}
-							use:autoHeightTextArea={{
-								value: $formData.dosage
-							}}
-						></textarea>
-					</Control>
-					<FieldErrors class="text-sm mt-1" />
-				</Field>
-			</div>
-		{:else}
+		</td>
+		<td class="p-2 text-start">
 			{prescriptionDetail.medicineDetail.dosage}
-		{/if}
-	</td>
+		</td>
+	{/if}
 	{#if editMode}
 		<td class="py-2 w-auto">
 			{#if editing}

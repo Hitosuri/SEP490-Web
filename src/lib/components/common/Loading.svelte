@@ -2,17 +2,23 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { twMerge } from 'tailwind-merge';
 
-	type $$Props = HTMLAttributes<HTMLDivElement>;
+	interface $$Props extends HTMLAttributes<HTMLDivElement> {
+		showLabel?: boolean;
+	}
+
+	export let showLabel = true;
 
 	const { class: classes, ...others } = $$restProps;
 	const elClasses = twMerge(
-		classes,
-		'flex gap-2 font-medium tracking-wider items-center w-fit h-fit'
+		'flex gap-2 font-medium tracking-wider items-center w-fit h-fit',
+		classes
 	);
 </script>
 
 <div class={elClasses} {...others}>
-	<span>Đang tải...</span>
+	{#if showLabel}
+		<span>Đang tải...</span>
+	{/if}
 	<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 		<path
 			fill="currentColor"

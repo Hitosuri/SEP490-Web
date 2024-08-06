@@ -14,7 +14,7 @@ const compactDateFormatter = new Intl.DateTimeFormat('vi', {
 });
 
 export function formatCurrency(amount: number | undefined | null): string {
-	if (!amount) {
+	if (amount == null) {
 		return '';
 	}
 	return currencyFormatter.format(amount);
@@ -46,4 +46,23 @@ export function formatHourMinute(date: Date | undefined | null): string {
 		return '';
 	}
 	return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+export function formatISODateWithOffset(date: Date | undefined | null): string {
+	if (!date) {
+		return '';
+	}
+	const tmp = new Date(date);
+	tmp.setMinutes(tmp.getMinutes() - tmp.getTimezoneOffset());
+	return tmp.toISOString().slice(0, -1) + getTimezoneOffset(tmp);
+}
+
+function pad(n: number) {
+	return `${Math.floor(Math.abs(n))}`.padStart(2, '0');
+}
+
+function getTimezoneOffset(date: Date) {
+	const tzOffset = -date.getTimezoneOffset();
+	const diff = tzOffset >= 0 ? '+' : '-';
+	return diff + pad(tzOffset / 60) + ':' + pad(tzOffset % 60);
 }

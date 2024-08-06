@@ -92,7 +92,6 @@
 
 	$: allMaterialId = usedMaterials.map((x) => x.materialId).filter((x) => x > 0);
 	$: $formData.recordExtraMaterialRequests = [...usedMaterials];
-	$: console.log(dataChanged);
 
 	resetValue();
 
@@ -373,7 +372,9 @@
 								<col />
 								<col />
 								<col class="w-40" />
-								<col class="w-10" />
+								{#if canEdit}
+									<col class="w-10" />
+								{/if}
 							</colgroup>
 							<thead>
 								<tr class="border-b">
@@ -381,7 +382,9 @@
 									<th class="text-start px-2 py-2">Vật tư</th>
 									<th class="px-2 py-2">Đơn vị</th>
 									<th class="text-end px-2 py-2">Số lượng</th>
-									<th class=""></th>
+									{#if canEdit}
+										<th class=""></th>
+									{/if}
 								</tr>
 							</thead>
 							<tbody>
@@ -438,8 +441,13 @@
 										</td>
 									</tr>
 								{:else}
-									{#each usedMaterials as material (material.materialId)}
-										<tr></tr>
+									{#each record.extraMaterials as material, i (material.materialId)}
+										<tr class="border-b">
+											<td class="text-center px-2 py-2">{i + 1}</td>
+											<td class="text-start px-2 py-2">{material.materialName}</td>
+											<td class="text-center px-2 py-2">{material.unit}</td>
+											<td class="text-end px-2 py-2">{material.quantity}</td>
+										</tr>
 									{:else}
 										<tr>
 											<td colspan="5" class="border-b py-3">
