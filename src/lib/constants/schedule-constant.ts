@@ -20,7 +20,7 @@ export const scheduleStatusInfo = {
 	},
 	[ScheduleStatus.CANCEL]: {
 		label: 'Đã huỷ',
-		styleClasses: ['bg-schedule-done', 'border-schedule-done', 'text-schedule-done']
+		styleClasses: ['bg-schedule-cancel', 'border-schedule-cancel', 'text-schedule-cancel']
 	}
 } as const;
 

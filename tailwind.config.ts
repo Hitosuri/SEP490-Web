@@ -25,17 +25,20 @@ export default {
 			backgroundColor: ({ colors }) => ({
 				'schedule-pending': colors.orange[100],
 				'schedule-confirmed': colors.green[100],
-				'schedule-done': colors.violet[100]
+				'schedule-done': colors.violet[100],
+				'schedule-cancel': colors.neutral[200]
 			}),
 			borderColor: ({ colors }) => ({
 				'schedule-pending': colors.orange[400],
 				'schedule-confirmed': colors.green[400],
-				'schedule-done': colors.violet[400]
+				'schedule-done': colors.violet[400],
+				'schedule-cancel': colors.neutral[400]
 			}),
 			textColor: ({ colors }) => ({
 				'schedule-pending': colors.orange[600],
 				'schedule-confirmed': colors.green[600],
-				'schedule-done': colors.violet[600]
+				'schedule-done': colors.violet[600],
+				'schedule-cancel': colors.neutral[600]
 			})
 		}
 	},

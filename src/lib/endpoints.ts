@@ -58,7 +58,8 @@ export default {
 		pullSchedule: (doctorId: number) =>
 			`${PUBLIC_API_HOST}/api/schedules/Reschedule?doctorId=${doctorId}`,
 		confirmFromPatient: (token: string, confirmed: boolean) =>
-			`${PUBLIC_API_HOST}/api/schedules/ConfirmScheduleByPatient?token=${encodeURIComponent(token)}&confirm=${confirmed}`
+			`${PUBLIC_API_HOST}/api/schedules/ConfirmScheduleByPatient?token=${encodeURIComponent(token)}&confirm=${confirmed}`,
+		cancel: (id: number) => `${PUBLIC_API_HOST}/api/schedules/CanclSchedule?scheduleId=${id}`
 	},
 	records: {
 		get: (id: number) => `${PUBLIC_API_HOST}/api/record/all/${id}`,

@@ -78,6 +78,7 @@
 	let limitEndElement: HTMLDivElement;
 	let editingSchedule: ScheduleFull | undefined;
 	let timeChanged = false;
+	let currentMinute: Date = new Date();
 
 	$: lowerLimit = calculateLowerLimit(selectedDate);
 	$: blockPastWidth = lowerLimit * 32;
@@ -129,7 +130,8 @@
 		MinuteTick.removeEvent(calculateLowerLimitActive);
 	});
 
-	function calculateLowerLimitActive() {
+	function calculateLowerLimitActive(time: Date) {
+		currentMinute = time;
 		lowerLimit = calculateLowerLimit(selectedDate);
 	}
 
@@ -205,14 +207,16 @@
 	): [UserMinimal, ScheduleFull[]][] {
 		const doctors: Record<number, [UserMinimal, ScheduleFull[]]> = {};
 
-		scheduleInDay.forEach((s) => {
-			const doctorId = s.doctor.id;
-			if (!doctors[doctorId]) {
-				doctors[doctorId] = [s.doctor, []];
-			}
+		scheduleInDay
+			.filter((x) => x.status !== ScheduleStatus.CANCEL)
+			.forEach((s) => {
+				const doctorId = s.doctor.id;
+				if (!doctors[doctorId]) {
+					doctors[doctorId] = [s.doctor, []];
+				}
 
-			doctors[doctorId][1].push(s);
-		});
+				doctors[doctorId][1].push(s);
+			});
 
 		return Object.values(doctors);
 	}
@@ -629,15 +633,11 @@
 		modalStore.trigger(modalSetting);
 	}
 
-	function pullSchedule(schedule: ScheduleFull) {
-		const newStartAt = new Date();
-		const newMinutes = Math.ceil(newStartAt.getMinutes() / 15) * 15;
-		newStartAt.setMinutes(newMinutes);
-
+	function cancelSchedule(schedule: ScheduleFull) {
 		const modalSetting: ModalSettings = {
 			type: 'confirm',
-			title: 'Xác nhận thay đổi thời gian',
-			body: `Vui lòng xác nhận thay đổi thời gian bắt đầu lịch hẹn của bệnh nhân ${schedule.patient.name} từ ${formatHourMinute(schedule.startAt)} vào lúc ${formatHourMinute(newStartAt)}`,
+			title: 'Xác nhận huỷ lịch',
+			body: `Bạn có chắc muốn huỷ lịch của bệnh nhân ${schedule.patient.name} do bệnh nhân không tới`,
 			response: (r) => {
 				if (!r || !$userStore) {
 					return;
@@ -645,7 +645,7 @@
 
 				toast.promise(
 					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.pullSchedule(schedule.doctor.id), {
+						const response = await fetch(endpoints.schedule.cancel(schedule.id), {
 							method: 'PUT',
 							headers: {
 								'content-type': 'application/json',
@@ -670,12 +670,12 @@
 							return Promise.reject();
 						}
 						filtering(lastFilterOptions);
-						return 'Cập nhật lịch hẹn thành công';
+						return 'Huỷ lịch hẹn thành công';
 					},
 					{
 						loading: 'Đang xử lý...',
-						success: (msg) => msg ?? 'Cập nhật lịch hẹn thành công',
-						error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật lịch hẹn'
+						success: (msg) => msg ?? 'Huỷ lịch hẹn thành công',
+						error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình huỷ lịch hẹn'
 					}
 				);
 			}
@@ -812,67 +812,35 @@
 						<div
 							class="h-full flex items-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}"
 						>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger
-									class="btn mx-auto block text-surface-400 p-0 size-7 text-lg hover:variant-soft-primary"
-								>
-									<i class="fa-solid fa-ellipsis"></i>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content
-									transition={fly}
-									transitionConfig={{
-										duration: 200,
-										y: 30,
-										easing: cubicOut
-									}}
-									class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
-								>
-									{#if schedule.status === ScheduleStatus.PENDING}
-										<DropdownMenu.Item
-											on:click={() => openScheduleConfirmModal(schedule)}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block flex justify-center">
-												<i class="fa-regular fa-handshake"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Xác nhận</span>
-										</DropdownMenu.Item>
-										<DropdownMenu.Item
-											on:click={() => deleteSchedule(schedule)}
-											class=" =data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-trash-can"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
-										</DropdownMenu.Item>
-									{:else}
-										{#if schedule.endAt && schedule.endAt > new Date() && schedule.status !== ScheduleStatus.DONE}
+							{#if ![ScheduleStatus.CANCEL].includes(schedule.status)}
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger
+										class="btn mx-auto block text-surface-400 p-0 size-7 text-lg hover:variant-soft-primary"
+									>
+										<i class="fa-solid fa-ellipsis"></i>
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content
+										transition={fly}
+										transitionConfig={{
+											duration: 200,
+											y: 30,
+											easing: cubicOut
+										}}
+										class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+									>
+										{#if schedule.status === ScheduleStatus.PENDING}
 											<DropdownMenu.Item
-												on:click={() => editSchedule(schedule)}
+												on:click={() => openScheduleConfirmModal(schedule)}
 												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 											>
-												<div class="size-4 text-center *:block">
-													<i class="fa-solid fa-pen-to-square"></i>
+												<div class="size-4 text-center *:block flex justify-center">
+													<i class="fa-regular fa-handshake"></i>
 												</div>
-												<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+												<span class="font-semibold text-sm leading-4">Xác nhận</span>
 											</DropdownMenu.Item>
-										{/if}
-										{#if schedule.status === ScheduleStatus.CONFIRMED}
-											{#if today(getLocalTimeZone()).compare(selectedDate) === 0}
-												<DropdownMenu.Item
-													on:click={() => patientCheckin(schedule)}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-												>
-													<div class="size-4 text-center *:block">
-														<i class="fa-solid fa-check-to-slot"></i>
-													</div>
-													<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
-												</DropdownMenu.Item>
-											{/if}
 											<DropdownMenu.Item
 												on:click={() => deleteSchedule(schedule)}
-												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												class=" =data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 											>
 												<div class="size-4 text-center *:block">
 													<i class="fa-regular fa-trash-can"></i>
@@ -880,9 +848,57 @@
 												<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
 											</DropdownMenu.Item>
 										{/if}
-									{/if}
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
+										{#if [ScheduleStatus.DONE, ScheduleStatus.CONFIRMED].includes(schedule.status)}
+											{#if schedule.endAt && schedule.endAt > currentMinute && schedule.status !== ScheduleStatus.DONE}
+												<DropdownMenu.Item
+													on:click={() => editSchedule(schedule)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center *:block">
+														<i class="fa-regular fa-calendar-lines-pen"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+												</DropdownMenu.Item>
+											{/if}
+											{#if schedule.status === ScheduleStatus.CONFIRMED}
+												{#if currentMinute > schedule.startAt}
+													<DropdownMenu.Item
+														on:click={() => cancelSchedule(schedule)}
+														class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													>
+														<div class="size-4 text-center *:block">
+															<i class="fa-regular fa-trash-can"></i>
+														</div>
+														<span class="font-semibold text-sm leading-4">
+															Huỷ lịch do bệnh nhân không tới
+														</span>
+													</DropdownMenu.Item>
+												{/if}
+												{#if today(getLocalTimeZone()).compare(selectedDate) === 0}
+													<DropdownMenu.Item
+														on:click={() => patientCheckin(schedule)}
+														class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													>
+														<div class="size-4 text-center *:block">
+															<i class="fa-solid fa-check-to-slot"></i>
+														</div>
+														<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
+													</DropdownMenu.Item>
+												{/if}
+												<DropdownMenu.Item
+													on:click={() => deleteSchedule(schedule)}
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+												>
+													<div class="size-4 text-center *:block">
+														<i class="fa-regular fa-calendar-circle-minus"></i>
+													</div>
+													<span class="font-semibold text-sm leading-4">Xoá lịch</span>
+												</DropdownMenu.Item>
+											{/if}
+										{/if}
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+							{/if}
 						</div>
 					{/each}
 				</div>
