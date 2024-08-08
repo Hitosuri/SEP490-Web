@@ -170,7 +170,11 @@
 											? 'hover:bg-gradient-to-r from-sky-100  to-teal-100 cursor-pointer font-bold'
 											: ''}"
 									>
-										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
+										<td
+											class="p-0 border-r {showLink
+												? 'group-hover:border-primary-300 text-primary-700'
+												: ''}"
+										>
 											<svelte:element
 												this={elementTag}
 												href="/records/{queueItem.id}"
@@ -179,7 +183,11 @@
 												{i + 1}
 											</svelte:element>
 										</td>
-										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
+										<td
+											class="p-0 border-r {showLink
+												? 'group-hover:border-primary-300 text-primary-700'
+												: ''}"
+										>
 											<svelte:element
 												this={elementTag}
 												href="/records/{queueItem.id}"
@@ -188,7 +196,11 @@
 												{queueItem.patientName}
 											</svelte:element>
 										</td>
-										<td class="p-0 border-r {showLink ? 'group-hover:border-primary-300' : ''}">
+										<td
+											class="p-0 border-r {showLink
+												? 'group-hover:border-primary-300 text-primary-700'
+												: ''}"
+										>
 											<svelte:element
 												this={elementTag}
 												href="/records/{queueItem.id}"
@@ -199,7 +211,7 @@
 												{formatHourMinute(queueItem.endAt)}
 											</svelte:element>
 										</td>
-										<td class="p-0">
+										<td class="p-0 {showLink ? 'text-primary-700' : ''}">
 											<svelte:element
 												this={elementTag}
 												href="/records/{queueItem.id}"

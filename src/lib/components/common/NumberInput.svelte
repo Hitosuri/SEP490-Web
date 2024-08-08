@@ -17,7 +17,7 @@
 <div class="relative">
 	<input
 		type="number"
-		class="input rounded-container-token px-12 text-center w-36 font-medium"
+		class="input rounded-container-token px-12 text-center font-medium bg-white/100"
 		bind:value
 		{...$$restProps}
 	/>

@@ -51,6 +51,8 @@ export default {
 		createByPatient: `${PUBLIC_API_HOST}/api/schedules/CreateByPatient`,
 		editByRecieptionist: (id: number) =>
 			`${PUBLIC_API_HOST}/api/schedules/UpdateByRecieptionist?scheduleId=${id}`,
+		editByPatient: (id: number) =>
+			`${PUBLIC_API_HOST}/api/schedules/UpdateByPatient?scheduleId=${id}`,
 		deleteByRecieptionist: (id: number) => `${PUBLIC_API_HOST}/api/schedules/DeletedSchedule/${id}`,
 		deleteByPatient: (id: number) =>
 			`${PUBLIC_API_HOST}/api/schedules/DeletedScheduleByPatient/${id}`,

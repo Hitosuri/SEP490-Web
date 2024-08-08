@@ -7,7 +7,7 @@
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
-	import { formatCompactDate, formatFullDate } from '$lib/helpers/formatters';
+	import { formatCompactDateTime } from '$lib/helpers/formatters';
 	import { type Writable } from 'svelte/store';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
 	import { createAppointmentPatientSchema } from '$lib/form-schemas/create-appointment-patient-schema';
@@ -17,10 +17,7 @@
 	export let createAppointmentByPatientForm: SuperValidated<
 		z.infer<typeof createAppointmentPatientSchema>
 	>;
-	export let startHour: number;
-	export let startMinute: number;
-	export let date: Date;
-	export let doctor: UserMinimal;
+	export let schedule: ScheduleFull;
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
@@ -36,17 +33,17 @@
 
 			toast.promise(
 				async (): Promise<string> => {
-					const response = await fetch(endpoints.schedule.createByPatient, {
-						method: 'POST',
+					const response = await fetch(endpoints.schedule.editByPatient(schedule.id), {
+						method: 'PUT',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: JSON.stringify(form.data)
 					});
-					const data = await response.json();
 
 					if (!response.ok) {
+						const data = await response.json();
 						if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
@@ -64,12 +61,12 @@
 					}
 					dispatch('finish');
 					closeModal();
-					return 'Tạo lịch hẹn thành công';
+					return 'Cập nhật lịch hẹn thành công';
 				},
 				{
 					loading: 'Đang xử lý...',
-					success: (msg) => msg ?? 'Tạo lịch hẹn thành công',
-					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo lịch hẹn'
+					success: (msg) => msg ?? 'Cập nhật lịch hẹn thành công',
+					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật lịch hẹn'
 				}
 			);
 		}
@@ -80,18 +77,16 @@
 		z.infer<typeof createAppointmentPatientSchema>['scheduleForAnotherRequest'],
 		undefined
 	> = {
-		createForPatientAge: 0,
-		createForPatientName: '',
-		noteForPatientCreatedBy: '',
-		relationWithCurrentPatient: ''
+		createForPatientAge: schedule.anotherPersonDto?.createForPatientAge ?? 0,
+		createForPatientName: schedule.anotherPersonDto?.createForPatientName ?? '',
+		noteForPatientCreatedBy: schedule.anotherPersonDto?.noteForPatientCreatedBy ?? '',
+		relationWithCurrentPatient: schedule.anotherPersonDto?.relationWithCurrentPatient ?? ''
 	};
-	let createForAnother = false;
+	let createForAnother = !!schedule.anotherPersonDto;
 
-	$: startTime = new Date(date);
-	$: startTime.setHours(startHour);
-	$: startTime.setMinutes(startMinute);
-	$: $formData.doctorId = doctor.id;
-	$: $formData.startAt = startTime;
+	$: $formData.doctorId = schedule.doctor.id;
+	$: $formData.description = schedule.description ?? '';
+	$: $formData.startAt = schedule.startAt;
 	$: $formData.scheduleForAnotherRequest = createForAnother ? anotherPatient : undefined;
 
 	function closeModal() {
@@ -112,7 +107,7 @@
 			<i class="fa-solid fa-xmark"></i>
 		</button>
 	</div>
-	<h1 class="font-semibold text-2xl my-6">Tạo lịch hẹn</h1>
+	<h1 class="font-semibold text-2xl my-6">Sửa lịch hẹn</h1>
 	<form use:enhance method="post">
 		<fieldset disabled={requesting} class="space-y-4">
 			<div class="grid grid-cols-2">
@@ -121,9 +116,7 @@
 					<div
 						class="text-xl font-semibold tracking-wide h-[42px] leading-[42px] text-primary-600 pl-4"
 					>
-						{startHour}:{String(startMinute).padStart(2, '0')}
-						-
-						{formatCompactDate(date)}
+						{formatCompactDateTime(schedule.startAt)}
 					</div>
 				</div>
 				<div>
@@ -131,7 +124,7 @@
 					<div
 						class="text-xl font-semibold tracking-wide h-[42px] leading-[42px] text-primary-600 pl-4"
 					>
-						{doctor.name}
+						{schedule.doctor.name}
 					</div>
 				</div>
 			</div>
@@ -154,7 +147,9 @@
 				</Field>
 			</div>
 			<div class="flex gap-4 items-center col-span-2">
-				<span class="font-semibold text-surface-500 select-none">Tạo lịch cho bệnh nhân khác</span>
+				<span class="font-semibold text-surface-500 select-none"
+					>Lịch hẹn dành cho bệnh nhân khác</span
+				>
 				<SlideToggle size="sm" name="create-for-another" bind:checked={createForAnother} />
 			</div>
 			{#if createForAnother}
@@ -233,8 +228,8 @@
 				<span class="pl-1">Huỷ</span>
 			</button>
 			<button type="submit" class="variant-filled-primary">
-				<i class="fa-solid fa-plus"></i>
-				<span class="pl-1">Tạo</span>
+				<i class="fa-solid fa-check"></i>
+				<span class="pl-1">Cập nhật</span>
 			</button>
 		</fieldset>
 	</form>

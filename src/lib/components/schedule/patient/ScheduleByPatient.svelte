@@ -15,6 +15,7 @@
 	import type { SuperValidated } from 'sveltekit-superforms';
 	import { formatCompactDate } from '$lib/helpers/formatters';
 	import { toast } from 'svelte-sonner';
+	import EditAppoimentByPatient from './EditAppoimentByPatient.svelte';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
@@ -125,6 +126,7 @@
 
 							return Promise.reject();
 						}
+						filtering();
 						return 'Xoá lịch hẹn thành công';
 					},
 					{
@@ -358,6 +360,28 @@
 		modalStore.trigger(setting);
 	}
 
+	function editAppointment(schedule: ScheduleFull) {
+		const setting: ModalSettings = {
+			type: 'component',
+			component: {
+				ref: EditAppoimentByPatient,
+				props: {
+					schedule,
+					createAppointmentByPatientForm
+				}
+			},
+			response: (r) => {
+				if (r) {
+					cancelCreateSchedule();
+					filtering();
+					return;
+				}
+				scheduleMenuOpened = true;
+			}
+		};
+		modalStore.trigger(setting);
+	}
+
 	function cancelCreateSchedule() {
 		selectionInDoctor = undefined;
 	}
@@ -376,7 +400,7 @@
 					<hr class="flex-1 !border-surface-400" />
 					<span class="text-surface-600">tháng {selectedDate.month}</span>
 				</div>
-				<div class="flex flex-wrap">
+				<div class="flex flex-wrap gap-4">
 					{#each waitConfirmSchedules as schedule (schedule.id)}
 						<div class="bg-white border pl-5 pr-3 py-3 shadow-md rounded-md flex gap-4 bg-">
 							<div>
@@ -404,6 +428,15 @@
 										}}
 										class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
 									>
+										<DropdownMenu.Item
+											on:click={() => editAppointment(schedule)}
+											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+										>
+											<div class="size-4 text-center *:block">
+												<i class="fa-regular fa-calendar-lines-pen"></i>
+											</div>
+											<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+										</DropdownMenu.Item>
 										<DropdownMenu.Item
 											on:click={() => deleteSchedule(schedule)}
 											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"

@@ -115,6 +115,48 @@
 	<title>Hồ sơ bệnh án - {record.patient.name}</title>
 </svelte:head>
 <Container paddingTopHeader heightFull class="py-4 space-y-6">
+	<div class="flex gap-x-4">
+		{#if record.anotherPersonDto}
+			<div class="bg-white rounded-container-token shadow-md p-6 border flex-1">
+				<p class="font-semibold text-2xl select-none mb-4">Bệnh nhân</p>
+				<div class="space-y-2">
+					<p class="text-lg">
+						<span class="font-medium text-surface-500">Tên:</span>
+						<span class="font-semibold">{record.anotherPersonDto.createForPatientName}</span>
+					</p>
+					<p class="text-lg">
+						<span class="font-medium text-surface-500">Tuổi:</span>
+						<span class="font-semibold">{record.anotherPersonDto.createForPatientAge}</span>
+					</p>
+					<p class="text-lg">
+						<span class="font-medium text-surface-500">Quan hệ với người giám hộ:</span>
+						<span class="font-semibold">{record.anotherPersonDto.relationWithCurrentPatient}</span>
+					</p>
+					{#if record.anotherPersonDto.noteForPatientCreatedBy?.trim()}
+						<p class="text-lg">
+							<span class="font-medium text-surface-500">Ghi chú:</span>
+							<span class="font-medium">{record.anotherPersonDto.noteForPatientCreatedBy}</span>
+						</p>
+					{/if}
+				</div>
+			</div>
+		{/if}
+		<div class="bg-white rounded-container-token shadow-md p-6 border flex-1">
+			<p class="font-semibold text-2xl select-none mb-4">
+				{record.anotherPersonDto ? 'Giám hộ' : 'Bệnh nhân'}
+			</p>
+			<div class="space-y-2">
+				<p class="text-lg">
+					<span class="font-medium text-surface-500">Tên:</span>
+					<span class="font-semibold">{record.patient.name}</span>
+				</p>
+				<p class="text-lg">
+					<span class="font-medium text-surface-500">Số điện thoại:</span>
+					<span class="font-semibold">{record.patient.phone}</span>
+				</p>
+			</div>
+		</div>
+	</div>
 	<ExaminationContent
 		editRecordForm={data.editRecordForm}
 		recordId={data.recordId}

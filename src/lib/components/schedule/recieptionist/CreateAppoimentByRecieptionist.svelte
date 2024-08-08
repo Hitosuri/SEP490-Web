@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { createAppointmentSchema } from '$lib/form-schemas/create-appointment-schema';
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, SlideToggle } from '@skeletonlabs/skeleton';
 	import { createEventDispatcher, getContext, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
-	import { Control, Description, Field, FieldErrors, Label } from 'formsnap';
+	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { Combobox, type Selected } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -15,6 +15,7 @@
 	import { type Writable } from 'svelte/store';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
+	import NumberInput from '$lib/components/common/NumberInput.svelte';
 
 	export let createAppointmentForm: SuperValidated<z.infer<typeof createAppointmentSchema>>;
 	export let startHour: number;
@@ -81,7 +82,7 @@
 			);
 		}
 	});
-	const { form: formData, enhance, allErrors } = form;
+	const { form: formData, enhance } = form;
 	let requesting = false;
 	let patients: Selected<Patient>[] = [];
 	let patientSearchInput = '';
@@ -90,10 +91,21 @@
 	let patientFirstOpen = false;
 	let patientSearchTimer: NodeJS.Timeout;
 	let selectedPatient: Selected<Patient> | undefined;
+	let anotherPatient: Exclude<
+		z.infer<typeof createAppointmentSchema>['scheduleForAnotherRequest'],
+		undefined
+	> = {
+		createForPatientAge: 0,
+		createForPatientName: '',
+		noteForPatientCreatedBy: '',
+		relationWithCurrentPatient: ''
+	};
+	let createForAnother = false;
 
 	$: onPatientSearchOpen(patientSearchOpen);
 	$: patientSearch(patientSearchInput);
 	$: $formData.patientId = selectedPatient?.value.id ?? 0;
+	$: $formData.scheduleForAnotherRequest = createForAnother ? anotherPatient : undefined;
 
 	onMount(() => {
 		const startTime = new Date(date);
@@ -287,6 +299,76 @@
 					<FieldErrors class="text-sm mt-1" />
 				</Field>
 			</div>
+			<div class="flex gap-4 items-center col-span-2">
+				<span class="font-semibold text-surface-500 select-none">Tạo lịch cho bệnh nhân khác</span>
+				<SlideToggle size="sm" name="create-for-another" bind:checked={createForAnother} />
+			</div>
+			{#if createForAnother}
+				<div class="grid grid-cols-2 gap-4 col-span-2 border rounded-md p-4 relative bg-slate-50">
+					<div>
+						<Field {form} name="scheduleForAnotherRequest.createForPatientName">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none mb-1">
+									Tên bệnh nhân<sup class="text-red-500">*</sup>
+								</Label>
+								<input
+									{...attrs}
+									type="text"
+									placeholder="Nhập tên bệnh nhân..."
+									class="input rounded-container-token bg-white/100"
+									bind:value={anotherPatient.createForPatientName}
+								/>
+							</Control>
+							<FieldErrors class="text-sm mt-1" />
+						</Field>
+					</div>
+					<div>
+						<Field {form} name="scheduleForAnotherRequest.createForPatientAge">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none mb-1">
+									Tuổi bệnh nhân<sup class="text-red-500">*</sup>
+								</Label>
+								<NumberInput bind:value={anotherPatient.createForPatientAge} />
+							</Control>
+							<FieldErrors class="text-sm mt-1" />
+						</Field>
+					</div>
+					<div>
+						<Field {form} name="scheduleForAnotherRequest.noteForPatientCreatedBy">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none mb-1">
+									Ghi chú cho người giám hộ
+								</Label>
+								<input
+									{...attrs}
+									type="text"
+									placeholder="Nhập ghi chú..."
+									class="input rounded-container-token bg-white/100"
+									bind:value={anotherPatient.noteForPatientCreatedBy}
+								/>
+							</Control>
+							<FieldErrors class="text-sm mt-1" />
+						</Field>
+					</div>
+					<div>
+						<Field {form} name="scheduleForAnotherRequest.relationWithCurrentPatient">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none mb-1">
+									Quan hệ với giám hộ<sup class="text-red-500">*</sup>
+								</Label>
+								<input
+									{...attrs}
+									type="text"
+									placeholder="Bố, mẹ, ông, bà..."
+									class="input rounded-container-token bg-white/100"
+									bind:value={anotherPatient.relationWithCurrentPatient}
+								/>
+							</Control>
+							<FieldErrors class="text-sm mt-1" />
+						</Field>
+					</div>
+				</div>
+			{/if}
 		</fieldset>
 		<fieldset
 			disabled={requesting}

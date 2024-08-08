@@ -123,6 +123,7 @@ interface ScheduleFull {
 	isPatientConfirm: boolean;
 	description?: string;
 	order: number;
+	anotherPersonDto?: AnotherPerson;
 }
 
 interface RecordListItem {
@@ -133,6 +134,7 @@ interface RecordListItem {
 	diagnosis: string;
 	reason: string;
 	isReVisit: boolean;
+	anotherPersonDto?: AnotherPerson;
 	status: import('$lib/constants/record-constant').RecordStatus;
 }
 
@@ -151,7 +153,7 @@ interface QueueItem {
 
 interface RecordPatient {
 	doctor: UserMinimal;
-	patient: UserMinimal;
+	patient: PatientInSchedule;
 	status: import('$lib/constants/record-constant').RecordStatus;
 	diagnostic: string;
 	reason: string;
@@ -167,6 +169,7 @@ interface RecordPatient {
 		defaultMaterials: MaterialInRelation[];
 	}[];
 	extraMaterials: MaterialInRelation[];
+	anotherPersonDto?: AnotherPerson;
 }
 
 interface Prescription {
@@ -295,4 +298,11 @@ interface Payment {
 	examinationDate: Date;
 	doctorName: string;
 	status: import('$lib/constants/record-constant').RecordStatus;
+}
+
+interface AnotherPerson {
+	createForPatientName: string;
+	createForPatientAge: number;
+	noteForPatientCreatedBy?: string;
+	relationWithCurrentPatient: string;
 }
