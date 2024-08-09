@@ -128,8 +128,7 @@
 		{:then data}
 			<div class="flex gap-4">
 				<div
-					class="flex-1 flex-shrink-0 space-y-6 {payment.status === RecordStatus.WAITTINGPAYMENT &&
-					data.totalAmount > 0
+					class="flex-1 flex-shrink-0 space-y-6 {payment.status === RecordStatus.WAITTINGPAYMENT
 						? 'border-r pr-4'
 						: ''}"
 				>
@@ -160,7 +159,7 @@
 								{/if}
 							</p>
 						</div>
-						{#if payment.status === RecordStatus.END || data.totalAmount <= 0}
+						{#if payment.status === RecordStatus.END}
 							<div>
 								<button
 									type="button"
@@ -263,7 +262,7 @@
 						</table>
 					</div>
 				</div>
-				{#if payment.status === RecordStatus.WAITTINGPAYMENT && data.totalAmount > 0}
+				{#if payment.status === RecordStatus.WAITTINGPAYMENT}
 					<div class="h-full flex flex-col gap-y-4">
 						<button
 							type="button"

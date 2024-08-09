@@ -25,8 +25,15 @@ export const createMaterialSchema = z.object({
 		.max(255, 'Mô tả không được vượt quá 255 kí tự'),
 	dosage: z.string().trim().max(255, 'Liều dùng không được vượt quá 255 kí tự').optional(),
 	uses: z.string().trim().max(255, 'Cách dùng không được vượt quá 255 kí tự').optional(),
-	smallestUnit: z.string().trim(),
-	smallestUnitQuantity: z.number(),
-	priceForSmallestUnit: z.number(),
+	smallestUnit: z
+		.string()
+		.trim()
+		.min(1, 'Đơn vị không được để trống')
+		.max(255, 'Đơn vị không được vượt quá 255 kí tự'),
+	smallestUnitQuantity: z
+		.number()
+		.int('Số lượng phải là số nguyên')
+		.gt(0, 'Số lượng phải lớn hơn 0'),
+	priceForSmallestUnit: z.number().nonnegative('Giá không thể là số âm').optional(),
 	isSurcharge: z.boolean()
 });

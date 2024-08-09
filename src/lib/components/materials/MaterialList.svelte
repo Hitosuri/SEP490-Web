@@ -25,6 +25,7 @@
 	import type { createMaterialSchema } from '$lib/form-schemas/create-material-schema';
 	import ImportMaterialForm from './ImportMaterialForm.svelte';
 	import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
+	import EditMaterialForm from './EditMaterialForm.svelte';
 
 	export let materialFilterForm: SuperValidated<z.infer<typeof materialFilterSchema>>;
 	export let createMaterialForm: SuperValidated<z.infer<typeof createMaterialSchema>>;
@@ -335,6 +336,28 @@
 				ref: ImportMaterialForm,
 				props: {
 					importMaterialForm,
+					material
+				}
+			},
+			response: (r) => {
+				if (r) {
+					filtering(lastestFilterOption, currentPage, pageSize, true, true);
+				}
+			}
+		};
+
+		modalStore.trigger(modalSetting);
+	}
+
+	function editMaterial(material: Material) {
+		// const selectdMaterialType = materialTypes?.find((x) => x.value.id === material.materialTypeId);
+		const modalSetting: ModalSettings = {
+			type: 'component',
+			component: {
+				ref: EditMaterialForm,
+				props: {
+					editMaterialForm: importMaterialForm,
+					materialTypes,
 					material
 				}
 			},
@@ -781,6 +804,7 @@
 	bind:sortingAscending
 	bind:loading
 	shadow={false}
+	showDelete={false}
 	fields={tableFields}
 	actionMenu={[
 		{
@@ -794,4 +818,5 @@
 		filtering(lastestFilterOption, e.detail, pageSize, true);
 	}}
 	on:sortField={(e) => selectSorting(e.detail)}
+	on:edit={(e) => editMaterial(e.detail)}
 ></DataTable>

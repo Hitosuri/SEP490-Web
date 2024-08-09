@@ -153,7 +153,7 @@
 			<fieldset disabled={requesting} class="grid grid-cols-2 gap-4 mb-4">
 				<div>
 					<p class="font-semibold text-surface-500 select-none">Vật tư cần nhập</p>
-					<p class="text-xl font-medium tracking-wide text-surface-300 mt-3">
+					<p class="text-xl font-medium tracking-wide text-surface-400 mt-3">
 						<span>{material.name}</span>
 						<i class="fa-solid fa-lock text-error-500 text-base ml-1"></i>
 					</p>

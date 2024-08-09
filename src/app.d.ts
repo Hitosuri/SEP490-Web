@@ -98,6 +98,34 @@ interface Material {
 	medicine?: Medicine;
 }
 
+interface MaterialDetail {
+	id: number;
+	name: string;
+	price: number;
+	quantity: number;
+	weight: number;
+	materialTypeId: number;
+	materialTypeName: string;
+	supplierId?: number;
+	supplierName: string;
+	unit: string;
+	description: string;
+	uses: string;
+	dosage: string;
+	smallestUnit?: string;
+	smallestUnitQuantity?: number;
+	priceForSmallestUnit?: number;
+	isSurcharge: boolean;
+	materialItems: MaterialItem[];
+}
+
+interface MaterialItem {
+	id: number;
+	importId: number;
+	price: number;
+	importTimed: Date;
+}
+
 interface MaterialType {
 	id: number;
 	name: string;

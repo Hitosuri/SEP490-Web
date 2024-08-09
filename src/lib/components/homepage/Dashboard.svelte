@@ -11,6 +11,7 @@
 	import Container from '../common/Container.svelte';
 	import { scheduleStepInMinute } from '$lib/constants/schedule-constant';
 	import { userFeatureDetails } from '$lib/constants/user-feature-constant';
+	import { browser } from '$app/environment';
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
@@ -27,8 +28,10 @@
 	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= stepInMiliseconds);
 
 	onMount(async () => {
-		await getPatientQueue();
-		MinuteTick.addEvent(getPatientQueue);
+		if (browser && $userStore?.roles.includes(Role.Doctor)) {
+			await getPatientQueue();
+			MinuteTick.addEvent(getPatientQueue);
+		}
 	});
 
 	onDestroy(() => {

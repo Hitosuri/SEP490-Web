@@ -311,22 +311,6 @@
 					</Field>
 				</div>
 				<div>
-					<Field {form} name="priceForSmallestUnit">
-						<Control let:attrs>
-							<Label class="font-semibold text-surface-500 select-none">
-								Đơn giá cho đơn vị nhỏ nhất<sup class="text-red-500">*</sup>
-							</Label>
-							<input
-								{...attrs}
-								type="number"
-								class="input rounded-container-token mt-1"
-								bind:value={$formData.priceForSmallestUnit}
-							/>
-						</Control>
-						<FieldErrors class="text-sm mt-1" />
-					</Field>
-				</div>
-				<div>
 					<Field {form} name="smallestUnitQuantity">
 						<Control let:attrs>
 							<Label class="font-semibold text-surface-500 select-none">
@@ -353,6 +337,24 @@
 						<FieldErrors class="text-sm mt-1" />
 					</Field>
 				</div>
+				{#if $formData.isSurcharge}
+					<div>
+						<Field {form} name="priceForSmallestUnit">
+							<Control let:attrs>
+								<Label class="font-semibold text-surface-500 select-none">
+									Đơn giá cho đơn vị nhỏ nhất<sup class="text-red-500">*</sup>
+								</Label>
+								<input
+									{...attrs}
+									type="number"
+									class="input rounded-container-token mt-1"
+									bind:value={$formData.priceForSmallestUnit}
+								/>
+							</Control>
+							<FieldErrors class="text-sm mt-1" />
+						</Field>
+					</div>
+				{/if}
 				<div class="col-span-2">
 					<Field {form} name="description">
 						<Control let:attrs>
