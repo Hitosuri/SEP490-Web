@@ -3,20 +3,23 @@
 	import { createTreatmentSchema } from '$lib/form-schemas/create-treatment-schema';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
-	import { getContext } from 'svelte';
-	import type { Writable } from 'svelte/store';
+	import { getContext, onMount, setContext } from 'svelte';
+	import { derived, type Writable } from 'svelte/store';
 	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
-	import MaterialEditRow from './MaterialEditRow.svelte';
 	import { toast } from 'svelte-sonner';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import Loading from '$lib/components/common/Loading.svelte';
+	import ExtraMaterialEditRow from '$lib/components/records/ExtraMaterialEditRow.svelte';
+	import { browser } from '$app/environment';
 
-	export let createTreatmentForm: SuperValidated<z.infer<typeof createTreatmentSchema>>;
+	export let editTreatmentForm: SuperValidated<z.infer<typeof createTreatmentSchema>>;
+	export let treatment: Treatment;
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
-	const form = superForm(createTreatmentForm, {
+	const form = superForm(editTreatmentForm, {
 		validators: zodClient(createTreatmentSchema),
 		resetForm: false,
 		SPA: true,
@@ -27,8 +30,8 @@
 
 			toast.promise(
 				async (): Promise<string> => {
-					const response = await fetch(endpoints.treatments.create, {
-						method: 'POST',
+					const response = await fetch(endpoints.treatments.edit(treatment.id), {
+						method: 'PUT',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
@@ -55,26 +58,96 @@
 						return Promise.reject();
 					}
 					closeModal(true);
-					return 'Tạo dịch vụ thành công';
+					return 'Cập nhật dịch vụ thành công';
 				},
 				{
 					loading: 'Đang xử lý...',
-					success: (msg) => msg ?? 'Tạo dịch vụ thành công',
-					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tạo dịch vụ'
+					success: (msg) => msg ?? 'Cập nhật dịch vụ thành công',
+					error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật dịch vụ'
 				}
 			);
 		}
 	});
 	const { form: formData, enhance, errors } = form;
 	let requesting = false;
-	let usedMaterials: {
-		materialId: number;
-		quantity: number;
-		isBasicUnit: boolean;
-	}[] = [];
+	let usedMaterials: z.infer<typeof createTreatmentSchema>['materials'] = [
+		...treatment.materials.map((x) => ({
+			materialId: x.materialId,
+			quantity: x.quantity,
+			isBasicUnit: x.isBasicUnit
+		}))
+	];
+	let loadStatus: 'init' | 'loading' | 'fail' | 'success' =
+		treatment.materials.length > 0 ? 'init' : 'success';
+	let extraMaterials: Material[] = [];
+	let materialErrors = derived(errors, (errors) => {
+		if (!errors.materials) {
+			return {} as Record<number | string, string[]>;
+		}
+		return Object.entries(errors.materials).reduce(
+			(c, p) => {
+				c[p[0]] = Array.isArray(p[1])
+					? [...p[1]]
+					: [...(p[1].materialId ?? []), ...(p[1].quantity ?? []), ...(p[1].isBasicUnit ?? [])];
+				return c;
+			},
+			{} as Record<number | string, string[]>
+		);
+	});
 
 	$: allMaterialId = usedMaterials.map((x) => x.materialId).filter((x) => x > 0);
 	$: $formData.materials = [...usedMaterials];
+	$: $formData.name = treatment.name;
+	$: $formData.price = treatment.price;
+
+	setContext('material-errors', materialErrors);
+	onMount(() => {
+		if (browser && treatment.materials.length > 0) {
+			loadDefaultMaterial();
+		}
+	});
+
+	async function loadDefaultMaterial() {
+		if (!$userStore) {
+			loadStatus = 'fail';
+			return;
+		}
+		loadStatus = 'loading';
+		const searchParams = new URLSearchParams();
+		searchParams.set('page', '1');
+		searchParams.set('size', String(treatment.materials.length));
+		treatment.materials.forEach((x) => {
+			searchParams.append('includeIds', String(x.materialId));
+		});
+
+		try {
+			const r = await fetch(`${endpoints.materials.get}?${searchParams}`, {
+				headers: {
+					Authorization: `Bearer ${$userStore.token}`
+				}
+			});
+
+			if (!r.ok) {
+				loadStatus = 'fail';
+				return;
+			}
+
+			const data: Pagination<Material[]> = await r.json();
+			console.log(data.data.length, treatment.materials.length);
+
+			if (data.data.length !== treatment.materials.length) {
+				loadStatus = 'fail';
+				return;
+			}
+
+			extraMaterials = data.data;
+
+			loadStatus = 'success';
+		} catch {
+			loadStatus = 'fail';
+			return;
+		}
+	}
 
 	function closeModal(state: boolean = false) {
 		$modalStore[0]?.response?.(state);
@@ -109,7 +182,7 @@
 			<i class="fa-solid fa-xmark"></i>
 		</button>
 	</div>
-	<h1 class="font-semibold text-2xl mt-6">Tạo dịch vụ</h1>
+	<h1 class="font-semibold text-2xl mt-6">Sửa dịch vụ</h1>
 	<p class="font-semibold text-surface-400 mb-6">Các dịch vụ được cung cấp bởi phòng khám</p>
 	<form use:enhance method="post">
 		<fieldset disabled={requesting} class="grid grid-cols-2 gap-4">
@@ -167,25 +240,67 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each usedMaterials as material, i (material)}
-							<MaterialEditRow
-								bind:selectedMaterialId={material.materialId}
-								bind:quantity={material.quantity}
-								bind:isBasicUnit={material.isBasicUnit}
-								{errors}
-								index={i}
-								excludeIds={allMaterialId}
-								on:remove={() => removeMaterial(i)}
-							/>
-						{:else}
+						{#if loadStatus === 'init'}
 							<tr>
-								<td colspan="5" class="border-b py-3">
-									<h3 class="h3 font-semibold text-center text-tertiary-500">Danh sách trống</h3>
+								<td colspan="5" class="p-2">-</td>
+							</tr>
+						{:else if loadStatus === 'fail'}
+							<tr>
+								<td colspan="5" class="p-2">
+									<button
+										type="button"
+										class="btn variant-filled-error rounded-container-token block mx-auto"
+										on:click={() => loadDefaultMaterial()}
+									>
+										<i class="fa-solid fa-rotate"></i>
+										<span>Tải lại</span>
+									</button>
 								</td>
 							</tr>
-						{/each}
+						{:else if loadStatus === 'loading'}
+							<tr>
+								<td colspan="5" class="p-2">
+									<Loading class="w-full justify-center items-center h-[42px]" />
+								</td>
+							</tr>
+						{:else if loadStatus === 'success'}
+							{#each usedMaterials as material, i (material)}
+								{@const foundInExtra = extraMaterials.find((x) => x.id === material.materialId)}
+								{@const foundInExtra2 = foundInExtra
+									? treatment.materials.find((x) => x.materialId === material.materialId)
+									: undefined}
+								{#if foundInExtra && foundInExtra2}
+									<ExtraMaterialEditRow
+										bind:selectedMaterialId={material.materialId}
+										bind:quantity={material.quantity}
+										bind:isBasicUnit={material.isBasicUnit}
+										index={i}
+										excludeIds={allMaterialId}
+										initMaterial={foundInExtra}
+										initUnit={foundInExtra2.isBasicUnit}
+										initQuantity={foundInExtra2.quantity}
+										on:remove={() => removeMaterial(i)}
+									/>
+								{:else}
+									<ExtraMaterialEditRow
+										bind:selectedMaterialId={material.materialId}
+										bind:quantity={material.quantity}
+										bind:isBasicUnit={material.isBasicUnit}
+										index={i}
+										excludeIds={allMaterialId}
+										on:remove={() => removeMaterial(i)}
+									/>
+								{/if}
+							{:else}
+								<tr>
+									<td colspan="5" class="border-b py-3">
+										<h3 class="h3 font-semibold text-center text-tertiary-500">Danh sách trống</h3>
+									</td>
+								</tr>
+							{/each}
+						{/if}
 						<tr>
-							<td colspan="4" class="py-2">
+							<td colspan="5" class="py-2">
 								<div class="w-10">
 									<button
 										type="button"
@@ -210,8 +325,8 @@
 				<span class="pl-1">Huỷ</span>
 			</button>
 			<button type="submit" class="variant-filled-primary">
-				<i class="fa-solid fa-plus"></i>
-				<span class="pl-1">Tạo</span>
+				<i class="fa-solid fa-check"></i>
+				<span class="pl-1">Cập nhật</span>
 			</button>
 		</fieldset>
 	</form>

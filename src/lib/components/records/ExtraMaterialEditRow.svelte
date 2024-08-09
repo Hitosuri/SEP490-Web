@@ -1,21 +1,17 @@
 <script lang="ts">
 	import type { Selected } from 'bits-ui';
 	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
-	import type { Writable } from 'svelte/store';
+	import type { Readable, Writable } from 'svelte/store';
 	import { createEventDispatcher, getContext, onMount } from 'svelte';
 	import endpoints from '$lib/endpoints';
 	import DropdownSelect from '$lib/components/common/DropdownSelect.svelte';
 	import NumberInput from '$lib/components/common/NumberInput.svelte';
-	import type { SuperForm } from 'sveltekit-superforms';
-	import type { z } from 'zod';
-	import type { editRecordSchema } from '$lib/form-schemas/edit-record-schema';
 
 	export let index: number = 0;
 	export let selectedMaterialId: number;
 	export let quantity: number;
 	export let isBasicUnit: boolean;
 	export let excludeIds: number[] = [];
-	export let errors: SuperForm<z.infer<typeof editRecordSchema>>['errors'];
 	export let initMaterial: Material | undefined = undefined;
 	export let initUnit: boolean | undefined = undefined;
 	export let initQuantity: number | undefined = undefined;
@@ -30,17 +26,13 @@
 	let refreshTrigger = Math.random();
 	let errorList: string[] = [];
 	let changeCount = 0;
+	let errors = getContext<Readable<Record<string | number, string[]>>>('material-errors');
 
 	$: selectedMaterialId = selectedMaterial?.value.id ?? 0;
 	$: isBasicUnit = selectedUnit?.value ?? true;
 	$: onSelectedMaterialChanged(selectedMaterial);
 	$: onSelectedUnitChanged(selectedUnit);
-	$: rowErrors = $errors.recordExtraMaterialRequests?.[index];
-	$: errorList = [
-		...(rowErrors?.materialId ?? []),
-		...(rowErrors?.quantity ?? []),
-		...(rowErrors?.isBasicUnit ?? [])
-	];
+	$: errorList = $errors[index] ?? []
 
 	function onSelectedUnitChanged(selectedUnit: Selected<boolean> | undefined) {
 		if (

@@ -7,21 +7,25 @@
 	import MaterialTypeList from '$lib/components/materials/MaterialTypeList.svelte';
 	import SupplierList from '$lib/components/materials/SupplierList.svelte';
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
+	import ExportMaterialList from '$lib/components/materials/ExportMaterialList.svelte';
 
 	export let data: PageData;
 
 	let tabValue = 'material';
 	let onMaterialTypeTabActive: () => void;
 	let onSupplierTabActive: () => void;
+	let onExportTabActive: () => void;
 </script>
 
 <svelte:head>
 	{#if tabValue === 'material'}
 		<title>Danh sách vật tư</title>
 	{:else if tabValue === 'material-type'}
-		<title>Danh sách lại vật tư</title>
+		<title>Danh sách loại vật tư</title>
 	{:else if tabValue === 'supplier'}
 		<title>Danh sách nhà cung cấp</title>
+	{:else if tabValue === 'export'}
+		<title>Danh sách xuất vật tư</title>
 	{/if}
 </svelte:head>
 <Container heightFull heightScreenMin paddingTopHeader class="pt-4 flex flex-col">
@@ -63,6 +67,12 @@
 				Vật tư
 			</Tabs.Trigger>
 			<Tabs.Trigger
+				value="export"
+				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
+			>
+				Xuất vật tư
+			</Tabs.Trigger>
+			<Tabs.Trigger
 				value="material-type"
 				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
 			>
@@ -82,6 +92,9 @@
 				createMaterialForm={data.createMaterialForm}
 				importMaterialForm={data.importMaterialForm}
 			/>
+		</Tabs.Content>
+		<Tabs.Content value="export">
+			<ExportMaterialList bind:onTabActive={onExportTabActive} />
 		</Tabs.Content>
 		<Tabs.Content value="material-type">
 			<MaterialTypeList

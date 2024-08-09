@@ -23,6 +23,9 @@
 	import { formatCurrency } from '$lib/helpers/formatters';
 	import DataTable from '$lib/components/common/DataTable.svelte';
 	import CreateServiceForm from '$lib/components/services/CreateServiceForm.svelte';
+	import TreatmentDetail from '$lib/components/services/TreatmentDetail.svelte';
+	import EditServiceForm from '$lib/components/services/EditServiceForm.svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let data: PageData;
 
@@ -251,6 +254,90 @@
 			}
 		};
 
+		modalStore.trigger(modalSetting);
+	}
+
+	function showDetail(treatment: Treatment) {
+		const modalSetting: ModalSettings = {
+			type: 'component',
+			component: {
+				ref: TreatmentDetail,
+				props: {
+					treatment
+				}
+			}
+		};
+
+		modalStore.trigger(modalSetting);
+	}
+
+	function showEditForm(treatment: Treatment) {
+		const modalSetting: ModalSettings = {
+			type: 'component',
+			component: {
+				ref: EditServiceForm,
+				props: {
+					editTreatmentForm: data.createTreatmentForm,
+					treatment
+				}
+			},
+			response: (r) => {
+				if (r) {
+					filtering(lastestFilterOption, currentPage, pageSize, true, true);
+				}
+			}
+		};
+
+		modalStore.trigger(modalSetting);
+	}
+
+	function deleteTreatment(treatment: Treatment) {
+		const modalSetting: ModalSettings = {
+			type: 'confirm',
+			title: 'Xác nhận',
+			body: `Xác nhận xoá dịch vụ ${treatment.name}`,
+			response: (r) => {
+				if (!r || !$userStore) {
+					return;
+				}
+
+				toast.promise(
+					async (): Promise<string> => {
+						const response = await fetch(endpoints.treatments.delete(treatment.id), {
+							method: 'DELETE',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							}
+						});
+
+						if (!response.ok) {
+							// if (Array.isArray(data?.error) || Array.isArray(data)) {
+							// 	const msg = (data?.error ?? data).join(', ');
+							// 	return Promise.reject(msg);
+							// } else if (typeof data === 'object') {
+							// 	Object.keys(data).forEach((k) => {
+							// 		const fieldName = pascalToCamelcase(k);
+							// 		if (Object.keys(form.data).includes(fieldName)) {
+							// 			setError(form, fieldName, data[k]);
+							// 		}
+							// 	});
+							// 	return Promise.reject();
+							// }
+
+							return Promise.reject();
+						}
+						filtering(lastestFilterOption, currentPage, pageSize, true, true);
+						return `Đã xoá dịch vụ ${treatment.name}`;
+					},
+					{
+						loading: 'Đang xử lý...',
+						success: (msg) => msg ?? `Đã xoá dịch vụ ${treatment.name}`,
+						error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình xoá dịch vụ'
+					}
+				);
+			}
+		};
 		modalStore.trigger(modalSetting);
 	}
 </script>
@@ -482,7 +569,9 @@
 				filtering(lastestFilterOption, e.detail, pageSize, true);
 			}}
 			on:sortField={(e) => selectSorting(e.detail)}
-			on:detail={(e) => console.log(e.detail)}
+			on:detail={(e) => showDetail(e.detail)}
+			on:edit={(e) => showEditForm(e.detail)}
+			on:delete={(e) => deleteTreatment(e.detail)}
 		></DataTable>
 	</div>
 </Container>

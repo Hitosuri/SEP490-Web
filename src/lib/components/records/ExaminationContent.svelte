@@ -2,8 +2,8 @@
 	import endpoints from '$lib/endpoints';
 	import { editRecordSchema } from '$lib/form-schemas/edit-record-schema';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
-	import { createEventDispatcher, getContext } from 'svelte';
-	import type { Writable } from 'svelte/store';
+	import { createEventDispatcher, getContext, setContext } from 'svelte';
+	import { derived, type Writable } from 'svelte/store';
 	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
@@ -89,10 +89,25 @@
 			isBasicUnit: x.isBasicUnit
 		}))
 	];
+	let materialErrors = derived(errors, (errors) => {
+		if (!errors.recordExtraMaterialRequests) {
+			return {} as Record<number | string, string[]>;
+		}
+		return Object.entries(errors.recordExtraMaterialRequests).reduce(
+			(c, p) => {
+				c[p[0]] = Array.isArray(p[1])
+					? [...p[1]]
+					: [...(p[1].materialId ?? []), ...(p[1].quantity ?? []), ...(p[1].isBasicUnit ?? [])];
+				return c;
+			},
+			{} as Record<number | string, string[]>
+		);
+	});
 
 	$: allMaterialId = usedMaterials.map((x) => x.materialId).filter((x) => x > 0);
 	$: $formData.recordExtraMaterialRequests = [...usedMaterials];
 
+	setContext('material-errors', materialErrors);
 	resetValue();
 
 	function resetValue() {
@@ -399,7 +414,6 @@
 												bind:selectedMaterialId={material.materialId}
 												bind:quantity={material.quantity}
 												bind:isBasicUnit={material.isBasicUnit}
-												{errors}
 												index={i}
 												excludeIds={allMaterialId}
 												initMaterial={foundInExtra}
@@ -412,7 +426,6 @@
 												bind:selectedMaterialId={material.materialId}
 												bind:quantity={material.quantity}
 												bind:isBasicUnit={material.isBasicUnit}
-												{errors}
 												index={i}
 												excludeIds={allMaterialId}
 												on:remove={() => removeMaterial(i)}
