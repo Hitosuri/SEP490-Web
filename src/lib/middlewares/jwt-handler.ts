@@ -1,4 +1,4 @@
-import { JWT_ACCESS_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { Role } from '$lib/authorization';
 import type { Handle } from '@sveltejs/kit';
 import { jwtVerify } from 'jose';
@@ -36,7 +36,7 @@ export default jwtHandler;
 
 async function verifyJwt(token: string): Promise<JwtPayload> {
 	try {
-		const result = await jwtVerify(token, new TextEncoder().encode(JWT_ACCESS_KEY));
+		const result = await jwtVerify(token, new TextEncoder().encode(env.JWT_ACCESS_KEY));
 		return result.payload as unknown as JwtPayload;
 	} catch (error) {
 		if (error instanceof JWSSignatureVerificationFailed) {
