@@ -115,6 +115,7 @@
 						<input
 							{...attrs}
 							type="text"
+							placeholder="Nhập số điện thoại..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.phone}
 						/>
@@ -129,6 +130,7 @@
 						<input
 							{...attrs}
 							type="email"
+							placeholder="Nhập email..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.email}
 						/>
@@ -143,6 +145,7 @@
 						<input
 							{...attrs}
 							type="text"
+							placeholder="Nhập tên bệnh nhân..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.name}
 						/>
@@ -174,9 +177,13 @@
 				</Field>
 			</div>
 		</fieldset>
+		<p class="text-sm mt-6 text-surface-500 font-medium">
+			<span class="text-red-500">*</span>Khuyến khích có email để có thể đặt lại mật khẩu và gửi
+			thông báo
+		</p>
 		<fieldset
 			disabled={requesting}
-			class="flex gap-4 mt-8 font-medium *:btn *:rounded-container-token *:flex-1"
+			class="flex gap-4 mt-2 font-medium *:btn *:rounded-container-token *:flex-1"
 		>
 			<slot name="cancelBtn">
 				<button type="button" class="variant-soft-surface">
