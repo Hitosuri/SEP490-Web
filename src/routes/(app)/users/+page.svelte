@@ -556,7 +556,7 @@
 			let:field
 		>
 			{#if field.name === 'name'}
-				<td class="text-left">
+				<td class="text-left cell-ellipsis">
 					<a href="/users/{fieldData.id}" class="hover:underline">{fieldData.name}</a>
 				</td>
 			{:else if field.name === 'email'}
@@ -564,7 +564,9 @@
 			{:else if field.name === 'phone'}
 				<td class="text-center">{fieldData.phone}</td>
 			{:else if field.name === 'salary'}
-				<td class="text-end">{formatCurrency(fieldData.salary)}</td>
+				<td class="text-end cell-ellipsis">
+					{formatCurrency(fieldData.salary)}
+				</td>
 			{:else if field.name === 'roles'}
 				<td class="text-center text-sm font-semibold">
 					<div class="flex flex-col items-center gap-y-1">

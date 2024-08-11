@@ -100,7 +100,9 @@
 	let firstActive = false;
 	let selectedMaterialType: MaterialType | undefined;
 
-	$: filtering(nameValue, codeValue, 1, pageSize, false, false, true);
+	$: if (firstActive) {
+		filtering(nameValue, codeValue, 1, pageSize, false, false, true);
+	}
 
 	function filtering(
 		name: string,

@@ -334,3 +334,29 @@ interface AnotherPerson {
 	noteForPatientCreatedBy?: string;
 	relationWithCurrentPatient: string;
 }
+
+interface ExportGroup {
+	group: string;
+	exportMaterials: ExportMaterial[];
+	createAt: Date;
+	createBy: string;
+	lastHandleBy?: string;
+}
+
+interface ExportMaterial {
+	id: number;
+	name: string;
+	price: number;
+	unit: string;
+	note?: string;
+	materialId: number;
+	quantity: number;
+	createBy: string;
+	handleBy: string;
+	avaliableMaterials: AvaiableMaterial[];
+}
+
+interface AvaiableMaterial {
+	id: number;
+	code: string;
+}

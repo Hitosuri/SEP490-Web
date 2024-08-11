@@ -268,6 +268,8 @@
 			bind:sortingAscending
 			bind:loading
 			fields={tableFields}
+			showDelete={false}
+			showEdit={false}
 			on:sortField={(e) => selectSorting(e.detail)}
 		/>
 	</div>

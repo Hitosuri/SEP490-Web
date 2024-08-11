@@ -30,7 +30,19 @@ export default {
 		create: `${PUBLIC_API_HOST}/api/materials/create`,
 		detail: (id: number) => `${PUBLIC_API_HOST}/api/materials/${id}`,
 		edit: (id: number) => `${PUBLIC_API_HOST}/api/materials/update/${id}`,
-		import: `${PUBLIC_API_HOST}/api/materials/import`
+		import: `${PUBLIC_API_HOST}/api/materials/import`,
+		export: {
+			get: `${PUBLIC_API_HOST}/api/materials/export-all`,
+			create: `${PUBLIC_API_HOST}/api/export/create`,
+			assign: `${PUBLIC_API_HOST}/api/export/assign`,
+			edit: `${PUBLIC_API_HOST}/api/export/update`,
+			detail: (id: string) => `${PUBLIC_API_HOST}/api/export/${id}`,
+			deleteGroup: (id: string) =>
+				`${PUBLIC_API_HOST}/api/export/export/remove/group:Guid?group=${id}`
+		}
+	},
+	availableMaterial: {
+		get: `${PUBLIC_API_HOST}/api/avaliable-material/all`
 	},
 	materialTypes: {
 		get: `${PUBLIC_API_HOST}/api/material-type/all`,

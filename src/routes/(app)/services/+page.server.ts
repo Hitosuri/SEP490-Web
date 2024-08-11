@@ -7,7 +7,7 @@ import { treatmentFilterSchema } from '$lib/form-schemas/treatment-filter-schema
 import { createTreatmentSchema } from '$lib/form-schemas/create-treatment-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
-	filterRoles(locals, url, Role.Doctor, Role.Nurse);
+	filterRoles(locals, url, Role.Doctor);
 
 	const searchParams = new URLSearchParams();
 	searchParams.set('page', '1');

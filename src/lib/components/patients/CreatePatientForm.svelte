@@ -25,6 +25,16 @@
 				return;
 			}
 
+			const requestBody: Record<string, any> = {
+				...form.data
+			};
+
+			Object.entries(requestBody).forEach((x) => {
+				if (!x[1]) {
+					delete requestBody[x[0]];
+				}
+			});
+
 			toast.promise(
 				async () => {
 					const response = await fetch(endpoints.patients.create, {
@@ -33,7 +43,7 @@
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
-						body: JSON.stringify(form.data)
+						body: JSON.stringify(requestBody)
 					});
 					const data = await response.json();
 

@@ -212,11 +212,12 @@
 								''}
 							<slot fieldData={extendedItem.item} {field}>
 								<td
-									class={field.align === 'right'
+									title={String(content)}
+									class="cell-ellipsis {field.align === 'right'
 										? 'text-end'
 										: field.align === 'left'
 											? 'text-start'
-											: 'text-center'}
+											: 'text-center'}"
 								>
 									{#if field.href}
 										<a href={field.href(extendedItem.item)} class="hover:underline">

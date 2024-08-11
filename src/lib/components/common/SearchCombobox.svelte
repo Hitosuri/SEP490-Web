@@ -11,6 +11,7 @@
 	export let regionInput: string | undefined = undefined;
 	export let regionWrapper: string | undefined = undefined;
 	export let placeholder: string = '';
+	export let disabled: boolean | undefined = undefined;
 
 	let items: Selected<T>[] = [];
 	let itemSearchInput = '';
@@ -82,7 +83,13 @@
 </script>
 
 {#key trigger}
-	<Combobox.Root {items} bind:inputValue={itemSearchInput} bind:open={itemSearchOpen} bind:selected>
+	<Combobox.Root
+		{items}
+		bind:inputValue={itemSearchInput}
+		bind:open={itemSearchOpen}
+		bind:selected
+		{disabled}
+	>
 		<div class={classesRegionWrapper}>
 			<Combobox.Input class={classesRegionInput} {placeholder} />
 			{#if showClear}

@@ -13,6 +13,7 @@
 	import { RecordStatus } from '$lib/constants/record-constant';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 	import ExtraMaterialEditRow from '$lib/components/records/ExtraMaterialEditRow.svelte';
+	import { formatCurrency } from '$lib/helpers/formatters';
 
 	export let editRecordForm: SuperValidated<z.infer<typeof editRecordSchema>>;
 	export let record: RecordPatient;
@@ -302,7 +303,10 @@
 												? 'rounded-t-md'
 												: 'rounded-md'}"
 										>
-											<span class="text-lg font-semibold">{treatment.name}</span>
+											<span class="text-lg font-semibold">
+												{treatment.name}
+												({formatCurrency(treatment.price)})
+											</span>
 											{#if canEdit}
 												<button
 													type="button"

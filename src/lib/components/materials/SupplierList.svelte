@@ -100,7 +100,9 @@
 	let firstActive = false;
 	let selectedSupplier: Supplier | undefined;
 
-	$: filtering(nameValue, phoneValue, 1, pageSize, false, false, true);
+	$: if (firstActive) {
+		filtering(nameValue, phoneValue, 1, pageSize, false, false, true);
+	}
 
 	function filtering(
 		name: string,

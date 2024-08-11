@@ -26,6 +26,10 @@
 	.schedule-done {
 		@apply bg-schedule-done border-schedule-done text-schedule-done;
 	}
+
+	.cell-ellipsis {
+		@apply max-w-0 overflow-hidden text-ellipsis;
+	}
 }
 
 @layer components {

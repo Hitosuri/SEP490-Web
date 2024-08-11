@@ -3,7 +3,6 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 
 	export let treatment: Treatment;
-	console.log(treatment);
 
 	const modalStore = getModalStore();
 
@@ -31,10 +30,15 @@
 			<hr class="self-center flex-1 !border-surface-200" />
 			<p class="text-end font-semibold tracking-wide text-lg">{treatment.name}</p>
 		</div>
-		<div class="flex gap-x-4">
-			<p class="font-medium text-surface-500">Giá dịch vụ:</p>
+		<div class="flex gap-x-4 overflow-hidden">
+			<p class="font-medium text-surface-500 whitespace-nowrap">Giá dịch vụ:</p>
 			<hr class="self-center flex-1 !border-surface-200" />
-			<p class="text-end font-semibold tracking-wide text-lg">{formatCurrency(treatment.price)}</p>
+			<p
+				title={String(formatCurrency(treatment.price))}
+				class="text-end font-semibold tracking-wide text-lg overflow-hidden text-ellipsis"
+			>
+				{formatCurrency(treatment.price)}
+			</p>
 		</div>
 		{#if treatment.materials.length > 0}
 			<div class="col-span-3">

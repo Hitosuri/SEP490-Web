@@ -7,7 +7,7 @@
 	import MaterialTypeList from '$lib/components/materials/MaterialTypeList.svelte';
 	import SupplierList from '$lib/components/materials/SupplierList.svelte';
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
-	import ExportMaterialList from '$lib/components/materials/ExportMaterialList.svelte';
+	import ExportMaterialList from '$lib/components/materials/exports/ExportMaterialList.svelte';
 
 	export let data: PageData;
 
@@ -25,7 +25,7 @@
 	{:else if tabValue === 'supplier'}
 		<title>Danh sách nhà cung cấp</title>
 	{:else if tabValue === 'export'}
-		<title>Danh sách xuất vật tư</title>
+		<title>Lịch sử xuất vật tư</title>
 	{/if}
 </svelte:head>
 <Container heightFull heightScreenMin paddingTopHeader class="pt-4 flex flex-col">
@@ -54,6 +54,16 @@
 						active: true,
 						title: 'Nhà cung cấp',
 						faIcon: 'fa-solid fa-boxes-packing'
+					}
+				]);
+			}
+			if (value === 'export') {
+				onExportTabActive();
+				usingSubFeature.set([
+					{
+						active: true,
+						title: 'Lịch sử xuất vật tư',
+						faIcon: 'fa-solid fa-file-export'
 					}
 				]);
 			}
@@ -94,7 +104,11 @@
 			/>
 		</Tabs.Content>
 		<Tabs.Content value="export">
-			<ExportMaterialList bind:onTabActive={onExportTabActive} />
+			<ExportMaterialList
+				bind:onTabActive={onExportTabActive}
+				createExportMaterialForm={data.createExportMaterialForm}
+				editExportMaterialForm={data.editExportMaterialForm}
+			/>
 		</Tabs.Content>
 		<Tabs.Content value="material-type">
 			<MaterialTypeList
