@@ -98,7 +98,7 @@
 
 <div class="relative">
 	<div
-		class="bg-white p-2 rounded-xl {shadow
+		class="bg-white p-2 rounded-xl overflow-x-auto {shadow
 			? 'shadow-md'
 			: ''} relative transition-all duration-200 {loading ? 'blur-[2px]' : 'blur-0'}"
 	>
@@ -213,11 +213,11 @@
 							<slot fieldData={extendedItem.item} {field}>
 								<td
 									title={String(content)}
-									class="cell-ellipsis {field.align === 'right'
+									class="{field.ellipsis ? 'cell-ellipsis' : ''} {field.align === 'right'
 										? 'text-end'
 										: field.align === 'left'
 											? 'text-start'
-											: 'text-center'}"
+											: 'text-center'} {field.classes ?? ''}"
 								>
 									{#if field.href}
 										<a href={field.href(extendedItem.item)} class="hover:underline">

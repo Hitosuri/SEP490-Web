@@ -43,7 +43,8 @@
 			name: 'price',
 			sortable: true,
 			align: 'right',
-			formatter: formatCurrency
+			formatter: formatCurrency,
+			ellipsis: true
 		}
 	];
 	const sortableField = tableFields.filter((x) => x?.sortable).map((x) => x!.name);

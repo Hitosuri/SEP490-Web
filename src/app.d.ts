@@ -279,6 +279,8 @@ type TableField<T> = {
 		align?: 'left' | 'center' | 'right';
 		formatter?: (value: T[K]) => string;
 		href?: (value: T) => string;
+		ellipsis?: boolean;
+		classes?: string;
 	};
 }[keyof T];
 

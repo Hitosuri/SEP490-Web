@@ -139,13 +139,16 @@
 			name: 'price',
 			sortable: true,
 			align: 'right',
-			formatter: formatCurrency
+			formatter: formatCurrency,
+			ellipsis: true,
+			classes: 'max-w-[120px]'
 		},
 		{
 			displayName: 'Tồn kho',
 			name: 'quantity',
 			sortable: true,
-			align: 'right'
+			align: 'right',
+			ellipsis: true
 		},
 		{
 			displayName: 'Phân loại',
