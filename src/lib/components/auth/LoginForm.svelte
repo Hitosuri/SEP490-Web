@@ -9,6 +9,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
+	import Loading from '../common/Loading.svelte';
 
 	export let loginForm: SuperValidated<z.infer<typeof loginSchema>>;
 	export let modal = false;
@@ -50,14 +51,21 @@
 	let requesting = false;
 	let submitingResolve: ((value: string | PromiseLike<string>) => void) | undefined;
 	let submitingReject: ((reason?: any) => void) | undefined;
+	let isUser = false;
+	let resetPasswordPromise: Promise<void>;
 
 	$: resetable = z.string().trim().email().safeParse(emailInput).success;
 	$: passwordFieldType = revealPassword ? 'text' : 'password';
 	$: backParam = `backTo=${encodeURI(decodeURI($page.url.searchParams.get('backTo') ?? ''))}`;
 
 	function resetPassword() {
-		fetch(endpoints.auth.resetPassword(emailInput.trim()), {
+		const baseUrl = isUser ? endpoints.auth.resetPassword : endpoints.auth.resetPasswordPatient;
+		resetPasswordPromise = fetch(baseUrl(emailInput.trim()), {
 			method: 'PUT'
+		}).then(async (response) => {
+			if (!response.ok) {
+				return Promise.reject();
+			}
 		});
 		emailSent = true;
 	}
@@ -95,10 +103,26 @@
 				<span>Trở lại đăng nhập</span>
 			</button>
 			{#if emailSent}
-				<p class="text-lg font-semibold p-4">
-					Email đã được gửi tới email {emailInput.trim()}, vui phòng kiểm tra và đăng nhập bằng mật
-					khẩu mới!
-				</p>
+				{#await resetPasswordPromise}
+					<Loading class="w-full justify-center py-10" />
+				{:then}
+					<p class="text-lg font-semibold p-4">
+						Email đã được gửi tới email
+						<span class="text-primary-500">{emailInput.trim()}</span>, vui phòng kiểm tra và đăng
+						nhập bằng mật khẩu mới!
+					</p>
+				{:catch}
+					<p class="text-lg font-semibold p-4 text-center">
+						Đã xảy ra lỗi trong quá trình đặt lại mật khẩu!
+					</p>
+					<button
+						class="btn variant-filled-primary mx-auto block"
+						on:click={resetPassword}
+						disabled={!resetable}
+					>
+						Gửi lại yêu cầu
+					</button>
+				{/await}
 			{:else}
 				<label class="font-medium mb-1" for="email-for-reset">Email của tài khoản</label>
 				<input
@@ -108,9 +132,30 @@
 					id="email-for-reset"
 					bind:value={emailInput}
 				/>
-				<p class="text-sm mt-1 text-surface-500">
-					* Sau khi bạn nhập email của tài khoản và xác nhận đặt lại mật khẩu, chúng tôi sẽ gửi mật
-					khẩu mới vào email của bạn
+				<div class="mt-3 flex justify-between">
+					<p>
+						<span class="font-medium">Bạn là:</span>
+						<span
+							class="flex-1 shrink-0 {isUser
+								? 'text-surface-400 font-semibold'
+								: 'text-primary-500 font-bold'}"
+						>
+							Bệnh nhân
+						</span>
+						|
+						<span
+							class="flex-1 shrink-0 {!isUser
+								? 'text-surface-400 font-semibold'
+								: 'text-primary-500 font-bold'}"
+						>
+							Bác sĩ, nhân viên...
+						</span>
+					</p>
+					<SlideToggle name="is-user" size="sm" bind:checked={isUser} />
+				</div>
+				<p class="text-sm mt-4 text-surface-500">
+					<span class="text-red-500">*</span>Sau khi bạn nhập email của tài khoản và xác nhận đặt
+					lại mật khẩu, chúng tôi sẽ gửi mật khẩu mới vào email của bạn
 				</p>
 				<button
 					class="btn variant-filled-primary mx-auto block mt-4"

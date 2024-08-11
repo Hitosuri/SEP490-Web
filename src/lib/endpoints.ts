@@ -4,7 +4,9 @@ export default {
 	auth: {
 		loginUser: `${env.PUBLIC_API_HOST}/api/authentication`,
 		loginPatient: `${env.PUBLIC_API_HOST}/api/authentication/LoginPatient`,
-		resetPassword: (email: string) => `${env.PUBLIC_API_HOST}/api/authentication/reset/${email}`
+		resetPassword: (email: string) => `${env.PUBLIC_API_HOST}/api/authentication/reset/${email}`,
+		resetPasswordPatient: (email: string) =>
+			`${env.PUBLIC_API_HOST}/api/authentication/patient-reset/${email}`
 	},
 	profile: {
 		getByUser: `${env.PUBLIC_API_HOST}/api/user/ViewProfile`,
