@@ -46,10 +46,11 @@
 			if (lastScroll >= scrollCap && scrollTop < scrollCap) {
 				showHeader = false;
 			}
-			if (scrollTop < shadowCap) {
+			if (inLandingPage && shadowVal[0] !== 0) {
+				shadowVal = [0, 0, 0, 0, 0, 0];
+			} else if (scrollTop < shadowCap) {
 				shadowVal = shadowMaxVal.map((x) => Math.min(1, scrollTop / shadowCap) * x);
-			}
-			if (lastScroll < shadowCap && scrollTop >= shadowCap) {
+			} else if (lastScroll < shadowCap && scrollTop >= shadowCap) {
 				shadowVal = shadowMaxVal;
 			}
 			lastScroll = scrollTop;
@@ -85,8 +86,8 @@
 <div
 	class="fixed top-0 right-0 shadow shadow-black/15 z-10 {$sideBarOpened && !inAuth
 		? 'left-side-bar'
-		: 'left-0'} {inLandingPage && !showHeader ? '-translate-y-24' : ''} {inLandingPage
-		? 'py-4'
+		: 'left-0'} {inLandingPage && !showHeader ? '-translate-y-24' : 'translate-y-0'} {inLandingPage
+		? 'py-4 transition-transform'
 		: 'py-6 bg-white'} pr-scroll-bar-dynamic transition-[left] duration-300 ease-out"
 	style="--tw-shadow-colored: 0 {shadowVal[0]}px {shadowVal[1]}px {shadowVal[2]}px var(--tw-shadow-color), 0 {shadowVal[3]}px {shadowVal[4]}px {shadowVal[5]}px var(--tw-shadow-color); --tw-shadow: var(--tw-shadow-colored)"
 >
