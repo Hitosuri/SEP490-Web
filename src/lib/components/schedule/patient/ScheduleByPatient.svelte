@@ -19,7 +19,6 @@
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
-	$: console.log(patientSchedules);
 
 	export let currentMonthValue: number;
 	export let createAppointmentByPatientForm: SuperValidated<

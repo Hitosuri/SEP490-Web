@@ -253,8 +253,6 @@
 	}
 
 	function updateScheduleList() {
-		console.log(123);
-
 		cancelSelection();
 		filtering(lastFilterOptions);
 	}

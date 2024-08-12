@@ -16,7 +16,6 @@
 
 	export let editScheduleForm: SuperValidated<z.infer<typeof editScheduleSchema>>;
 	export let schedule: ScheduleFull;
-	console.log(schedule);
 
 	export let maxStep: number;
 

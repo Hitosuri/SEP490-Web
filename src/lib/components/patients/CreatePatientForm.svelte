@@ -56,10 +56,8 @@
 							data.error.forEach((err: string) => {
 								if (typeof err === 'string') {
 									if (err.startsWith('Bệnh nhân với số điện thoại')) {
-										console.log(err);
 										setError(form, 'phone', err);
 									} else if (err.startsWith('Bệnh nhân với Email ')) {
-										console.log(err);
 										setError(form, 'email', err);
 									}
 								}

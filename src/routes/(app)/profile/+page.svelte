@@ -27,8 +27,6 @@
 	let editProfileForm: SuperValidated<z.infer<typeof editProfileSchema>> | undefined;
 	let changePasswordForm: SuperValidated<z.infer<typeof changePasswordSchema>> | undefined;
 
-	$: console.log(data);
-
 	async function profileStartEditting() {
 		if (!editProfileForm) {
 			editProfileForm = await superValidate(zod(editProfileSchema));

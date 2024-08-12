@@ -135,7 +135,6 @@
 			}
 
 			const data: Pagination<Material[]> = await r.json();
-			console.log(data.data.length, treatment.materials.length);
 
 			if (data.data.length !== treatment.materials.length) {
 				loadStatus = 'fail';
