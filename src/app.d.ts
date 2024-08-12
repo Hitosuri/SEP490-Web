@@ -293,6 +293,7 @@ interface UserFeatureDetail {
 	lottieAnim: string;
 	class: string;
 	routes: string[];
+	roles?: import('$lib/helpers/authorization').Role[];
 }
 
 interface UserSubFeatureDetail {

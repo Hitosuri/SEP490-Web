@@ -471,71 +471,13 @@
 						});
 
 						if (!response.ok) {
-							// if (Array.isArray(data?.error) || Array.isArray(data)) {
-							// 	const msg = (data?.error ?? data).join(', ');
-							// 	return Promise.reject(msg);
-							// } else if (typeof data === 'object') {
-							// 	Object.keys(data).forEach((k) => {
-							// 		const fieldName = pascalToCamelcase(k);
-							// 		if (Object.keys(form.data).includes(fieldName)) {
-							// 			setError(form, fieldName, data[k]);
-							// 		}
-							// 	});
-							// 	return Promise.reject();
-							// }
-
-							return Promise.reject();
-						}
-						filtering(lastFilterOptions);
-						return `Trạng thái của lịch hẹn đã chuyển thành '${scheduleStatusInfo[ScheduleStatus.DONE].label}'`;
-					},
-					{
-						loading: 'Đang xử lý...',
-						success: (msg) =>
-							msg ??
-							`Trạng thái của lịch hẹn đã chuyển thành '${scheduleStatusInfo[ScheduleStatus.DONE].label}'`,
-						error: (msg) =>
-							String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình cập nhật trạng thái lịch hẹn'
-					}
-				);
-			}
-		};
-		modalStore.trigger(modalSetting);
-	}
-
-	function startScheduleEarly(schedule: ScheduleFull) {
-		const modalSetting: ModalSettings = {
-			type: 'confirm',
-			title: 'Xác nhận khám sớm',
-			body: `Xác nhận bệnh nhân ${schedule.patient.name} đã tới`,
-			response: (r) => {
-				if (!r || !$userStore) {
-					return;
-				}
-
-				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.checkin(schedule.id), {
-							method: 'PUT',
-							headers: {
-								'content-type': 'application/json',
-								Authorization: `Bearer ${$userStore.token}`
+							const data = await response.json();
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
+							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+								const msg = (data?.error ?? data).join(', ');
+								return Promise.reject(msg);
 							}
-						});
-
-						if (!response.ok) {
-							// if (Array.isArray(data?.error) || Array.isArray(data)) {
-							// 	const msg = (data?.error ?? data).join(', ');
-							// 	return Promise.reject(msg);
-							// } else if (typeof data === 'object') {
-							// 	Object.keys(data).forEach((k) => {
-							// 		const fieldName = pascalToCamelcase(k);
-							// 		if (Object.keys(form.data).includes(fieldName)) {
-							// 			setError(form, fieldName, data[k]);
-							// 		}
-							// 	});
-							// 	return Promise.reject();
-							// }
 
 							return Promise.reject();
 						}
@@ -604,18 +546,13 @@
 						});
 
 						if (!response.ok) {
-							// if (Array.isArray(data?.error) || Array.isArray(data)) {
-							// 	const msg = (data?.error ?? data).join(', ');
-							// 	return Promise.reject(msg);
-							// } else if (typeof data === 'object') {
-							// 	Object.keys(data).forEach((k) => {
-							// 		const fieldName = pascalToCamelcase(k);
-							// 		if (Object.keys(form.data).includes(fieldName)) {
-							// 			setError(form, fieldName, data[k]);
-							// 		}
-							// 	});
-							// 	return Promise.reject();
-							// }
+							const data = await response.json();
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
+							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+								const msg = (data?.error ?? data).join(', ');
+								return Promise.reject(msg);
+							}
 
 							return Promise.reject();
 						}
@@ -654,18 +591,13 @@
 						});
 
 						if (!response.ok) {
-							// if (Array.isArray(data?.error) || Array.isArray(data)) {
-							// 	const msg = (data?.error ?? data).join(', ');
-							// 	return Promise.reject(msg);
-							// } else if (typeof data === 'object') {
-							// 	Object.keys(data).forEach((k) => {
-							// 		const fieldName = pascalToCamelcase(k);
-							// 		if (Object.keys(form.data).includes(fieldName)) {
-							// 			setError(form, fieldName, data[k]);
-							// 		}
-							// 	});
-							// 	return Promise.reject();
-							// }
+							const data = await response.json();
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
+							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+								const msg = (data?.error ?? data).join(', ');
+								return Promise.reject(msg);
+							}
 
 							return Promise.reject();
 						}

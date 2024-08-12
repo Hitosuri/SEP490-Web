@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { Role } from '$lib/authorization';
+import { Role } from '$lib/helpers/authorization';
 import type { Handle } from '@sveltejs/kit';
 import { jwtVerify } from 'jose';
 import { JWSSignatureVerificationFailed, JWTExpired } from 'jose/errors';

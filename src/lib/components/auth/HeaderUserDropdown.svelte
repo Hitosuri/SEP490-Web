@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Role, roleTranslation } from '$lib/authorization';
+	import { Role, roleTranslation } from '$lib/helpers/authorization';
 	import { DropdownMenu } from 'bits-ui';
 	import { createEventDispatcher } from 'svelte';
 	import { cubicOut } from 'svelte/easing';

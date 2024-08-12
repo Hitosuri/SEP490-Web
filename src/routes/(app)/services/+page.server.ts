@@ -1,13 +1,14 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles } from '$lib/helpers/authorization';
 import endpoints from '$lib/endpoints';
 import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import { treatmentFilterSchema } from '$lib/form-schemas/treatment-filter-schema';
 import { createTreatmentSchema } from '$lib/form-schemas/create-treatment-schema';
+import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
-	filterRoles(locals, url, Role.Doctor);
+	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.SERVICES_MANAGEMENT].roles ?? []));
 
 	const searchParams = new URLSearchParams();
 	searchParams.set('page', '1');

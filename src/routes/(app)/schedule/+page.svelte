@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Role } from '$lib/authorization';
+	import { Role } from '$lib/helpers/authorization';
 	import ScheduleByPatient from '$lib/components/schedule/patient/ScheduleByPatient.svelte';
 	import ScheduleByRecieptionist from '$lib/components/schedule/recieptionist/ScheduleByRecieptionist.svelte';
 	import type { PageData } from './$types';

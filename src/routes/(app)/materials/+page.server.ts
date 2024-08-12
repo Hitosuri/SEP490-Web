@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles } from '$lib/helpers/authorization';
 import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -10,9 +10,10 @@ import { createSupplierSchema } from '$lib/form-schemas/create-supplier-schema';
 import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
 import { createExportMaterialSchema } from '$lib/form-schemas/create-export-material-schema';
 import { editExportMaterialSchema } from '$lib/form-schemas/edit-export-material-schema';
+import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
-	filterRoles(locals, url, Role.Accountant);
+	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.MATERIALS_MANAGEMENT].roles ?? []));
 
 	const response = await fetch(`${endpoints.materials.get}?page=1&size=10`, {
 		headers: {

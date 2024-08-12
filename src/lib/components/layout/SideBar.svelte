@@ -2,17 +2,21 @@
 	import { page } from '$app/stores';
 	import { userFeatureDetails } from '$lib/constants/user-feature-constant';
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
+	import { intersection } from 'lodash-es';
 	import { getContext } from 'svelte';
 	import type { Readable, Writable } from 'svelte/store';
 	import { fly } from 'svelte/transition';
 
-	const allFeature = Object.values(userFeatureDetails);
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let sideBarOpenActive = getContext<Writable<boolean>>('sidebar-active');
 	let sideBarOpened = getContext<Readable<boolean>>('sidebar-state');
 	let searchInput = '';
 	let usingFeatureIndex = -1;
 	let lastUsingFeatureIndex = 0;
 
+	$: allFeature = Object.values(userFeatureDetails).filter(
+		(x) => $userStore && (!x.roles || intersection(x.roles, $userStore.roles).length > 0)
+	);
 	$: normalizedSearchInput = searchInput
 		.trim()
 		.toLowerCase()
@@ -96,53 +100,57 @@
 					{/if}
 				</div>
 				{#each filteredFeatures as feature, i (feature.id)}
-					{@const active = usingFeatureIndex === i}
-					{@const haveSubItem = active && $usingSubFeature && $usingSubFeature.length > 0}
-					<div>
-						<a href={feature.url} class="flex items-center">
-							<div
-								class="size-16 text-2xl flex justify-center items-center mx-1 {active
-									? 'text-primary-500'
-									: 'text-surface-400'}"
-							>
-								<i
-									class="fa-solid {!active && feature.hasDuotone
-										? 'fa-duotone'
-										: ''} {feature.faIcon}"
-								></i>
-							</div>
-							<p
-								class="flex-1 {active ? 'text-black font-bold' : 'text-surface-400 font-semibold'}"
-							>
-								{feature.title}
-							</p>
-							{#if active}
+					{#if $userStore && (!feature.roles || intersection(feature.roles, $userStore.roles).length > 0)}
+						{@const active = usingFeatureIndex === i}
+						{@const haveSubItem = active && $usingSubFeature && $usingSubFeature.length > 0}
+						<div>
+							<a href={feature.url} class="flex items-center">
 								<div
-									transition:fly={{
-										duration: 200,
-										x: -16
-									}}
-									class="text-slate-500 -mr-3 ml-3"
+									class="size-16 text-2xl flex justify-center items-center mx-1 {active
+										? 'text-primary-500'
+										: 'text-surface-400'}"
 								>
-									<i class="fa-solid fa-caret-right"></i>
+									<i
+										class="fa-solid {!active && feature.hasDuotone
+											? 'fa-duotone'
+											: ''} {feature.faIcon}"
+									></i>
+								</div>
+								<p
+									class="flex-1 {active
+										? 'text-black font-bold'
+										: 'text-surface-400 font-semibold'}"
+								>
+									{feature.title}
+								</p>
+								{#if active}
+									<div
+										transition:fly={{
+											duration: 200,
+											x: -16
+										}}
+										class="text-slate-500 -mr-3 ml-3"
+									>
+										<i class="fa-solid fa-caret-right"></i>
+									</div>
+								{/if}
+							</a>
+							{#if haveSubItem}
+								<div class="pl-11 pr-1 pb-1 space-y-1">
+									{#each $usingSubFeature as subFeature (subFeature)}
+										<div class="flex items-center text-blue-950 text-sm overflow-hidden">
+											<div class="size-10 flex justify-center items-center shrink-0">
+												<i class={subFeature.faIcon}></i>
+											</div>
+											<p class="font-medium text-ellipsis overflow-hidden whitespace-nowrap pr-2">
+												{subFeature.title}
+											</p>
+										</div>
+									{/each}
 								</div>
 							{/if}
-						</a>
-						{#if haveSubItem}
-							<div class="pl-11 pr-1 pb-1 space-y-1">
-								{#each $usingSubFeature as subFeature (subFeature)}
-									<div class="flex items-center text-blue-950 text-sm overflow-hidden">
-										<div class="size-10 flex justify-center items-center shrink-0">
-											<i class={subFeature.faIcon}></i>
-										</div>
-										<p class="font-medium text-ellipsis overflow-hidden whitespace-nowrap pr-2">
-											{subFeature.title}
-										</p>
-									</div>
-								{/each}
-							</div>
-						{/if}
-					</div>
+						</div>
+					{/if}
 				{/each}
 			</div>
 		</div>

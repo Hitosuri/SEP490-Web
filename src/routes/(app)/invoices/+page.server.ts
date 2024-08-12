@@ -1,12 +1,13 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles } from '$lib/helpers/authorization';
 import endpoints from '$lib/endpoints';
 import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import { invoiceFilterSchema } from '$lib/form-schemas/invoice-filter-schema';
+import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 export const load: PageServerLoad = async ({ fetch, url, locals }) => {
-	filterRoles(locals, url, Role.Accountant, Role.Recieptionist);
+	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.PAYMENT_MANAGEMENT].roles ?? []));
 
 	const searchParams = new URLSearchParams();
 	searchParams.set('page', '1');

@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles, Role } from '$lib/helpers/authorization';
 import { createAppointmentSchema } from '$lib/form-schemas/create-appointment-schema';
 import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
@@ -7,9 +7,15 @@ import endpoints from '$lib/endpoints';
 import { scheduleFilterSchema } from '$lib/form-schemas/schedule-filter-schema';
 import { createAppointmentPatientSchema } from '$lib/form-schemas/create-appointment-patient-schema';
 import { editScheduleSchema } from '$lib/form-schemas/edit-schedule-schema';
+import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
-	filterRoles(locals, url, Role.Recieptionist, Role.Doctor, Role.Patient);
+	filterRoles(
+		locals,
+		url,
+		...(userFeatureDetails[UserFeature.SCHEDULE_MANAGEMENT].roles ?? []),
+		Role.Patient
+	);
 	const today = new Date();
 
 	const searchParams = new URLSearchParams();

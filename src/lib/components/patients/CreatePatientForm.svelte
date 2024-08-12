@@ -45,11 +45,13 @@
 						},
 						body: JSON.stringify(requestBody)
 					});
-					const data = await response.json();
 
 					if (!response.ok) {
+						const data = await response.json();
 						let msg = '';
-						if (Array.isArray(data?.error)) {
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error)) {
 							msg = data.error.join(', ');
 							data.error.forEach((err: string) => {
 								if (typeof err === 'string') {

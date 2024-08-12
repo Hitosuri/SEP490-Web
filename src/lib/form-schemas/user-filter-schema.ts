@@ -1,4 +1,4 @@
-import { userRoles } from '$lib/authorization';
+import { userRoles } from '$lib/helpers/authorization';
 import { z } from 'zod';
 
 export const userFilterSchema = z.object({

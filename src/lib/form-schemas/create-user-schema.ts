@@ -1,4 +1,4 @@
-import { userRoles } from '$lib/authorization';
+import { userRoles } from '$lib/helpers/authorization';
 import { z } from 'zod';
 
 const msInDay = 1000 * 60 * 60 * 24;

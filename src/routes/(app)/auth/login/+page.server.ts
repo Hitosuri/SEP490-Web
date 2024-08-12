@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles, Role } from '$lib/helpers/authorization';
 import { superValidate } from 'sveltekit-superforms';
 import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';

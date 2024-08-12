@@ -12,6 +12,7 @@
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { formatHourMinute } from '$lib/helpers/formatters';
 	import endpoints from '$lib/endpoints';
+	import { pascalToCamelcase } from '$lib/helpers/utils';
 
 	export let editScheduleForm: SuperValidated<z.infer<typeof editScheduleSchema>>;
 	export let schedule: ScheduleFull;
@@ -42,18 +43,21 @@
 					});
 
 					if (!response.ok) {
-						// if (Array.isArray(data?.error) || Array.isArray(data)) {
-						// 	const msg = (data?.error ?? data).join(', ');
-						// 	return Promise.reject(msg);
-						// } else if (typeof data === 'object') {
-						// 	Object.keys(data).forEach((k) => {
-						// 		const fieldName = pascalToCamelcase(k);
-						// 		if (Object.keys(form.data).includes(fieldName)) {
-						// 			setError(form, fieldName, data[k]);
-						// 		}
-						// 	});
-						// 	return Promise.reject();
-						// }
+						const data = await response.json();
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+							const msg = (data?.error ?? data).join(', ');
+							return Promise.reject(msg);
+						} else if (typeof data === 'object') {
+							Object.keys(data).forEach((k) => {
+								const fieldName = pascalToCamelcase(k);
+								if (Object.keys(form.data).includes(fieldName)) {
+									setError(form, fieldName, data[k]);
+								}
+							});
+							return Promise.reject();
+						}
 
 						return Promise.reject();
 					}

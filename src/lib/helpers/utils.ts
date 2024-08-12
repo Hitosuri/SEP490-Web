@@ -1,4 +1,4 @@
-import { Role } from '$lib/authorization';
+import { Role } from '$lib/helpers/authorization';
 
 export function getRoleId(role: Role) {
 	switch (role) {

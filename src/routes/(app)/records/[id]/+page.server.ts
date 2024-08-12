@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles, Role } from '$lib/helpers/authorization';
 import endpoints from '$lib/endpoints';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
@@ -6,9 +6,15 @@ import { editPrescriptionDetailSchema } from '$lib/form-schemas/edit-prescriptio
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { editRecordSchema } from '$lib/form-schemas/edit-record-schema';
+import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
-	filterRoles(locals, url, Role.Doctor, Role.Accountant, Role.Patient);
+	filterRoles(
+		locals,
+		url,
+		...(userFeatureDetails[UserFeature.PATIENTS_MANAGEMENT].roles ?? []),
+		Role.Patient
+	);
 
 	const recordId = Number(params.id);
 	if (!recordId) {

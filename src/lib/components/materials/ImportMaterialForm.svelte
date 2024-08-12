@@ -70,7 +70,9 @@
 					const data = await response.json();
 
 					if (!response.ok) {
-						if (Array.isArray(data?.error) || Array.isArray(data)) {
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
 						} else if (typeof data.errors === 'object') {

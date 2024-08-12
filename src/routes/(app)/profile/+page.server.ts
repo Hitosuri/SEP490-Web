@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles, Role } from '$lib/helpers/authorization';
 import endpoints from '$lib/endpoints';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';

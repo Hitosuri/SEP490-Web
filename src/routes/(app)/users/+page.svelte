@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Role, roleTranslation, userRoles } from '$lib/authorization';
+	import { Role, roleTranslation, userRoles } from '$lib/helpers/authorization';
 	import { formatCurrency } from '$lib/helpers/formatters';
 	import { type Selected, ToggleGroup, Dialog } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
@@ -557,15 +557,18 @@
 		>
 			{#if field.name === 'name'}
 				<td class="text-left cell-ellipsis">
-					<a href="/users/{fieldData.id}" class="hover:underline">{fieldData.name}</a>
+					<a href="/users/{fieldData.id}" class="hover:underline" title={fieldData.name}
+						>{fieldData.name}</a
+					>
 				</td>
 			{:else if field.name === 'email'}
-				<td class="text-left">{fieldData.email}</td>
+				<td class="text-left" title={fieldData.email}>{fieldData.email}</td>
 			{:else if field.name === 'phone'}
-				<td class="text-center">{fieldData.phone}</td>
+				<td class="text-center" title={fieldData.phone}>{fieldData.phone}</td>
 			{:else if field.name === 'salary'}
-				<td class="text-end cell-ellipsis">
-					{formatCurrency(fieldData.salary)}
+				{@const salary = formatCurrency(fieldData.salary)}
+				<td class="text-end cell-ellipsis" title={salary}>
+					{salary}
 				</td>
 			{:else if field.name === 'roles'}
 				<td class="text-center text-sm font-semibold">

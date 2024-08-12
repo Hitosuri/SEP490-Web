@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Role } from '$lib/authorization';
+	import { Role } from '$lib/helpers/authorization';
 	import FunctionCard from '$lib/components/homepage/FunctionCard.svelte';
 	import endpoints from '$lib/endpoints';
 	import { formatHourMinute } from '$lib/helpers/formatters';
@@ -12,6 +12,7 @@
 	import { scheduleStepInMinute } from '$lib/constants/schedule-constant';
 	import { userFeatureDetails } from '$lib/constants/user-feature-constant';
 	import { browser } from '$app/environment';
+	import { intersection } from 'lodash-es';
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
@@ -94,18 +95,13 @@
 						});
 
 						if (!response.ok) {
-							// if (Array.isArray(data?.error) || Array.isArray(data)) {
-							// 	const msg = (data?.error ?? data).join(', ');
-							// 	return Promise.reject(msg);
-							// } else if (typeof data === 'object') {
-							// 	Object.keys(data).forEach((k) => {
-							// 		const fieldName = pascalToCamelcase(k);
-							// 		if (Object.keys(form.data).includes(fieldName)) {
-							// 			setError(form, fieldName, data[k]);
-							// 		}
-							// 	});
-							// 	return Promise.reject();
-							// }
+							const data = await response.json();
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
+							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+								const msg = (data?.error ?? data).join(', ');
+								return Promise.reject(msg);
+							}
 
 							return Promise.reject();
 						}
@@ -132,12 +128,14 @@
 		class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 p-4 border rounded-xl flex-1 flex-shrink-0 bg-white"
 	>
 		{#each allFeature as featureDetail (featureDetail.id)}
-			<FunctionCard
-				lottieAnimUrl={featureDetail.lottieAnim}
-				title={featureDetail.title}
-				class={featureDetail.class}
-				href={featureDetail.url}
-			/>
+			{#if $userStore && (!featureDetail.roles || intersection(featureDetail.roles, $userStore.roles).length > 0)}
+				<FunctionCard
+					lottieAnimUrl={featureDetail.lottieAnim}
+					title={featureDetail.title}
+					class={featureDetail.class}
+					href={featureDetail.url}
+				/>
+			{/if}
 		{/each}
 	</div>
 	{#if $userStore?.roles.includes(Role.Doctor)}

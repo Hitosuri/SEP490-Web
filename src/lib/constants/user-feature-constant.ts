@@ -1,3 +1,5 @@
+import { Role } from '$lib/helpers/authorization';
+
 export enum UserFeature {
 	USERS_MANAGEMENT = 1,
 	SERVICES_MANAGEMENT = 2,
@@ -16,7 +18,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		url: '/users',
 		lottieAnim: '/images/animations/user.lottie',
 		class: 'from-sky-400 to-indigo-400',
-		routes: ['/(app)/users']
+		routes: ['/(app)/users'],
+		roles: [Role.Admin]
 	},
 	[UserFeature.SERVICES_MANAGEMENT]: {
 		id: UserFeature.SERVICES_MANAGEMENT,
@@ -26,7 +29,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		url: '/services',
 		lottieAnim: '/images/animations/treatment.lottie',
 		class: 'from-yellow-400 to-orange-400',
-		routes: ['/(app)/services']
+		routes: ['/(app)/services'],
+		roles: [Role.Doctor]
 	},
 	[UserFeature.MATERIALS_MANAGEMENT]: {
 		id: UserFeature.MATERIALS_MANAGEMENT,
@@ -36,7 +40,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		url: '/materials',
 		lottieAnim: '/images/animations/material.lottie',
 		class: 'from-indigo-400 to-purple-400',
-		routes: ['/(app)/materials']
+		routes: ['/(app)/materials'],
+		roles: [Role.Accountant]
 	},
 	[UserFeature.PATIENTS_MANAGEMENT]: {
 		id: UserFeature.PATIENTS_MANAGEMENT,
@@ -46,7 +51,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		url: '/patients',
 		lottieAnim: '/images/animations/patient.lottie',
 		class: 'from-pink-400 to-red-400',
-		routes: ['/(app)/patients', '/(app)/records/[id]']
+		routes: ['/(app)/patients', '/(app)/records/[id]'],
+		roles: [Role.Doctor, Role.Recieptionist]
 	},
 	[UserFeature.SCHEDULE_MANAGEMENT]: {
 		id: UserFeature.SCHEDULE_MANAGEMENT,
@@ -56,7 +62,8 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		url: '/schedule',
 		lottieAnim: '/images/animations/schedule.lottie',
 		class: 'from-emerald-400 to-lime-400',
-		routes: ['/(app)/schedule']
+		routes: ['/(app)/schedule'],
+		roles: [Role.Recieptionist, Role.Patient]
 	},
 	[UserFeature.PAYMENT_MANAGEMENT]: {
 		id: UserFeature.PAYMENT_MANAGEMENT,
@@ -66,6 +73,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		url: '/invoices',
 		lottieAnim: '/images/animations/invoice.lottie',
 		class: 'from-teal-400 to-cyan-400',
-		routes: ['/(app)/invoices']
+		routes: ['/(app)/invoices'],
+		roles: [Role.Recieptionist, Role.Accountant]
 	}
 };

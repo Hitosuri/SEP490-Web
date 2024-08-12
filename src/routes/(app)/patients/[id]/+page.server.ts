@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/authorization';
+import { filterRoles, Role } from '$lib/helpers/authorization';
 import endpoints from '$lib/endpoints';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
@@ -7,7 +7,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';
 
 export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
-	filterRoles(locals, url, Role.Doctor, Role.Nurse);
+	filterRoles(locals, url, Role.Doctor);
 	const patientId = Number(params.id);
 	if (!patientId) {
 		error(400, { message: 'Id của bệnh nhân phải là số' });

@@ -9,7 +9,7 @@
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
 	import { ToggleGroup } from 'bits-ui';
-	import { roleTranslation, userRoles } from '$lib/authorization';
+	import { roleTranslation, userRoles } from '$lib/helpers/authorization';
 	import endpoints from '$lib/endpoints';
 	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
 	import { type Writable } from 'svelte/store';
@@ -44,7 +44,9 @@
 
 					if (!response.ok) {
 						const data = await response.json();
-						if (Array.isArray(data?.error) || Array.isArray(data)) {
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
 						} else if (typeof data === 'object') {
