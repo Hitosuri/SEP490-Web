@@ -209,19 +209,11 @@
 
 						if (!response.ok) {
 							const data = await response.json();
-							if (typeof data.error === 'string') {
-								return Promise.reject(data.error);
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
 							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 								const msg = (data?.error ?? data).join(', ');
 								return Promise.reject(msg);
-							} else if (typeof data === 'object') {
-								// Object.keys(data).forEach((k) => {
-								// 	const fieldName = pascalToCamelcase(k);
-								// 	if (Object.keys(form.data).includes(fieldName)) {
-								// 		setError(form, fieldName, data[k]);
-								// 	}
-								// });
-								return Promise.reject();
 							}
 
 							return Promise.reject();
@@ -243,7 +235,7 @@
 </script>
 
 <h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Lịch sử xuất vật tư</h1>
-<div class="p-1 bg-slate-300 shadow-inner flex gap-1 rounded-lg overflow-hidden">
+<div class="p-1 bg-slate-300 shadow-inner flex gap-1 rounded-lg overflow-hidden items-center">
 	<div class="input border-surface-500/25 w-fit overflow-hidden rounded-container-token flex">
 		<div class="size-10 flex justify-center items-center border-r border-inherit">
 			<i class="fa-solid fa-magnifying-glass"></i>
@@ -266,12 +258,12 @@
 			bind:value={supplierName}
 		/>
 	</div>
-	<div class="bg-white p-1 rounded-full text-sm">
+	<div class="bg-white p-1 rounded-full text-sm h-fit flex gap-x-1">
 		<button
 			type="button"
 			class="rounded-full {isProcessing
 				? 'bg-primary-500 text-white'
-				: ''} font-semibold px-2 h-full"
+				: ''} font-semibold px-2 py-1 h-fit"
 			on:click={() => changeIsProcessing(true)}
 		>
 			Đang xử lý
@@ -280,7 +272,7 @@
 			type="button"
 			class="rounded-full {!isProcessing
 				? 'bg-primary-500 text-white'
-				: ''} font-semibold px-2 h-full"
+				: ''} font-semibold px-2 py-1 h-fit"
 			on:click={() => changeIsProcessing(false)}
 		>
 			Hoàn thành

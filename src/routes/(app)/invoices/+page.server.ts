@@ -6,7 +6,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { invoiceFilterSchema } from '$lib/form-schemas/invoice-filter-schema';
 
 export const load: PageServerLoad = async ({ fetch, url, locals }) => {
-	filterRoles(locals, url, Role.Accountant);
+	filterRoles(locals, url, Role.Accountant, Role.Recieptionist);
 
 	const searchParams = new URLSearchParams();
 	searchParams.set('page', '1');

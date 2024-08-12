@@ -2,13 +2,9 @@
 	import type { Selected } from 'bits-ui';
 	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
 	import type { Readable, Writable } from 'svelte/store';
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
 	import endpoints from '$lib/endpoints';
-	import DropdownSelect from '$lib/components/common/DropdownSelect.svelte';
 	import NumberInput from '$lib/components/common/NumberInput.svelte';
-	import type { SuperForm } from 'sveltekit-superforms';
-	import type { z } from 'zod';
-	import type { createTreatmentSchema } from '$lib/form-schemas/create-treatment-schema';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 
 	export let index: number = 0;

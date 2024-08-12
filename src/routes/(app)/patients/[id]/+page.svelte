@@ -264,9 +264,6 @@
 							class="p-4 flex gap-2 justify-end font-medium absolute left-0 bottom-0 w-full"
 							transition:fly={{ duration: 300, x: -80 }}
 						>
-							<button type="button" class="btn rounded-container-token variant-soft-error"
-								>Xoá</button
-							>
 							<button
 								type="button"
 								on:click={() => (editting = true)}
