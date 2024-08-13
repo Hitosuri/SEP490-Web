@@ -104,7 +104,7 @@
 				: 'py-0'}"
 		>
 			<svelte:fragment slot="lead">
-				{#if !inLandingPage && !inAuth}
+				{#if !inLandingPage && !inAuth && !$userStore?.isPatient}
 					<button
 						type="button"
 						class="btn-icon size-10 text-2xl mr-4 transition-all hover:bg-surface-200 hover:text-surface-700 text-surface-500"
@@ -117,7 +117,7 @@
 					<img class={inLandingPage ? 'h-10' : 'h-12'} src="/images/prodental.png" alt="" />
 				</a>
 			</svelte:fragment>
-			<a href="#" class="group pt-1">
+			<!-- <a href="#" class="group pt-1">
 				<div class="flex flex-col h-8 justify-end">
 					<p
 						class="leading-5 text-sm group-hover:pb-1 font-bold text-black/60 group-hover:text-black transition-all duration-160 ease-out px-2 uppercase tracking-wider"
@@ -152,7 +152,7 @@
 						class="bg-primary-500 h-1 transition-all duration-200 ease-out w-0 group-hover:w-full"
 					></div>
 				</div>
-			</a>
+			</a> -->
 			<svelte:fragment slot="trail">
 				{#if !$userStore && $page.url.pathname !== '/auth/login'}
 					<Dialog.Root

@@ -6,6 +6,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { treatmentFilterSchema } from '$lib/form-schemas/treatment-filter-schema';
 import { createTreatmentSchema } from '$lib/form-schemas/create-treatment-schema';
 import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
+import { handleFetch } from '$lib/helpers/utils';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.SERVICES_MANAGEMENT].roles ?? []));
@@ -15,11 +16,13 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	searchParams.set('size', '10');
 
 	const requestUrl = `${endpoints.treatments.get}?${searchParams}`;
-	const r = await fetch(requestUrl, {
-		headers: {
-			Authorization: `Bearer ${locals.user?.token}`
-		}
-	});
+	const r = await handleFetch(
+		fetch(requestUrl, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		})
+	);
 
 	const data: ApiResponse<Pagination<Treatment[]>> = await r.json();
 

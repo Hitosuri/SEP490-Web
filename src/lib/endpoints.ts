@@ -19,13 +19,15 @@ export default {
 		get: `${env.PUBLIC_API_HOST}/api/user/ListUser`,
 		create: `${env.PUBLIC_API_HOST}/api/user`,
 		edit: (id: number) => `${env.PUBLIC_API_HOST}/api/user/UpdateUser/${id}`,
-		doctorSearch: `${env.PUBLIC_API_HOST}/api/user/doctors/search`
+		doctorSearch: `${env.PUBLIC_API_HOST}/api/user/doctors/search`,
+		ban: `${env.PUBLIC_API_HOST}/api/user/BanUser`
 	},
 	patients: {
 		get: `${env.PUBLIC_API_HOST}/api/patient/all`,
 		create: `${env.PUBLIC_API_HOST}/api/patient`,
 		detail: (id: number) => `${env.PUBLIC_API_HOST}/api/patient/${id}`,
-		edit: (id: number) => `${env.PUBLIC_API_HOST}/api/patient/update/${id}`
+		edit: (id: number) => `${env.PUBLIC_API_HOST}/api/patient/update/${id}`,
+		ban: `${env.PUBLIC_API_HOST}/api/patient/BanPatient`
 	},
 	materials: {
 		get: `${env.PUBLIC_API_HOST}/api/materials/all`,

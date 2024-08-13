@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { createEventDispatcher, getContext, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import SuperDebug, { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
-	import { Combobox, type Selected } from 'bits-ui';
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { type Selected } from 'bits-ui';
 	import { type Writable } from 'svelte/store';
 	import { createMaterialSchema } from '$lib/form-schemas/create-material-schema';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
@@ -481,7 +479,6 @@
 					</button>
 				</fieldset>
 			</form>
-			<SuperDebug data={$formData} />
 		</div>
 	{/if}
 </div>

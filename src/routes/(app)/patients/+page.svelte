@@ -13,9 +13,12 @@
 	import { type Writable } from 'svelte/store';
 	import { getContext } from 'svelte';
 	import Container from '$lib/components/common/Container.svelte';
+	import { toast } from 'svelte-sonner';
+	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 
 	export let data: PageData;
 
+	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let patients = data.patientListPage.data;
 	let pageSize = data.patientListPage.pageSize || 10;
@@ -58,6 +61,10 @@
 			sortable: true,
 			align: 'center',
 			formatter: formatCompactDate
+		},
+		{
+			displayName: 'Trạng thái',
+			name: 'status'
 		}
 	];
 	const sortableField = tableFields.filter((x) => x?.sortable).map((x) => x.name);
@@ -169,6 +176,57 @@
 
 		filtering(lastestFilterOption, currentPage, pageSize, true);
 	}
+
+	function banPatient(patient: Patient, ban: boolean) {
+		const modalSetting: ModalSettings = {
+			type: 'confirm',
+			title: 'Xác nhận',
+			body: `Xác nhận cấm bệnh nhân ${patient.name ?? patient.phone ?? patient.email}`,
+			response: (r) => {
+				if (!r || !$userStore) {
+					return;
+				}
+
+				toast.promise(
+					async (): Promise<string> => {
+						const searchParams = new URLSearchParams();
+						searchParams.set('patientId', String(patient.id));
+						searchParams.set('status', ban ? '2' : '1');
+
+						const response = await fetch(`${endpoints.patients.ban}?${searchParams}`, {
+							method: 'POST',
+							headers: {
+								Authorization: `Bearer ${$userStore.token}`
+							}
+						});
+
+						if (!response.ok) {
+							const data = await response.json();
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
+							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+								const msg = (data?.error ?? data).join(', ');
+								return Promise.reject(msg);
+							}
+
+							return Promise.reject();
+						}
+
+						filtering(lastestFilterOption, currentPage, pageSize, true, true);
+						return `${ban ? 'Cấm' : 'Huỷ cấm'} bệnh nhân thành công`;
+					},
+					{
+						loading: 'Đang xử lý...',
+						success: (msg) => msg ?? `${ban ? 'Cấm' : 'Huỷ cấm'} bệnh nhân thành công`,
+						error: (msg) =>
+							String(msg ?? '') ||
+							`Đã xảy ra lỗi trong quá trình ${ban ? 'cấm' : 'huỷ cấm'} bệnh nhân`
+					}
+				);
+			}
+		};
+		modalStore.trigger(modalSetting);
+	}
 </script>
 
 <svelte:head>
@@ -270,7 +328,51 @@
 			fields={tableFields}
 			showDelete={false}
 			showEdit={false}
+			actionMenu={[
+				{
+					label: 'Cấm bệnh nhân',
+					icon: 'fa-solid fa-ban',
+					click: (patient) => banPatient(patient, true),
+					showWhen: (patient) => patient.status === 1
+				},
+				{
+					label: 'Huỷ cấm',
+					icon: 'fa-regular fa-universal-access',
+					click: (patient) => banPatient(patient, false),
+					showWhen: (patient) => patient.status === 2
+				}
+			]}
 			on:sortField={(e) => selectSorting(e.detail)}
-		/>
+			let:fieldData
+			let:field
+		>
+			{#if field.name == 'name'}
+				<td title={fieldData.name ?? ''} class="text-start">
+					<a href="/patients/{fieldData.id}" class="hover:underline">{fieldData.name ?? ''}</a>
+				</td>
+			{:else if field.name === 'email'}
+				<td title={fieldData.email ?? ''} class="text-start">
+					{fieldData.email ?? ''}
+				</td>
+			{:else if field.name === 'phone'}
+				<td title={fieldData.phone ?? ''} class="text-center">
+					{fieldData.phone ?? ''}
+				</td>
+			{:else if field.name === 'birthday'}
+				{@const dateString = formatCompactDate(fieldData.birthday)}
+				<td title={dateString} class="text-center">
+					{dateString}
+				</td>
+			{:else if field.name === 'status'}
+				{@const status = fieldData.status === 1 ? 'Bình thường' : 'Bị ban'}
+				<td title={status} class="text-center w-0">
+					<span
+						class="badge {fieldData.status === 1 ? 'variant-soft-success' : 'variant-soft-error'}"
+					>
+						{status}
+					</span>
+				</td>
+			{/if}
+		</DataTable>
 	</div>
 </Container>

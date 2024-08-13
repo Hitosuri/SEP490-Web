@@ -8,6 +8,7 @@ import { scheduleFilterSchema } from '$lib/form-schemas/schedule-filter-schema';
 import { createAppointmentPatientSchema } from '$lib/form-schemas/create-appointment-patient-schema';
 import { editScheduleSchema } from '$lib/form-schemas/edit-schedule-schema';
 import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
+import { handleFetch } from '$lib/helpers/utils';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(
@@ -25,11 +26,13 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	searchParams.set('endAt', `${today.getFullYear()}-${today.getMonth() + 2}-1`);
 
 	if (locals.user?.roles.includes(Role.Recieptionist)) {
-		const r = await fetch(`${endpoints.schedule.getByRecieptionist}?${searchParams}`, {
-			headers: {
-				Authorization: `Bearer ${locals.user?.token}`
-			}
-		});
+		const r = await handleFetch(
+			fetch(`${endpoints.schedule.getByRecieptionist}?${searchParams}`, {
+				headers: {
+					Authorization: `Bearer ${locals.user?.token}`
+				}
+			})
+		);
 
 		const schedules: Pagination<ScheduleFull[]> = await r.json();
 		schedules.data.forEach((x, i) => {
@@ -47,16 +50,20 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 		} as const;
 	} else if (locals.user?.roles.includes(Role.Patient)) {
 		const [allSchedule, scheduleOfPatient] = await Promise.all([
-			fetch(`${endpoints.schedule.getByPatient}?${searchParams}`, {
-				headers: {
-					Authorization: `Bearer ${locals.user?.token}`
-				}
-			}).then<Pagination<ScheduleByPatient[]>>((x) => x.json()),
-			fetch(`${endpoints.schedule.getOwnByPatient}?${searchParams}`, {
-				headers: {
-					Authorization: `Bearer ${locals.user?.token}`
-				}
-			}).then<Pagination<ScheduleFull[]>>((x) => x.json())
+			handleFetch(
+				fetch(`${endpoints.schedule.getByPatient}?${searchParams}`, {
+					headers: {
+						Authorization: `Bearer ${locals.user?.token}`
+					}
+				})
+			).then<Pagination<ScheduleByPatient[]>>((x) => x.json()),
+			handleFetch(
+				fetch(`${endpoints.schedule.getOwnByPatient}?${searchParams}`, {
+					headers: {
+						Authorization: `Bearer ${locals.user?.token}`
+					}
+				})
+			).then<Pagination<ScheduleFull[]>>((x) => x.json())
 		]);
 
 		scheduleOfPatient.data.forEach((x, i) => {

@@ -165,39 +165,6 @@
 		}));
 	}
 
-	async function searchMaterialsFn(keyword: string): Promise<Selected<Material>[] | undefined> {
-		if (!$userStore) {
-			return;
-		}
-
-		const searchParams = new URLSearchParams();
-		searchParams.set('page', '1');
-		searchParams.set('size', '5');
-		searchParams.set('materialName', keyword);
-
-		// $formData.extraMaterials.forEach((x) => {
-		// 	searchParams.append('excludeIds', String(x.materialId));
-		// });
-
-		const url = `${endpoints.materials.get}?${searchParams}`;
-		const response = await fetch(url, {
-			headers: {
-				Authorization: `Bearer ${$userStore.token}`
-			}
-		});
-
-		if (!response.ok) {
-			return;
-		}
-
-		const data: Pagination<Material[]> = await response.json();
-
-		return data.data.map((x) => ({
-			label: x.name ?? '',
-			value: x
-		}));
-	}
-
 	function addTreatment() {
 		if (!selectedTreatment) {
 			return;

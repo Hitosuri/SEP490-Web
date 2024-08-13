@@ -64,6 +64,7 @@ interface Patient {
 	email: string | undefined | null;
 	phone: string | undefined | null;
 	birthday: Date | undefined | null;
+	status: number;
 }
 
 interface Pagination<T> {

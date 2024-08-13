@@ -22,7 +22,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-	class="h-full p-0.5 absolute top-0 overflow-hidden group"
+	class="h-full p-0.5 absolute top-0 overflow-hidden group z-[2]"
 	style="left: {leftOffset * 128}px; width: {width * 128}px"
 	id="schedule-{schedule.id}"
 	on:mouseenter={() => dispatch('hoverStart', schedule.id)}

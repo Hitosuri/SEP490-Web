@@ -21,6 +21,7 @@
 	import { type Writable } from 'svelte/store';
 	import { getContext } from 'svelte';
 	import Container from '$lib/components/common/Container.svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let data: PageData;
 
@@ -86,6 +87,10 @@
 		{
 			displayName: 'Vai trò',
 			name: 'roles'
+		},
+		{
+			displayName: 'Trạng thái',
+			name: 'status'
 		}
 	];
 	const sortableField = tableFields.filter((x) => x.sortable).map((x) => x.name);
@@ -260,6 +265,57 @@
 				if (r) {
 					filtering(lastestFilterOption, currentPage, pageSize, true, true);
 				}
+			}
+		};
+		modalStore.trigger(modalSetting);
+	}
+
+	function banUser(user: User, ban: boolean) {
+		const modalSetting: ModalSettings = {
+			type: 'confirm',
+			title: 'Xác nhận',
+			body: `Xác nhận cấm nhân viên ${user.name ?? user.phone ?? user.email}`,
+			response: (r) => {
+				if (!r || !$userStore) {
+					return;
+				}
+
+				toast.promise(
+					async (): Promise<string> => {
+						const searchParams = new URLSearchParams();
+						searchParams.set('userId', String(user.id));
+						searchParams.set('status', ban ? '2' : '1');
+
+						const response = await fetch(`${endpoints.users.ban}?${searchParams}`, {
+							method: 'PUT',
+							headers: {
+								Authorization: `Bearer ${$userStore.token}`
+							}
+						});
+
+						if (!response.ok) {
+							const data = await response.json();
+							if (typeof data?.error === 'string') {
+								return Promise.reject(data?.error);
+							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+								const msg = (data?.error ?? data).join(', ');
+								return Promise.reject(msg);
+							}
+
+							return Promise.reject();
+						}
+
+						filtering(lastestFilterOption, currentPage, pageSize, true, true);
+						return `${ban ? 'Cấm' : 'Huỷ cấm'} nhân viên thành công`;
+					},
+					{
+						loading: 'Đang xử lý...',
+						success: (msg) => msg ?? `${ban ? 'Cấm' : 'Huỷ cấm'} nhân viên thành công`,
+						error: (msg) =>
+							String(msg ?? '') ||
+							`Đã xảy ra lỗi trong quá trình ${ban ? 'cấm' : 'huỷ cấm'} nhân viên`
+					}
+				);
 			}
 		};
 		modalStore.trigger(modalSetting);
@@ -546,6 +602,23 @@
 			bind:sortingAscending
 			bind:loading
 			fields={tableFields}
+			showDelete={false}
+			actionMenu={[
+				{
+					label: 'Cấm nhân viên',
+					icon: 'fa-solid fa-ban',
+					click: (user) => banUser(user, true),
+					showWhen: (user) => user.status === 1,
+					showBelow: true
+				},
+				{
+					label: 'Huỷ cấm',
+					icon: 'fa-regular fa-universal-access',
+					click: (user) => banUser(user, false),
+					showWhen: (user) => user.status === 2,
+					showBelow: true
+				}
+			]}
 			on:pageChange={(e) => {
 				currentPage = e.detail;
 				filtering(lastestFilterOption, e.detail, pageSize, true);
@@ -567,7 +640,7 @@
 				<td class="text-center" title={fieldData.phone}>{fieldData.phone}</td>
 			{:else if field.name === 'salary'}
 				{@const salary = formatCurrency(fieldData.salary)}
-				<td class="text-end cell-ellipsis" title={salary}>
+				<td class="text-end cell-ellipsis max-w-40" title={salary}>
 					{salary}
 				</td>
 			{:else if field.name === 'roles'}
@@ -597,6 +670,15 @@
 							{/if}
 						{/each}
 					</div>
+				</td>
+			{:else if field.name === 'status'}
+				{@const status = fieldData.status === 1 ? 'Bình thường' : 'Bị ban'}
+				<td title={status} class="text-center w-0">
+					<span
+						class="badge {fieldData.status === 1 ? 'variant-soft-success' : 'variant-soft-error'}"
+					>
+						{status}
+					</span>
 				</td>
 			{:else}
 				<td class="text-left">{fieldData[field.name]}</td>

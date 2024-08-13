@@ -14,15 +14,19 @@
 <DropdownMenu.Root preventScroll={true}>
 	<DropdownMenu.Trigger
 		class="overflow-x-hidden {inLandingHeader
-			? 'h-12 w-56 px-3 absolute right-0 top-1/2 -translate-y-1/2 rounded-l-full border border-tertiary-700 variant-filled-tertiary hover:bg-white hover:border-surface-300'
-			: 'h-10 w-40 px-[10px] rounded-full variant-outline hover:variant-outline-primary'} ring-surface-200 transition-all duration-300 hover:text-primary-500 flex items-center"
+			? 'h-12 w-24 sm:w-56 px-3 absolute right-0 top-1/2 -translate-y-1/2 rounded-l-full border border-tertiary-700 variant-filled-tertiary hover:bg-white hover:border-surface-300'
+			: 'h-10 w-10 sm:w-40 px-[10px] rounded-full variant-outline hover:variant-outline-primary'} ring-surface-200 transition-all duration-300 hover:text-primary-500 flex items-center"
 	>
 		<i class="fa-solid fa-circle-user {inLandingHeader ? 'text-2xl' : 'text-xl'}"></i>
-		<span class="ml-2 {inLandingHeader ? 'text-base' : 'text-sm'} text-ellipsis overflow-x-hidden"
-			>{userAuth.email}</span
+		<span
+			class="ml-2 text-ellipsis overflow-x-hidden hidden sm:block {inLandingHeader
+				? 'text-base'
+				: 'text-sm'}"
 		>
+			{userAuth.email}
+		</span>
 		{#if inLandingHeader}
-			<div class="w-10 shrink-0 text-xl">
+			<div class="w-10 shrink-0 text-xl ml-auto">
 				<i class="fa-solid fa-ellipsis-vertical"></i>
 			</div>
 		{/if}
@@ -42,7 +46,7 @@
 		</DropdownMenu.Label>
 		<DropdownMenu.Item
 			href="/profile"
-			class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center"
+			class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center"
 		>
 			<div class="size-4 text-center">
 				<i class="fa-solid fa-user block"></i>
@@ -52,7 +56,7 @@
 		{#if userAuth.roles.includes(Role.Patient)}
 			<DropdownMenu.Item
 				href="/schedule"
-				class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center"
+				class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center"
 			>
 				<div class="size-4 text-center">
 					<i class="fa-solid fa-calendar-days block"></i>
@@ -63,7 +67,7 @@
 		<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
 		<DropdownMenu.Item
 			on:click={() => dispatch('logout')}
-			class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+			class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 		>
 			<div class="size-4 text-center">
 				<i class="fa-solid fa-right-from-bracket block"></i>

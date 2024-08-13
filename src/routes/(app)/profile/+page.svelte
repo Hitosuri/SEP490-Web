@@ -51,8 +51,8 @@
 <Container paddingTopHeader class="py-4">
 	<Breadcrumb crumbs={[{ label: 'Tài khoản cá nhân' }]} highlight />
 	<div class="rounded-lg shadow-lg overflow-hidden border mt-4 bg-white">
-		<div class="py-4 px-6 border-b flex">
-			<h3 class="h3 font-semibold">
+		<div class="py-4 px-6 border-b flex items-center">
+			<h3 class="h4 sm:h3 font-semibold">
 				{profileEditting ? 'Sửa thông tin tài khoản' : 'Thông tin tài khoản'}
 			</h3>
 			{#if !profileEditting}
@@ -87,7 +87,7 @@
 	</div>
 	<div class="rounded-lg shadow-lg overflow-hidden border mt-8 bg-white">
 		<div class="py-4 px-6 border-b">
-			<h3 class="h3 font-semibold">
+			<h3 class="h4 sm:h3 font-semibold">
 				{#if passwordEditting}
 					Thay đổi mật khẩu
 				{:else}
@@ -104,8 +104,8 @@
 				</div>
 				<div>
 					{#if !passwordEditting}
-						<p class="text-sm font-semibold text-surface-500 select-none">Mật khẩu</p>
-						<p class="text-xl font-medium tracking-wide">••••••••••••••••••••</p>
+						<p class="text-xs sm:text-sm font-semibold text-surface-500 select-none">Mật khẩu</p>
+						<p class="text-lg sm:text-xl font-medium tracking-wide">••••••••••••</p>
 					{:else if changePasswordForm}
 						<ChangePasswordForm
 							{changePasswordForm}
@@ -134,9 +134,9 @@
 	{#if $userStore?.isPatient && data.records}
 		<div class="rounded-lg shadow-lg overflow-hidden border mt-8 bg-white">
 			<div class="py-4 px-6 border-b">
-				<h3 class="h3 font-semibold">Hồ sơ khám bệnh</h3>
+				<h3 class="h4 sm:h3 font-semibold">Hồ sơ khám bệnh</h3>
 			</div>
-			<div>
+			<div class="overflow-x-auto">
 				<table class="w-full">
 					<thead>
 						<tr>

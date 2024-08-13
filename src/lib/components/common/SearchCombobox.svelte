@@ -120,7 +120,7 @@
 		>
 			{#each items as item}
 				<Combobox.Item
-					class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-2 rounded select-none flex gap-3 items-center cursor-pointer"
+					class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-2 sm:px-4 py-2 rounded select-none flex gap-3 items-center cursor-pointer text-sm sm:text-base"
 					value={item.value}
 					label={item.label}
 				>
@@ -132,7 +132,7 @@
 					</Combobox.ItemIndicator>
 				</Combobox.Item>
 			{:else}
-				<span class="block px-5 py-2 text-sm text-muted-foreground">Không có kết quả</span>
+				<span class="block sm:px-4 py-2 text-sm text-muted-foreground"> Không có kết quả </span>
 			{/each}
 		</Combobox.Content>
 	</Combobox.Root>
