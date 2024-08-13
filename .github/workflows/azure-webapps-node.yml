@@ -46,7 +46,7 @@ jobs:
 
     - name: Install dependency
       run: |
-        npm ci --omit dev
+        npm install
 
     - name: Build prject
       run: |
