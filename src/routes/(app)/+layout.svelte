@@ -1,17 +1,37 @@
 <script lang="ts">
 	import { type SvelteEvent } from '@skeletonlabs/skeleton';
-	import type { LayoutData } from './$types';
-	import Header from '$lib/components/Header.svelte';
+	import Header from '$lib/components/layout/Header.svelte';
+	import scrollStore from '$lib/stores/scroll-store';
+	import { getContext, setContext } from 'svelte';
+	import { derived, writable, type Writable } from 'svelte/store';
+	import SideBar from '$lib/components/layout/SideBar.svelte';
+	import { page } from '$app/stores';
 
-	export let data: LayoutData;
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
+	let sideBarOpenActive = writable(true);
+	let sideBarOpened = derived([userStore, sideBarOpenActive], ([user, sideBarState]) => {
+		return !!(user && !user.isPatient && sideBarState && !inAuth);
+	});
+
+	$: inAuth = $page.url.pathname.startsWith('/auth');
+
+	setContext('sidebar-active', sideBarOpenActive);
+	setContext('sidebar-state', sideBarOpened);
 
 	function scrollHandler(e: SvelteEvent<UIEvent, Window>) {
-		console.log(e.currentTarget.scrollY);
+		scrollStore.set(e.currentTarget.scrollY);
 	}
 </script>
 
-<svelte:window />
-<Header loginForm={data.loginForm} />
-<div class="min-h-full h-full bg-white pt-[5.5rem]">
-	<slot />
+<svelte:window on:scroll={scrollHandler} />
+<div class="bg-stone-100 flex flex-row w-full">
+	{#if $userStore && !$userStore.isPatient && !inAuth}
+		<SideBar />
+	{/if}
+	<div class="relative flex-1 shrink-0">
+		<Header />
+		<div class="min-h-screen">
+			<slot />
+		</div>
+	</div>
 </div>

@@ -3,10 +3,43 @@
 @tailwind utilities;
 @tailwind variants;
 
+@layer base {
+	input[type='number'] {
+		appearance: textfield;
+		-moz-appearance: textfield;
+	}
+
+	input[type='number']::-webkit-inner-spin-button,
+	input[type='number']::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	.schedule-pending {
+		@apply bg-schedule-pending border-schedule-pending text-schedule-pending;
+	}
+
+	.schedule-confirmed {
+		@apply bg-schedule-confirmed border-schedule-confirmed text-schedule-confirmed;
+	}
+
+	.schedule-done {
+		@apply bg-schedule-done border-schedule-done text-schedule-done;
+	}
+
+	.cell-ellipsis {
+		@apply max-w-0 overflow-hidden text-ellipsis;
+	}
+}
+
 @layer components {
 	.input {
 		@apply bg-white border-surface-500/40 !bg-opacity-30;
 	}
+}
+
+* {
+	@apply focus:outline-0;
 }
 
 :root {
@@ -32,7 +65,7 @@ body {
 }
 
 ::-webkit-scrollbar {
-	@apply bg-surface-50/70 w-2 h-2;
+	@apply bg-surface-50/70 w-scroll-bar h-scroll-bar;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -41,4 +74,24 @@ body {
 
 [data-fs-field-error] {
 	@apply text-error-400 text-sm font-semibold;
+}
+
+#nprogress > .bar {
+	@apply !bg-primary-500;
+}
+
+#nprogress .peg {
+	box-shadow:
+		0 0 10px rgb(var(--color-surface-500) / 1),
+		0 0 5px rgb(var(--color-surface-500) / 1) !important;
+}
+
+.untouchable {
+	background: repeating-linear-gradient(
+		142deg,
+		theme('colors.surface.50'),
+		theme('colors.surface.50') 4px,
+		theme('colors.surface.200') 4px,
+		theme('colors.surface.200') 8px
+	);
 }
