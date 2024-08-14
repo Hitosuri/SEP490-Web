@@ -188,10 +188,14 @@
 		$formData.description = selectedMaterialType?.description ?? '';
 	}
 
+	function deselectAll() {
+		selectedMaterialType = undefined;
+		resetForm();
+	}
+
 	function selectType(materialType: MaterialType) {
 		if (selectedMaterialType?.id === materialType.id) {
-			selectedMaterialType = undefined;
-			resetForm();
+			deselectAll();
 			return;
 		}
 
@@ -289,13 +293,22 @@
 		/>
 	</div>
 	<div class="flex-shrink-0 pl-4 border-l ml-4">
-		<p
-			class="{selectedMaterialType
+		<div
+			class="rounded-lg h-[51px] font-semibold flex justify-center items-center relative {selectedMaterialType
 				? 'bg-tertiary-500 text-white'
-				: 'bg-slate-300'} rounded-lg h-[51px] font-semibold flex justify-center items-center"
+				: 'bg-slate-300'}"
 		>
+			{#if selectedMaterialType}
+				<button
+					type="button"
+					class="absolute bottom-full right-0 text-sm anchor"
+					on:click={deselectAll}
+				>
+					Trở về tạo loại vật tư
+				</button>
+			{/if}
 			{selectedMaterialType ? 'Cập nhật loại vật tư' : 'Tạo loại vật tư'}
-		</p>
+		</div>
 		<form method="post" use:enhance class="space-y-4 mt-4">
 			<div>
 				<Field {form} name="name">
