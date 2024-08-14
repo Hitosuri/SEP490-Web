@@ -9,6 +9,7 @@
 	import Loading from '$lib/components/common/Loading.svelte';
 	import { Chart, registerables } from 'chart.js';
 	import { browser } from '$app/environment';
+	import { fade } from 'svelte/transition';
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const patientStatisticStore = getContext<Writable<PatientStatisticSnapshot>>('patientStatistic');
@@ -89,11 +90,18 @@
 			options: {
 				responsive: true,
 				resizeDelay: 200,
-				maintainAspectRatio: false
+				maintainAspectRatio: false,
+				animation: false
 			}
 		});
 
 		if ($patientStatisticStore.result) {
+			lastestFilterOption = {
+				periodType: selectedFilterType.value,
+				year: selectedYear.value,
+				month: selectedMonth.value,
+				day: selectedDay.value
+			};
 			patientStatistic = await $patientStatisticStore.result;
 		}
 	});
@@ -105,6 +113,12 @@
 		chart.data.labels = patientStatistic.ageDistribution.map((x) => x.ageGroup);
 		chart.data.datasets[0].data = patientStatistic.ageDistribution.map((x) => x.patientCount);
 		chart.update();
+		if (!chart.options.animation) {
+			chart.options.animation = {
+				duration: 500,
+				easing: 'easeOutExpo'
+			};
+		}
 	}
 
 	function getDayList(year: number, month: number): Selected<number>[] {
@@ -135,19 +149,19 @@
 			clearTimeout(filterTimer);
 		}
 
+		const filterOptions: Record<string, string | number> = {
+			periodType,
+			year,
+			month,
+			day
+		};
+
+		if (!forceFilter && isEqual(lastestFilterOption, filterOptions)) {
+			return;
+		}
+
 		filterTimer = setTimeout(async () => {
 			if (!$userStore) {
-				return;
-			}
-
-			const filterOptions: Record<string, string | number> = {
-				periodType,
-				year,
-				month,
-				day
-			};
-
-			if (!forceFilter && isEqual(lastestFilterOption, filterOptions)) {
 				return;
 			}
 
@@ -188,6 +202,8 @@
 							return Promise.reject('Đã có lỗi xảy ra');
 						}
 
+						lastestFilterOption = filterOptions;
+						x.body.time = new Date(x.body.time);
 						patientStatistic = x.body;
 
 						return x.body;
@@ -276,9 +292,9 @@
 	</button>
 </div>
 <div class="border-b pt-4 mb-4"></div>
-<div class="space-y-6">
+<div class="space-y-6 @container relative">
 	<div class="grid grid-cols-3 h-60">
-		<div class="flex-1 flex-shrink-0 flex justify-center items-center flex-col">
+		<div class="flex justify-center items-center flex-col">
 			<p class="text-4xl font-extrabold text-blue-600 md:text-5xl">
 				{patientStatistic.newPatientsCount}
 			</p>
@@ -288,8 +304,8 @@
 			<canvas bind:this={chartCanvas}></canvas>
 		</div>
 	</div>
-	<div class="pb-6">
-		<table class="w-4/5 min-w-[800px] mx-auto">
+	<div class="pb-6 w-full @3xl:w-5/6 mx-auto @5xl:w-4/5 overflow-auto">
+		<table class="w-full">
 			<thead>
 				<tr>
 					<th
@@ -297,11 +313,15 @@
 					>
 						#
 					</th>
-					<th class="text-start px-4 py-2 text-sm bg-slate-100">Tên</th>
-					<th class="text-start px-4 py-2 text-sm bg-slate-100">Email</th>
-					<th class="text-center px-4 py-2 text-sm bg-slate-100">Số điện thoại</th>
+					<th class="text-start px-4 py-2 text-sm bg-slate-100 whitespace-nowrap min-w-40">
+						Tên bệnh nhân
+					</th>
+					<th class="text-start px-4 py-2 text-sm bg-slate-100 whitespace-nowrap">Email</th>
+					<th class="text-center px-4 py-2 text-sm bg-slate-100 whitespace-nowrap">
+						Số điện thoại
+					</th>
 					<th
-						class="text-end px-4 py-2 text-sm bg-slate-100 rounded-tr-container-token rounded-br-container-token"
+						class="text-center px-4 py-2 text-sm bg-slate-100 rounded-tr-container-token rounded-br-container-token"
 					>
 						Số lần khám
 					</th>
@@ -311,19 +331,23 @@
 				{#each patientStatistic.patientFrequencies as patient, i (patient.id)}
 					<tr class="border-b">
 						<td class="text-center px-4 py-2">{i + 1}</td>
-						<td class="text-start px-4 py-2">{patient.patientName}</td>
-						<td class="text-start px-4 py-2">{patient.patientEmail}</td>
-						<td class="text-center px-4 py-2">{patient.patientPhone}</td>
-						<td class="text-end px-4 py-2">{patient.count}</td>
+						<td class="text-start px-4 py-2">{patient.patientName ?? ''}</td>
+						<td class="text-start px-4 py-2">{patient.patientEmail ?? ''}</td>
+						<td class="text-center px-4 py-2">{patient.patientPhone ?? ''}</td>
+						<td class="text-center px-4 py-2 font-medium">{patient.count ?? ''}</td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
 	</div>
-	<!-- {#if $patientStatisticStore.result}
-        {#await $patientStatisticStore.result}
-            <Loading class="w-full justify-center py-6" />
-        {:then patientStatistic}
-        {/await}
-    {/if} -->
+	{#if $patientStatisticStore.result}
+		{#await $patientStatisticStore.result}
+			<div
+				transition:fade={{ duration: 200 }}
+				class="absolute top-0 left-0 right-0 bottom-0 bg-white/60 !m-0 flex justify-center items-center"
+			>
+				<Loading />
+			</div>
+		{/await}
+	{/if}
 </div>
