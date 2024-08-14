@@ -21,6 +21,17 @@
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
+	const materialTypesForEditing: Selected<MaterialType>[] = [
+		{
+			label: 'Chưa chọn',
+			value: {
+				id: 0,
+				name: 'Chưa chọn',
+				code: ''
+			}
+		},
+		...materialTypes.slice(1)
+	];
 	const form = superForm(createMaterialForm, {
 		validators: zodClient(createMaterialSchema),
 		resetForm: false,
@@ -96,7 +107,7 @@
 	let requesting = false;
 	let selectedSupplier: Selected<Supplier> | undefined;
 
-	let selectedMaterialType: Selected<MaterialType> | undefined = materialTypes[0];
+	let selectedMaterialType: Selected<MaterialType> | undefined = materialTypesForEditing[0];
 
 	$: $formData.supplierId = selectedSupplier?.value.id ?? 0;
 	$: $formData.materialTypeId = selectedMaterialType?.value.id ?? 0;
@@ -199,7 +210,7 @@
 								Loại vật tư<sup class="text-red-500">*</sup>
 							</Label>
 							<DropdownSelect
-								items={materialTypes}
+								items={materialTypesForEditing}
 								bind:selected={selectedMaterialType}
 								regionInput="ring-1 px-3 ring-surface-300 focus:ring-primary justify-between mt-1 w-full"
 								let:ValueComponent

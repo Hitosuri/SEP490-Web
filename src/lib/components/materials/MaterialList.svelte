@@ -526,6 +526,7 @@
 							items={materialTypes}
 							selected={materialTypes[0]}
 							onSelectedChange={(mt) => ($formData.materialType = mt?.value.id ?? 0)}
+							regionInput="min-w-40"
 							let:ValueComponent
 						>
 							<ValueComponent class="font-semibold px-2" />

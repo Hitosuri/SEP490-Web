@@ -22,6 +22,17 @@
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
+	const materialTypesForEditing: Selected<MaterialType>[] = [
+		{
+			label: 'Chưa chọn',
+			value: {
+				id: 0,
+				name: 'Chưa chọn',
+				code: ''
+			}
+		},
+		...materialTypes.slice(1)
+	];
 	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(editMaterialForm, {
 		validators: zodClient(createMaterialSchema),
@@ -151,7 +162,9 @@
 			$formData.dosage = data.body.dosage;
 			$formData.uses = data.body.uses;
 
-			selectedMaterialType = materialTypes.find((x) => x.value.id === data.body?.materialTypeId);
+			selectedMaterialType = materialTypesForEditing.find(
+				(x) => x.value.id === data.body?.materialTypeId
+			);
 			if (data.body.supplierId) {
 				selectedSupplier = {
 					label: data.body.supplierName,
@@ -286,7 +299,7 @@
 									Loại vật tư<sup class="text-red-500">*</sup>
 								</Label>
 								<DropdownSelect
-									items={materialTypes}
+									items={materialTypesForEditing}
 									bind:selected={selectedMaterialType}
 									regionInput="ring-1 px-3 ring-surface-300 focus:ring-primary justify-between mt-1 w-full"
 									regionContent="z-[1000]"
