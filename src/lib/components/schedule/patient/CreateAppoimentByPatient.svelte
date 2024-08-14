@@ -140,7 +140,9 @@
 			<div class="col-span-2 flex flex-col">
 				<Field {form} name="description">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none mb-1">Mô tả</Label>
+						<Label class="font-semibold text-surface-500 select-none mb-1">
+							Mô tả<sup class="text-red-500">*</sup>
+						</Label>
 						<textarea
 							class="textarea rounded-md bg-white"
 							{...attrs}

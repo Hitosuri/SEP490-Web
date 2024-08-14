@@ -364,3 +364,29 @@ interface AvaiableMaterial {
 	id: number;
 	code: string;
 }
+
+interface PatientStatistic {
+	time: Date;
+	newPatientsCount: number;
+	ageDistribution: {
+		ageGroup: string;
+		patientCount: number;
+	}[];
+	patientFrequencies: {
+		id: number;
+		patientName: string;
+		patientEmail: string;
+		patientPhone: string;
+		count: number;
+	}[];
+}
+
+interface PatientStatisticSnapshot {
+	query: {
+		periodType: 'day' | 'month' | 'year';
+		year: number;
+		month: number;
+		day: number;
+	};
+	result?: Promise<PatientStatistic>;
+}

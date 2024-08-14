@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -33,7 +33,6 @@
 		},
 		...materialTypes.slice(1)
 	];
-	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
 	const form = superForm(editMaterialForm, {
 		validators: zodClient(createMaterialSchema),
 		resetForm: false,
@@ -52,10 +51,12 @@
 			}
 		},
 		onUpdate: ({ form }) => {
+			console.log(form);
+
 			if (!form.valid || !$userStore) {
 				return;
 			}
-			const rielForm: Record<string, string | number | boolean> = { ...form.data };
+			const rielForm: Record<string, string | number | boolean | null> = { ...form.data };
 
 			Object.entries(rielForm).forEach((x) => {
 				if ((typeof x[1] === 'string' && !x[1].trim()) || (typeof x[1] === 'number' && x[1] <= 0)) {
@@ -76,7 +77,9 @@
 
 					if (!response.ok) {
 						const data = await response.json();
-						if (Array.isArray(data?.error) || Array.isArray(data)) {
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
 						} else if (typeof data.errors === 'object') {
@@ -92,7 +95,7 @@
 
 						return Promise.reject();
 					}
-					dispatch('finish');
+					closeModal(true);
 					return 'Cập nhật vật tư thành công';
 				},
 				{

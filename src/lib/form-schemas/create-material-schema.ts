@@ -23,8 +23,11 @@ export const createMaterialSchema = z.object({
 		.trim()
 		.min(1, 'Mô tả không được để trống')
 		.max(255, 'Mô tả không được vượt quá 255 kí tự'),
-	dosage: z.string().trim().max(255, 'Liều dùng không được vượt quá 255 kí tự').optional(),
-	uses: z.string().trim().max(255, 'Cách dùng không được vượt quá 255 kí tự').optional(),
+	dosage: z.union([
+		z.string().trim().max(255, 'Liều dùng không được vượt quá 255 kí tự').optional(),
+		z.null()
+	]),
+	uses: z.union([z.string().trim().max(255, 'Cách dùng không được vượt quá 255 kí tự'), z.null()]),
 	smallestUnit: z
 		.string()
 		.trim()
@@ -34,6 +37,9 @@ export const createMaterialSchema = z.object({
 		.number()
 		.int('Số lượng phải là số nguyên')
 		.gt(0, 'Số lượng phải lớn hơn 0'),
-	priceForSmallestUnit: z.number().nonnegative('Giá không thể là số âm').optional(),
+	priceForSmallestUnit: z.union([
+		z.number().nonnegative('Giá không thể là số âm').optional(),
+		z.null()
+	]),
 	isSurcharge: z.boolean()
 });

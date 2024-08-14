@@ -53,7 +53,7 @@
 			if (!form.valid || !$userStore) {
 				return;
 			}
-			const rielForm: Record<string, string | number | boolean> = { ...form.data };
+			const rielForm: Record<string, string | number | boolean | null> = { ...form.data };
 
 			Object.entries(rielForm).forEach((x) => {
 				if ((typeof x[1] === 'string' && !x[1].trim()) || (typeof x[1] === 'number' && x[1] <= 0)) {

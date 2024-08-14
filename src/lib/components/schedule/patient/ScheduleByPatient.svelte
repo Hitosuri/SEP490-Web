@@ -545,7 +545,7 @@
 			>
 				<div class="h-fit w-fit pl-32 sm:pl-40">
 					<div
-						class="sticky left-32 sm:left-40 -translate-x-32 sm:sssssssssssssssssssssssssssssssssss-translate-x-40 w-32 sm:w-40 h-0 z-20"
+						class="sticky left-32 sm:left-40 -translate-x-32 sm:-translate-x-40 w-32 sm:w-40 h-0 z-20"
 					>
 						<div class="w-full h-fit absolute top-0 left-0 bg-slate-50 border-r">
 							<div

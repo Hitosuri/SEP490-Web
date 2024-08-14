@@ -9,7 +9,7 @@
 	import DatePicker from '$lib/components/common/DatePicker.svelte';
 	import { CalendarDate } from '@internationalized/date';
 	import { ToggleGroup } from 'bits-ui';
-	import { roleTranslation, userRoles } from '$lib/helpers/authorization';
+	import { Role, roleTranslation, userRoles } from '$lib/helpers/authorization';
 	import endpoints from '$lib/endpoints';
 	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
 	import { type Writable } from 'svelte/store';
@@ -99,7 +99,9 @@
 			<div>
 				<Field {form} name="name">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Họ và tên</Label>
+						<Label class="font-semibold text-surface-500 select-none">
+							Họ và tên<sup class="text-red-500">*</sup>
+						</Label>
 						<input
 							{...attrs}
 							type="text"
@@ -113,7 +115,9 @@
 			<div>
 				<Field {form} name="email">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Email</Label>
+						<Label class="font-semibold text-surface-500 select-none">
+							Email<sup class="text-red-500">*</sup>
+						</Label>
 						<input
 							{...attrs}
 							type="email"
@@ -127,7 +131,9 @@
 			<div>
 				<Field {form} name="phone">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Số điện thoại</Label>
+						<Label class="font-semibold text-surface-500 select-none">
+							Số điện thoại<sup class="text-red-500">*</sup>
+						</Label>
 						<input
 							{...attrs}
 							type="text"
@@ -141,7 +147,9 @@
 			<div>
 				<Field {form} name="birthday">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Ngày sinh</Label>
+						<Label class="font-semibold text-surface-500 select-none">
+							Ngày sinh<sup class="text-red-500">*</sup>
+						</Label>
 						<input
 							{...attrs}
 							type="hidden"
@@ -165,7 +173,9 @@
 			<div>
 				<Field {form} name="salary">
 					<Control let:attrs>
-						<Label class="font-semibold text-surface-500 select-none">Lương</Label>
+						<Label class="font-semibold text-surface-500 select-none">
+							Lương<sup class="text-red-500">*</sup>
+						</Label>
 						<input
 							{...attrs}
 							type="number"
@@ -178,28 +188,32 @@
 			</div>
 			<div class="col-span-2">
 				<Field {form} name="roles">
-					<p class="font-semibold text-surface-500 select-none">Vai trò</p>
+					<p class="font-semibold text-surface-500 select-none">
+						Vai trò<sup class="text-red-500">*</sup>
+					</p>
 					<ToggleGroup.Root
 						bind:value={$formData.roles}
 						class="flex rounded-lg border overflow-hidden w-fit mt-1"
 					>
 						{#each userRoles as userRole, i}
-							<Control let:attrs>
-								{#if i !== 0}
-									<div class="h-auto border-r"></div>
-								{/if}
-								<input
-									class="hidden"
-									type="checkbox"
-									{...attrs}
-									bind:group={$formData.roles}
-									value={userRole}
-								/>
-								<ToggleGroup.Item
-									class="btn py-2 rounded-none font-medium data-[state=on]:variant-filled-tertiary"
-									value={userRole}>{roleTranslation[userRole]}</ToggleGroup.Item
-								>
-							</Control>
+							{#if userRole !== Role.Admin}
+								<Control let:attrs>
+									{#if i !== 0}
+										<div class="h-auto border-r"></div>
+									{/if}
+									<input
+										class="hidden"
+										type="checkbox"
+										{...attrs}
+										bind:group={$formData.roles}
+										value={userRole}
+									/>
+									<ToggleGroup.Item
+										class="btn py-2 rounded-none font-medium data-[state=on]:variant-filled-tertiary"
+										value={userRole}>{roleTranslation[userRole]}</ToggleGroup.Item
+									>
+								</Control>
+							{/if}
 						{/each}
 					</ToggleGroup.Root>
 					<FieldErrors class="text-sm mt-1" />

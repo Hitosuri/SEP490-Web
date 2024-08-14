@@ -113,5 +113,11 @@ export default {
 		detail: (id: number) => `${env.PUBLIC_API_HOST}/api/payment/${id}`,
 		confirm: (id: number) => `${env.PUBLIC_API_HOST}/api/payment/confirm/${id}`,
 		reset: (id: number) => `${env.PUBLIC_API_HOST}/api/payment/reset/${id}`
+	},
+	statistics: {
+		patient: `${env.PUBLIC_API_HOST}/api/statistics/StatisticByPatient`,
+		scheduleAndDoctor: `${env.PUBLIC_API_HOST}/api/statistics/StatisticByScheduleAndDoctor`,
+		material: `${env.PUBLIC_API_HOST}/api/statistics/material-statistic`,
+		exportMaterial: `${env.PUBLIC_API_HOST}/api/statistics/export-material-statistic`
 	}
 };

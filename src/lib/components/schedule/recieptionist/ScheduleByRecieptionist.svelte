@@ -657,7 +657,7 @@
 		/>
 		<div class="flex gap-4">
 			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_4rem] relative"
+				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_7rem_4rem] relative"
 			>
 				{#if editingSchedule}
 					{@const startAt = new Date(
@@ -693,13 +693,14 @@
 					</div>
 				{/if}
 				<div
-					class="grid pb-2 border-b font-bold text-sm text-surface-400 tracking-wide pr-scroll-bar"
+					class="grid pb-2 border-b font-semibold text-sm text-surface-400 tracking-wide pr-scroll-bar"
 				>
 					<span class="text-center">#</span>
 					<span class="text-center">Bệnh nhân</span>
 					<span class="text-center">Thời gian</span>
 					<span class="text-center">Bác sĩ</span>
 					<span class="text-center">Trạng thái</span>
+					<span class="text-center">BN đã xác nhận</span>
 					<span></span>
 				</div>
 				<div class="grid overflow-y-scroll flex-1 items-center content-start">
@@ -750,6 +751,13 @@
 							>
 								{scheduleStatusInfo[schedule.status]?.label ?? ''}
 							</span>
+						</div>
+						<div class="py-3.5 text-center {odd ? '' : 'bg-slate-50'}">
+							<input
+								type="checkbox"
+								checked={schedule.isPatientConfirm}
+								class="checkbox pointer-events-none"
+							/>
 						</div>
 						<div
 							class="h-full flex items-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}"
@@ -803,7 +811,7 @@
 										<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
-										disabled={schedule.status !== ScheduleStatus.PENDING ||
+										disabled={schedule.status === ScheduleStatus.DONE ||
 											currentMinute <= schedule.startAt}
 										on:click={() => cancelSchedule(schedule)}
 										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
