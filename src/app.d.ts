@@ -390,3 +390,27 @@ interface PatientStatisticSnapshot {
 	};
 	result?: Promise<PatientStatistic>;
 }
+
+interface ScheduleStatistic {
+	time: Date;
+	countSchedule: {
+		cancelSchedule: number;
+		completedSchedule: number;
+	};
+	frequencyOfDoctors: {
+		id: number;
+		name: string;
+		phone: string;
+		frequency: number;
+	}[];
+}
+
+interface ScheduleStatisticSnapshot {
+	query: {
+		periodType: 'day' | 'month' | 'year';
+		year: number;
+		month: number;
+		day: number;
+	};
+	result?: Promise<ScheduleStatistic>;
+}

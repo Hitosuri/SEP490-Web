@@ -13,8 +13,17 @@
 			day: 0
 		}
 	});
+	const scheduleStatisticStore = writable<ScheduleStatisticSnapshot>({
+		query: {
+			periodType: 'year',
+			year: 0,
+			month: 0,
+			day: 0
+		}
+	});
 
 	setContext('patientStatistic', patientStatisticStore);
+	setContext('scheduleStatistic', scheduleStatisticStore);
 </script>
 
 <Container paddingTopHeader class="py-4">
@@ -43,7 +52,7 @@
 						? 'bg-white shadow'
 						: 'text-black/70'}"
 				>
-					Lịch hẹn
+					Lịch khám
 				</a>
 			</div>
 		</div>
