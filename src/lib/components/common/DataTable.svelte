@@ -22,6 +22,8 @@
 		icon: string;
 		label: string;
 		click?: (item: T) => void;
+		showWhen?: (item: T) => boolean;
+		showBelow?: boolean;
 	}[] = [];
 	export let groupFn: ((item: T) => K) | undefined = undefined;
 	export let shadow = true;
@@ -251,7 +253,7 @@
 											{#if showDetail && !detailEmitEvent}
 												<DropdownMenu.Item
 													href={href.detailUrl}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 												>
 													<div class="size-4 text-center">
 														<i class="fa-solid fa-circle-info block"></i>
@@ -262,7 +264,7 @@
 											{#if detailEmitEvent}
 												<DropdownMenu.Item
 													on:click={() => dispatch('detail', extendedItem.item)}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 												>
 													<div class="size-4 text-center">
 														<i class="fa-solid fa-circle-info block"></i>
@@ -275,22 +277,28 @@
 											{/if}
 											{#if actionMenu.length > 0}
 												{#each actionMenu as action (action)}
-													<DropdownMenu.Item
-														on:click={() => action.click?.(extendedItem.item)}
-														class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-													>
-														<div class="size-4 text-center">
-															<i class="{action.icon} block"></i>
-														</div>
-														<span class="font-semibold text-sm leading-4">{action.label}</span>
-													</DropdownMenu.Item>
+													{#if !action.showWhen || (action.showWhen(extendedItem.item) && !action.showBelow)}
+														<DropdownMenu.Item
+															on:click={() => action.click?.(extendedItem.item)}
+															class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+														>
+															<div class="size-4 text-center">
+																<i class="{action.icon} block"></i>
+															</div>
+															<span class="font-semibold text-sm leading-4">{action.label}</span>
+														</DropdownMenu.Item>
+													{/if}
 												{/each}
-												<DropdownMenu.Separator class="my-1 -ml-1 -mr-1 block h-px bg-surface-50" />
+												{#if (showDetail || detailEmitEvent) && (showEdit || showDelete)}
+													<DropdownMenu.Separator
+														class="my-1 -ml-1 -mr-1 block h-px bg-surface-50"
+													/>
+												{/if}
 											{/if}
 											{#if showEdit}
 												<DropdownMenu.Item
 													on:click={() => dispatch('edit', extendedItem.item)}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 												>
 													<div class="size-4 text-center">
 														<i class="fa-regular fa-pen-to-square block"></i>
@@ -301,13 +309,33 @@
 											{#if showDelete}
 												<DropdownMenu.Item
 													on:click={() => dispatch('delete', extendedItem.item)}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 												>
 													<div class="size-4 text-center">
 														<i class="fa-regular fa-trash-can block"></i>
 													</div>
 													<span class="font-semibold text-sm leading-4">Xoá</span>
 												</DropdownMenu.Item>
+											{/if}
+											{#if actionMenu.length > 0}
+												{#if (showDetail || detailEmitEvent) && (showEdit || showDelete)}
+													<DropdownMenu.Separator
+														class="my-1 -ml-1 -mr-1 block h-px bg-surface-50"
+													/>
+												{/if}
+												{#each actionMenu as action (action)}
+													{#if !action.showWhen || (action.showWhen(extendedItem.item) && action.showBelow)}
+														<DropdownMenu.Item
+															on:click={() => action.click?.(extendedItem.item)}
+															class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+														>
+															<div class="size-4 text-center">
+																<i class="{action.icon} block"></i>
+															</div>
+															<span class="font-semibold text-sm leading-4">{action.label}</span>
+														</DropdownMenu.Item>
+													{/if}
+												{/each}
 											{/if}
 										</DropdownMenu.Content>
 									</DropdownMenu.Root>
@@ -336,44 +364,6 @@
 </div>
 {#if totalItems > pageSize}
 	<CustomPagination {totalItems} {pageSize} bind:currentPage on:pageChange />
-	<!-- <Pagination.Root
-		count={totalItems}
-		bind:page={paginationBinding}
-		perPage={pageSize}
-		let:pages
-		let:range
-		onPageChange={(page) => dispatch('pageChange', page)}
-	>
-		<div class="flex items-center justify-center">
-			<Pagination.PrevButton
-				class="mr-6 size-8 rounded-xl duration-200 bg-slate-200 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-surface-400"
-			>
-				<i class="fa-solid fa-chevron-left"></i>
-			</Pagination.PrevButton>
-			<div class="flex items-center gap-3">
-				{#each pages as page (page.key)}
-					{#if page.type === 'ellipsis'}
-						<div class="text-lg font-medium">...</div>
-					{:else}
-						<Pagination.Page
-							{page}
-							class="size-10 rounded-xl duration-200 bg-slate-300 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-surface-400 data-[selected]:font-semibold data-[selected]:bg-white data-[selected]:shadow-md select-none"
-						>
-							{page.value}
-						</Pagination.Page>
-					{/if}
-				{/each}
-			</div>
-			<Pagination.NextButton
-				class="ml-6 size-8 rounded-xl duration-200 bg-slate-200 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-surface-400"
-			>
-				<i class="fa-solid fa-chevron-right"></i>
-			</Pagination.NextButton>
-		</div>
-		<p class="text-center text-[13px] text-muted-foreground mt-6">
-			Hiển thị {range.start} - {range.end}
-		</p>
-	</Pagination.Root> -->
 {/if}
 {#if openBatchMenu}
 	<div

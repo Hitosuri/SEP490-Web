@@ -1,4 +1,5 @@
 import endpoints from '$lib/endpoints';
+import { handleFetch } from '$lib/helpers/utils';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
@@ -10,16 +11,18 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	}
 
 	if (!errorMsg) {
-		if (params.token.at(-1) === ';') {
+		if (params.token.at(-1) === '.') {
 			confirmed = true;
 		}
 
 		const token = params.token.slice(0, -1);
 		const url = endpoints.schedule.confirmFromPatient(token, confirmed);
 
-		const response = await fetch(url, {
-			method: 'PUT'
-		});
+		const response = await handleFetch(
+			fetch(url, {
+				method: 'PUT'
+			})
+		);
 
 		if (!response.ok) {
 			errorMsg = (await response.text()) || 'Đã có lỗi xảy ra';

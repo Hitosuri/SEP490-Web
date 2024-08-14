@@ -52,7 +52,6 @@ export const actions: Actions = {
 				secure: true
 			});
 		} catch (error) {
-			console.log(error);
 			return fail(500, { form });
 		}
 

@@ -5,6 +5,7 @@ import type { PageServerLoad } from './$types';
 import { editPatientSchema } from '$lib/form-schemas/edit-patient-schema';
 import { zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';
+import { handleFetch } from '$lib/helpers/utils';
 
 export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 	filterRoles(locals, url, Role.Doctor);
@@ -14,23 +15,22 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 	}
 
 	const [patient, records] = await Promise.all([
-		fetch(`${endpoints.patients.detail(patientId)}`, {
-			headers: {
-				Authorization: `Bearer ${locals.user?.token}`
-			}
-		}).then<ApiResponse<Patient>>((x) => x.json()),
-		fetch(`${endpoints.records.get(patientId)}`, {
-			headers: {
-				Authorization: `Bearer ${locals.user?.token}`
-			}
-		}).then<ApiResponse<RecordListItem[]>>((x) => x.json())
+		handleFetch(
+			fetch(`${endpoints.patients.detail(patientId)}`, {
+				headers: {
+					Authorization: `Bearer ${locals.user?.token}`
+				}
+			}),
+			{ 404: 'loop' }
+		).then<ApiResponse<Patient>>((x) => x.json()),
+		handleFetch(
+			fetch(`${endpoints.records.get(patientId)}`, {
+				headers: {
+					Authorization: `Bearer ${locals.user?.token}`
+				}
+			})
+		).then<ApiResponse<RecordListItem[]>>((x) => x.json())
 	]);
-
-	if (patient.status === 404) {
-		error(404, {
-			message: patient.error ?? ''
-		});
-	}
 
 	if (!patient.body || !records.body) {
 		error(500, {
@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 	patient.body.birthday = patient.body.birthday
 		? new Date(patient.body.birthday)
 		: patient.body.birthday;
-	records.body.forEach((x) => {
+	records.body!.forEach((x) => {
 		x.visitDate = new Date(x.visitDate);
 	});
 

@@ -13,7 +13,6 @@
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
 
 	export let data: PageData;
-	console.log(data);
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');

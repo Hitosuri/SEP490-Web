@@ -5,6 +5,7 @@ import type { PageServerLoad } from './$types';
 import { zod } from 'sveltekit-superforms/adapters';
 import { invoiceFilterSchema } from '$lib/form-schemas/invoice-filter-schema';
 import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
+import { handleFetch } from '$lib/helpers/utils';
 
 export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.PAYMENT_MANAGEMENT].roles ?? []));
@@ -14,11 +15,13 @@ export const load: PageServerLoad = async ({ fetch, url, locals }) => {
 	searchParams.set('size', '10');
 
 	const requestUrl = `${endpoints.payment.get}?${searchParams}`;
-	const r = await fetch(requestUrl, {
-		headers: {
-			Authorization: `Bearer ${locals.user?.token}`
-		}
-	});
+	const r = await handleFetch(
+		fetch(requestUrl, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		})
+	);
 
 	const data: Pagination<Payment[]> = await r.json();
 

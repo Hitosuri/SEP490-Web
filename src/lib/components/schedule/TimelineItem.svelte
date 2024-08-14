@@ -22,7 +22,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-	class="h-full p-0.5 absolute top-0 overflow-hidden group"
+	class="h-full p-0.5 absolute top-0 overflow-hidden group z-[2]"
 	style="left: {leftOffset * 128}px; width: {width * 128}px"
 	id="schedule-{schedule.id}"
 	on:mouseenter={() => dispatch('hoverStart', schedule.id)}
@@ -37,7 +37,7 @@
 			{#if width * 4 > 2}
 				<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
 					<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
-						{schedule.patient.name}
+						{schedule.patient.name ?? ''}
 					</p>
 					<p class="text-xs font-semibold text-surface-400">
 						{formatHourMinute(schedule.startAt)}

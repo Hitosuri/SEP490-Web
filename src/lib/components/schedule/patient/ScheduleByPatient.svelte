@@ -6,20 +6,21 @@
 	import { today, getLocalTimeZone, type DateValue } from '@internationalized/date';
 	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
 	import endpoints from '$lib/endpoints';
-	import { getContext } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import CreateAppoimentByPatient from './CreateAppoimentByPatient.svelte';
 	import { createAppointmentPatientSchema } from '$lib/form-schemas/create-appointment-patient-schema';
 	import { z } from 'zod';
 	import type { SuperValidated } from 'sveltekit-superforms';
-	import { formatCompactDate } from '$lib/helpers/formatters';
+	import { formatCompactDate, formatCompactDateTime } from '$lib/helpers/formatters';
 	import { toast } from 'svelte-sonner';
 	import EditAppoimentByPatient from './EditAppoimentByPatient.svelte';
+	import Container from '$lib/components/common/Container.svelte';
+	import { MinuteTick } from '$lib/helpers/minute-tick';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
-	$: console.log(patientSchedules);
 
 	export let currentMonthValue: number;
 	export let createAppointmentByPatientForm: SuperValidated<
@@ -42,6 +43,7 @@
 	let hoverHintTop = 0;
 	let canCreateSchedule = true;
 	let limitEndElement: HTMLDivElement;
+	let currentMinute: Date = new Date();
 
 	$: lowerLimit = calculateLowerLimit(selectedDate);
 	$: blockPastWidth = lowerLimit * 32;
@@ -64,6 +66,19 @@
 	$: hoverHintLeft = (quarterCount + 2) * 32;
 	$: hoveringHours = Math.floor(quarterCount / 4);
 	$: hoveringMinutes = (quarterCount % 4) * 15;
+
+	onMount(() => {
+		MinuteTick.addEvent(calculateLowerLimitActive);
+	});
+
+	onDestroy(() => {
+		MinuteTick.removeEvent(calculateLowerLimitActive);
+	});
+
+	function calculateLowerLimitActive(time: Date) {
+		currentMinute = time;
+		lowerLimit = calculateLowerLimit(selectedDate);
+	}
 
 	function calculateLowerLimit(date: DateValue): number {
 		const result = date.compare(today(getLocalTimeZone()));
@@ -386,304 +401,311 @@
 	<title>Danh sách lịch hẹn</title>
 </svelte:head>
 <svelte:window on:mousemove={scheduleDragging} on:mouseup={scheduleDragEnd} />
-<div class="pt-header bg-stone-100 min-h-screen h-screen">
-	<div class="p-4 mx-auto container space-y-8">
-		{#if waitConfirmSchedules.length > 0}
-			<div>
-				<div class="flex items-center gap-2 text-2xl font-light mb-4">
-					<span class="text-surface-500">Lịch hẹn chờ phòng khám xác nhận</span>
-					<hr class="flex-1 !border-surface-400" />
-					<span class="text-surface-600">tháng {selectedDate.month}</span>
-				</div>
-				<div class="flex flex-wrap gap-4">
-					{#each waitConfirmSchedules as schedule (schedule.id)}
-						<div class="bg-white border pl-5 pr-3 py-3 shadow-md rounded-md flex gap-4 bg-">
-							<div>
-								<p class="text-sm font-bold text-surface-400">
-									{schedule.startAt.getHours()}:{String(schedule.startAt.getMinutes()).padStart(
-										2,
-										'0'
-									)}
-									<span class="px-2">-</span>
-									{formatCompactDate(schedule.startAt)}
-								</p>
-								<p class="font-medium">Bs. {schedule.doctor.name}</p>
-							</div>
-							<div>
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger class="btn-icon hover:variant-soft-primary">
-										<i class="fa-solid fa-ellipsis-vertical"></i>
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content
-										transition={fly}
-										transitionConfig={{
-											duration: 200,
-											y: 30,
-											easing: cubicOut
-										}}
-										class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
-									>
-										<DropdownMenu.Item
-											on:click={() => editAppointment(schedule)}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-calendar-lines-pen"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
-										</DropdownMenu.Item>
-										<DropdownMenu.Item
-											on:click={() => deleteSchedule(schedule)}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-trash-can"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
-										</DropdownMenu.Item>
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-		{/if}
+<Container paddingTopHeader class="space-y-8 py-4">
+	{#if waitConfirmSchedules.length > 0}
 		<div>
-			<div class="flex items-center gap-2 text-2xl font-light">
-				<span class="text-surface-500">Lịch hẹn theo ngày / Tạo lịch</span>
+			<div class="flex items-center gap-2 text-base sm:text-xl md:text-2xl font-light mb-4">
+				<span class="text-surface-500">Lịch hẹn chờ phòng khám xác nhận</span>
 				<hr class="flex-1 !border-surface-400" />
+				<span class="text-surface-600">tháng {selectedDate.month}</span>
 			</div>
-			<div>
-				<Calendar.Root
-					locale="vi"
-					class="rounded-container-token p-4 w-full"
-					let:months
-					let:weekdays
-					preventDeselect={true}
-					value={selectedDate}
-					onValueChange={onSelectedDateChange}
-				>
-					<Calendar.Header class="flex items-center justify-between h-10">
-						<Calendar.PrevButton class="btn variant-ghost-tertiary rounded-md px-8">
-							<i class="fa-solid fa-chevron-left"></i>
-						</Calendar.PrevButton>
-						<Calendar.Heading class="text-lg font-semibold capitalize tracking-tight ml-2.5" />
-						<Calendar.NextButton class="btn variant-ghost-tertiary rounded-md px-8">
-							<i class="fa-solid fa-chevron-right"></i>
-						</Calendar.NextButton>
-					</Calendar.Header>
+			<div class="flex flex-wrap gap-4">
+				{#each waitConfirmSchedules as schedule (schedule.id)}
+					<div
+						class="bg-white border pl-3 sm:pl-5 pr-1 sm:pr-3 py-2 sm:py-3 shadow-md rounded-md flex items-center gap-4 bg-"
+					>
+						<div>
+							<p class="text-xs sm:text-sm font-bold text-surface-400">
+								{formatCompactDateTime(schedule.startAt)}
+							</p>
+							<p class="text-sm sm:text-base font-medium">Bs. {schedule.doctor.name}</p>
+						</div>
+						<div>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger class="btn-icon size-9 hover:variant-soft-primary">
+									<i class="fa-solid fa-ellipsis-vertical"></i>
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content
+									transition={fly}
+									transitionConfig={{
+										duration: 200,
+										y: 30,
+										easing: cubicOut
+									}}
+									class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+								>
+									<DropdownMenu.Item
+										on:click={() => editAppointment(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-calendar-lines-pen"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										disabled={schedule.startAt.getTime() - currentMinute.getTime() < 1000 * 60 * 60}
+										on:click={() => deleteSchedule(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-calendar-circle-minus"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Xoá lịch</span>
+									</DropdownMenu.Item>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+	<div>
+		<div class="flex items-center gap-2 text-base sm:text-xl md:text-2xl font-light">
+			<span class="text-surface-500">Lịch hẹn theo ngày / Tạo lịch</span>
+			<hr class="flex-1 !border-surface-400" />
+		</div>
+		<div>
+			<Calendar.Root
+				locale="vi"
+				class="rounded-container-token sm:p-4 w-full"
+				let:months
+				let:weekdays
+				preventDeselect={true}
+				value={selectedDate}
+				onValueChange={onSelectedDateChange}
+			>
+				<Calendar.Header class="flex items-center justify-between h-10">
+					<Calendar.PrevButton
+						class="btn btn-sm sm:btn-base variant-ghost-tertiary rounded-md px-4 sm:px-8"
+					>
+						<i class="fa-solid fa-chevron-left"></i>
+					</Calendar.PrevButton>
+					<Calendar.Heading
+						class="text-sm sm:text-lg font-semibold text-surface-500 capitalize tracking-tight"
+					/>
+					<Calendar.NextButton
+						class="btn btn-sm sm:btn-base variant-ghost-tertiary rounded-md px-4 sm:px-8"
+					>
+						<i class="fa-solid fa-chevron-right"></i>
+					</Calendar.NextButton>
+				</Calendar.Header>
 
-					<div class="flex flex-col space-y-4 pt-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-						{#each months as month}
-							<Calendar.Grid class="w-full border-collapse select-none space-y-1">
-								<Calendar.GridHead>
-									<Calendar.GridRow class="mb-1 flex w-full justify-between">
-										{#each weekdays as day}
-											<Calendar.HeadCell
-												class="flex-1 rounded-md text-xs text-surface-400 font-medium"
+				<div
+					class="flex flex-col space-y-4 py-3 sm:pt-4 sm:pb-0 sm:flex-row sm:space-x-4 sm:space-y-0"
+				>
+					{#each months as month}
+						<Calendar.Grid class="w-full border-collapse select-none space-y-1">
+							<Calendar.GridHead>
+								<Calendar.GridRow class="mb-1 flex w-full justify-between">
+									{#each weekdays as day}
+										<Calendar.HeadCell
+											class="flex-1 rounded-md text-xs text-surface-400 font-medium"
+										>
+											<div>{day.slice(0, 2)}</div>
+										</Calendar.HeadCell>
+									{/each}
+								</Calendar.GridRow>
+							</Calendar.GridHead>
+							<Calendar.GridBody>
+								{#each month.weeks as weekDates}
+									<Calendar.GridRow class="flex w-full gap-2 justify-between">
+										{#each weekDates as date}
+											<Calendar.Cell
+												{date}
+												class="relative flex-1 h-8 max-w-10 sm:max-w-full sm:h-10 !p-0 text-center my-1"
 											>
-												<div>{day.slice(0, 2)}</div>
-											</Calendar.HeadCell>
+												<Calendar.Day
+													{date}
+													month={month.value}
+													class="group relative font-medium inline-flex w-full h-full items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-transparent p-0 text-foreground transition-all hover:border-primary-700 data-[disabled]:pointer-events-none data-[outside-month]:pointer-events-none data-[selected]:bg-primary-200 data-[selected]:font-semibold data-[selected]:text-primary-700 data-[disabled]:text-surface-300 data-[unavailable]:text-surface-300 data-[unavailable]:line-through text-sm sm:text-base"
+												>
+													<div
+														class="absolute top-[5px] hidden size-1 rounded-full bg-primary-400 transition-all group-data-[today]:block"
+													/>
+													{date.day}
+												</Calendar.Day>
+											</Calendar.Cell>
 										{/each}
 									</Calendar.GridRow>
-								</Calendar.GridHead>
-								<Calendar.GridBody>
-									{#each month.weeks as weekDates}
-										<Calendar.GridRow class="flex w-full gap-2 justify-between">
-											{#each weekDates as date}
-												<Calendar.Cell {date} class="relative flex-1 h-10 !p-0 text-center my-1">
-													<Calendar.Day
-														{date}
-														month={month.value}
-														class="group relative font-medium inline-flex w-full h-full items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-transparent p-0 text-foreground transition-all hover:border-primary-700 data-[disabled]:pointer-events-none data-[outside-month]:pointer-events-none data-[selected]:bg-primary-200 data-[selected]:font-semibold data-[selected]:text-primary-700 data-[disabled]:text-surface-300 data-[unavailable]:text-surface-300 data-[unavailable]:line-through"
-													>
-														<div
-															class="absolute top-[5px] hidden size-1 rounded-full bg-primary-400 transition-all group-data-[today]:block"
-														/>
-														{date.day}
-													</Calendar.Day>
-												</Calendar.Cell>
-											{/each}
-										</Calendar.GridRow>
-									{/each}
-								</Calendar.GridBody>
-							</Calendar.Grid>
+								{/each}
+							</Calendar.GridBody>
+						</Calendar.Grid>
+					{/each}
+				</div>
+			</Calendar.Root>
+		</div>
+		<div class="bg-white border shadow-md rounded-container-token p-4 flex-1 h-fit">
+			<div
+				bind:this={scheduleListElement}
+				class="min-h-56 {scheduleMenuOpened
+					? 'overflow-hidden pr-scroll-bar pb-scroll-bar'
+					: 'overflow-x-scroll'} {scheduleGrabing ? 'select-none' : ''}"
+			>
+				<div class="h-fit w-fit pl-32 sm:pl-40">
+					<div
+						class="sticky left-32 sm:left-40 -translate-x-32 sm:-translate-x-40 w-32 sm:w-40 h-0 z-20"
+					>
+						<div class="w-full h-fit absolute top-0 left-0 bg-slate-50 border-r">
+							<div
+								class="text-center h-10 leading-10 sticky top-0 left-0 border-b-2 bg-slate-50 text-sm font-semibold"
+							>
+								Bác sĩ
+							</div>
+							{#each scheduleByDoctors as pair (pair[0].id)}
+								<div class="h-16 border-b flex items-center justify-center">{pair[0].name}</div>
+							{/each}
+							<div class="h-[42px] relative">
+								<form
+									class="absolute left-0 top-0 -right-16 border-b flex items-center justify-center h-full text-sm"
+									on:submit|preventDefault|stopPropagation={addDoctorSubmit}
+								>
+									{#key scheduleByDoctors}
+										<SearchCombobox
+											placeholder="Tên bác sĩ..."
+											searchFn={searchDoctorFn}
+											regionInput="border-none bg-white w-full py-2 text-sm sm:text-base"
+											bind:selected={addingDoctor}
+											let:itemData
+										></SearchCombobox>
+									{/key}
+									<button
+										disabled={!addingDoctor}
+										type="submit"
+										class="btn variant-filled-primary h-full w-16 flex-shrink-0 rounded-none"
+									>
+										<i class="fa-solid fa-plus"></i>
+									</button>
+								</form>
+							</div>
+						</div>
+					</div>
+					<div class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10">
+						{#each Array(25) as _, i}
+							<div class="shrink-0 text-center leading-10 text-sm select-none font-semibold w-32">
+								<p>{i}:00</p>
+							</div>
 						{/each}
 					</div>
-				</Calendar.Root>
-			</div>
-			<div class="bg-white border shadow-md rounded-container-token p-4 flex-1 h-fit">
-				<div
-					bind:this={scheduleListElement}
-					class="min-h-56 {scheduleMenuOpened
-						? 'overflow-hidden pr-scroll-bar pb-scroll-bar'
-						: 'overflow-x-scroll'} {scheduleGrabing ? 'select-none' : ''}"
-				>
-					<div class="h-fit w-fit pl-40">
-						<div class="sticky left-40 -translate-x-40 w-40 h-0 z-20">
-							<div class="w-full h-fit absolute top-0 left-0 bg-slate-50 border-r">
-								<div
-									class="text-center h-10 leading-10 sticky top-0 left-0 border-b-2 bg-slate-50 text-sm font-semibold"
+					<!-- svelte-ignore a11y-no-static-element-interactions -->
+					<div
+						class="h-fit relative"
+						on:mousedown={scheduleDragStart}
+						on:mouseenter={() => {
+							if (scheduleByDoctors.length === 0) {
+								return;
+							}
+							scheduleHovering = true;
+						}}
+						on:mouseleave={() => (scheduleHovering = false)}
+						on:mousemove={(e) => {
+							const bounding = e.currentTarget.getBoundingClientRect();
+							if (scheduleMenuOpened) {
+								return;
+							}
+							quarterCount = Math.min(
+								Math.max(Math.floor((e.clientX - bounding.left - 62) / 32), 0),
+								96
+							);
+							rowCount = Math.max(
+								Math.min(Math.floor((e.clientY - bounding.top) / 64), scheduleByDoctors.length - 1),
+								0
+							);
+						}}
+					>
+						<div class="absolute left-0 top-0 bottom-0 w-full flex *:h-full">
+							<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
+							{#each Array(24) as _}
+								<div class="w-32 shrink-0 border-r"></div>
+							{/each}
+							<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
+						</div>
+						<div
+							class="h-16 w-8 absolute z-10 top-0 {(scheduleHovering && canCreateSchedule) ||
+							scheduleMenuOpened
+								? 'opacity-100'
+								: 'opacity-0 pointer-events-none'}"
+							style="left: {hoverHintLeft}px; top: {hoverHintTop}px;"
+						>
+							<ContextMenu.Root bind:open={scheduleMenuOpened}>
+								<ContextMenu.Trigger class="h-full w-full px-0.5 py-2">
+									<div
+										class="bg-red-300 rounded-md h-full w-full mr-auto cursor-pointer shadow-md"
+									></div>
+								</ContextMenu.Trigger>
+
+								<ContextMenu.Content
+									transition={fly}
+									transitionConfig={{
+										duration: 200,
+										y: 30,
+										easing: cubicOut
+									}}
+									class="w-full max-w-32 sm:max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
 								>
-									Bác sĩ
-								</div>
-								{#each scheduleByDoctors as pair (pair[0].id)}
-									<div class="h-16 border-b flex items-center justify-center">{pair[0].name}</div>
-								{/each}
-								<div class="h-[42px] relative">
-									<form
-										class="absolute left-0 top-0 -right-16 border-b flex items-center justify-center h-full"
-										on:submit|preventDefault|stopPropagation={addDoctorSubmit}
+									<ContextMenu.Item
+										on:click={createAppointment}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 									>
-										{#key scheduleByDoctors}
-											<SearchCombobox
-												placeholder="Tên bác sĩ..."
-												searchFn={searchDoctorFn}
-												regionInput="border-none bg-white w-full py-2"
-												bind:selected={addingDoctor}
-												let:itemData
-											></SearchCombobox>
-										{/key}
-										<button
-											disabled={!addingDoctor}
-											type="submit"
-											class="btn variant-filled-primary h-full w-16 flex-shrink-0 rounded-none"
-										>
-											<i class="fa-solid fa-plus"></i>
-										</button>
-									</form>
-								</div>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-calendar-check"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Tạo lịch hẹn</span>
+									</ContextMenu.Item>
+									<ContextMenu.Item
+										on:click={cancelCreateSchedule}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-circle-xmark"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Huỷ</span>
+									</ContextMenu.Item>
+								</ContextMenu.Content>
+							</ContextMenu.Root>
+							<div
+								class="absolute z-20 text-center -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
+							>
+								{hoveringHours}:{String(hoveringMinutes).padStart(2, '0')}
 							</div>
 						</div>
-						<div class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10">
-							{#each Array(25) as _, i}
-								<div class="shrink-0 text-center leading-10 text-sm select-none font-semibold w-32">
-									<p>{i}:00</p>
+						<div class="pl-16 w-full relative">
+							<div
+								on:dblclick={scrollToLimitEnd}
+								class="w-10 untouchable absolute top-0 left-16 bottom-0 z-[1]"
+								style="width: {blockPastWidth}px;"
+							>
+								<div class="w-0 ml-auto" bind:this={limitEndElement}></div>
+							</div>
+							{#each scheduleByDoctors as pair (pair[0].id)}
+								<div class="h-16 w-full border-b border-dashed relative">
+									{#each pair[1] as schedule (schedule.id)}
+										{@const leftOffset =
+											(schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60) * 128}
+										{@const width = Math.max(
+											(schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60) * 128 -
+												leftOffset,
+											0
+										)}
+										{@const ownSchedule = patientSchedules.find((x) => x.id === schedule.id)}
+										{#if !ownSchedule}
+											<div
+												class="h-full bg-red-400 absolute top-0 overflow-hidden untouchable"
+												style="left: {leftOffset}px; width: {width}px"
+												id="schedule-{schedule.id}"
+											></div>
+										{:else if ownSchedule.status !== 1}
+											<TimelineItem schedule={ownSchedule} />
+										{/if}
+									{/each}
 								</div>
 							{/each}
-						</div>
-						<!-- svelte-ignore a11y-no-static-element-interactions -->
-						<div
-							class="h-fit relative"
-							on:mousedown={scheduleDragStart}
-							on:mouseenter={() => {
-								if (scheduleByDoctors.length === 0) {
-									return;
-								}
-								scheduleHovering = true;
-							}}
-							on:mouseleave={() => (scheduleHovering = false)}
-							on:mousemove={(e) => {
-								const bounding = e.currentTarget.getBoundingClientRect();
-								if (scheduleMenuOpened) {
-									return;
-								}
-								quarterCount = Math.min(
-									Math.max(Math.floor((e.clientX - bounding.left - 62) / 32), 0),
-									96
-								);
-								rowCount = Math.max(
-									Math.min(
-										Math.floor((e.clientY - bounding.top) / 64),
-										scheduleByDoctors.length - 1
-									),
-									0
-								);
-							}}
-						>
-							<div class="absolute left-0 top-0 bottom-0 w-full flex *:h-full">
-								<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
-								{#each Array(24) as _}
-									<div class="w-32 shrink-0 border-r"></div>
-								{/each}
-								<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
-							</div>
-							<div
-								class="h-16 w-8 absolute z-10 top-0 {(scheduleHovering && canCreateSchedule) ||
-								scheduleMenuOpened
-									? 'opacity-100'
-									: 'opacity-0 pointer-events-none'}"
-								style="left: {hoverHintLeft}px; top: {hoverHintTop}px;"
-							>
-								<ContextMenu.Root bind:open={scheduleMenuOpened}>
-									<ContextMenu.Trigger class="h-full w-full px-0.5 py-2">
-										<div
-											class="bg-red-300 rounded-md h-full w-full mr-auto cursor-pointer shadow-md"
-										></div>
-									</ContextMenu.Trigger>
-
-									<ContextMenu.Content
-										transition={fly}
-										transitionConfig={{
-											duration: 200,
-											y: 30,
-											easing: cubicOut
-										}}
-										class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
-									>
-										<ContextMenu.Item
-											on:click={createAppointment}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-calendar-check"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Tạo lịch hẹn</span>
-										</ContextMenu.Item>
-										<ContextMenu.Item
-											on:click={cancelCreateSchedule}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-										>
-											<div class="size-4 text-center *:block">
-												<i class="fa-regular fa-circle-xmark"></i>
-											</div>
-											<span class="font-semibold text-sm leading-4">Huỷ</span>
-										</ContextMenu.Item>
-									</ContextMenu.Content>
-								</ContextMenu.Root>
-								<div
-									class="absolute z-20 text-center -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
-								>
-									{hoveringHours}:{String(hoveringMinutes).padStart(2, '0')}
-								</div>
-							</div>
-							<div class="pl-16 w-full relative">
-								<div
-									class="w-10 untouchable absolute top-0 left-16 bottom-0"
-									style="width: {blockPastWidth}px;"
-								>
-									<div class="w-0 ml-auto" bind:this={limitEndElement}></div>
-								</div>
-								{#each scheduleByDoctors as pair (pair[0].id)}
-									<div class="h-16 w-full border-b border-dashed relative">
-										{#each pair[1] as schedule (schedule.id)}
-											{@const leftOffset =
-												(schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60) * 128}
-											{@const width = Math.max(
-												(schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60) * 128 -
-													leftOffset,
-												0
-											)}
-											{@const ownSchedule = patientSchedules.find((x) => x.id === schedule.id)}
-											{#if !ownSchedule}
-												<div
-													class="h-full bg-red-400 absolute top-0 overflow-hidden untouchable"
-													style="left: {leftOffset}px; width: {width}px"
-													id="schedule-{schedule.id}"
-												></div>
-											{:else if ownSchedule.status !== 1}
-												<TimelineItem schedule={ownSchedule} />
-											{/if}
-										{/each}
-									</div>
-								{/each}
-								<div class="h-[42px] border-b"></div>
-							</div>
+							<div class="h-[42px] border-b"></div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>
+</Container>

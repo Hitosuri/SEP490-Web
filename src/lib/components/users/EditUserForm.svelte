@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { dateProxy, setError, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { createEventDispatcher, getContext, onMount, type ComponentEvents } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import DatePicker from '$lib/components/common/DatePicker.svelte';
-	import { CalendarDate } from '@internationalized/date';
 	import { ToggleGroup } from 'bits-ui';
-	import { roleTranslation, userRoles } from '$lib/helpers/authorization';
+	import { Role, roleTranslation, userRoles } from '$lib/helpers/authorization';
 	import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import endpoints from '$lib/endpoints';
@@ -34,6 +32,11 @@
 				async (): Promise<string> => {
 					const { roles, status, ...others } = form.data;
 					const rielForm: Record<string, string | boolean | number | number[]> = { ...others };
+
+					if (user.roles.includes(Role.Admin && !roles.includes(Role.Admin))) {
+						roles.push(Role.Admin);
+					}
+
 					rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
 					rielForm.status = status ? 1 : 2;
 
@@ -80,8 +83,6 @@
 		}
 	});
 	const { form: formData, enhance } = form;
-	// const birthDateProxy = dateProxy(formData, 'birthday', { format: 'date', empty: undefined });
-	const today = new Date();
 	let requesting = false;
 
 	onMount(() => {
@@ -91,6 +92,7 @@
 		$formData.salary = user.salary;
 		// @ts-ignore
 		$formData.roles = [...user.roles];
+		$formData.status = user.status === 1;
 	});
 
 	// function birthdayChanged(e: ComponentEvents<DatePicker>['valueChange']) {
@@ -190,22 +192,24 @@
 						class="flex rounded-lg border overflow-hidden w-fit mt-1"
 					>
 						{#each userRoles as userRole, i}
-							<Control let:attrs>
-								{#if i !== 0}
-									<div class="h-auto border-r"></div>
-								{/if}
-								<input
-									class="hidden"
-									type="checkbox"
-									{...attrs}
-									bind:group={$formData.roles}
-									value={userRole}
-								/>
-								<ToggleGroup.Item
-									class="btn py-2 rounded-none font-medium data-[state=on]:variant-filled-tertiary"
-									value={userRole}>{roleTranslation[userRole]}</ToggleGroup.Item
-								>
-							</Control>
+							{#if userRole !== Role.Admin}
+								<Control let:attrs>
+									{#if i !== 0}
+										<div class="h-auto border-r"></div>
+									{/if}
+									<input
+										class="hidden"
+										type="checkbox"
+										{...attrs}
+										bind:group={$formData.roles}
+										value={userRole}
+									/>
+									<ToggleGroup.Item
+										class="btn py-2 rounded-none font-medium data-[state=on]:variant-filled-tertiary"
+										value={userRole}>{roleTranslation[userRole]}</ToggleGroup.Item
+									>
+								</Control>
+							{/if}
 						{/each}
 					</ToggleGroup.Root>
 					<FieldErrors class="text-sm mt-1" />

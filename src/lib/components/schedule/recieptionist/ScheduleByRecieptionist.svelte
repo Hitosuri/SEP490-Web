@@ -130,6 +130,18 @@
 		MinuteTick.removeEvent(calculateLowerLimitActive);
 	});
 
+	function scrollToLimitEnd() {
+		if (!limitEndElement) {
+			return;
+		}
+
+		limitEndElement.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center',
+			inline: 'center'
+		});
+	}
+
 	function calculateLowerLimitActive(time: Date) {
 		currentMinute = time;
 		lowerLimit = calculateLowerLimit(selectedDate);
@@ -253,8 +265,6 @@
 	}
 
 	function updateScheduleList() {
-		console.log(123);
-
 		cancelSelection();
 		filtering(lastFilterOptions);
 	}
@@ -647,7 +657,7 @@
 		/>
 		<div class="flex gap-4">
 			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_4rem] relative"
+				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_7rem_4rem] relative"
 			>
 				{#if editingSchedule}
 					{@const startAt = new Date(
@@ -683,13 +693,14 @@
 					</div>
 				{/if}
 				<div
-					class="grid pb-2 border-b font-bold text-sm text-surface-400 tracking-wide pr-scroll-bar"
+					class="grid pb-2 border-b font-semibold text-sm text-surface-400 tracking-wide pr-scroll-bar"
 				>
 					<span class="text-center">#</span>
 					<span class="text-center">Bệnh nhân</span>
 					<span class="text-center">Thời gian</span>
 					<span class="text-center">Bác sĩ</span>
 					<span class="text-center">Trạng thái</span>
+					<span class="text-center">BN đã xác nhận</span>
 					<span></span>
 				</div>
 				<div class="grid overflow-y-scroll flex-1 items-center content-start">
@@ -718,7 +729,7 @@
 							>
 								{schedule.patient.name ?? 'Chưa có tên'}
 							</a>
-							<p class="text-xs text-surface-400">{schedule.patient.phone}</p>
+							<p class="text-xs text-surface-400">{schedule.patient.phone ?? ''}</p>
 						</div>
 						<span class="py-3.5 text-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}">
 							<span class="badge variant-soft-tertiary">
@@ -741,96 +752,92 @@
 								{scheduleStatusInfo[schedule.status]?.label ?? ''}
 							</span>
 						</div>
+						<div class="py-3.5 text-center {odd ? '' : 'bg-slate-50'}">
+							<input
+								type="checkbox"
+								checked={schedule.isPatientConfirm}
+								class="checkbox pointer-events-none"
+							/>
+						</div>
 						<div
 							class="h-full flex items-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}"
 						>
-							{#if ![ScheduleStatus.CANCEL].includes(schedule.status)}
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger
-										class="btn mx-auto block text-surface-400 p-0 size-7 text-lg hover:variant-soft-primary"
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger
+									class="btn mx-auto block text-surface-400 p-0 size-7 text-lg hover:variant-soft-primary"
+								>
+									<i class="fa-solid fa-ellipsis"></i>
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content
+									transition={fly}
+									transitionConfig={{
+										duration: 200,
+										y: 30,
+										easing: cubicOut
+									}}
+									class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
+								>
+									<DropdownMenu.Item
+										disabled={schedule.status !== ScheduleStatus.PENDING}
+										on:click={() => openScheduleConfirmModal(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 									>
-										<i class="fa-solid fa-ellipsis"></i>
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content
-										transition={fly}
-										transitionConfig={{
-											duration: 200,
-											y: 30,
-											easing: cubicOut
-										}}
-										class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+										<div class="size-4 text-center *:block flex justify-center">
+											<i class="fa-regular fa-handshake"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Xác nhận</span>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										disabled={schedule.status !== ScheduleStatus.CONFIRMED ||
+											today(getLocalTimeZone()).compare(selectedDate) !== 0}
+										on:click={() => patientCheckin(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 									>
-										{#if schedule.status === ScheduleStatus.PENDING}
-											<DropdownMenu.Item
-												on:click={() => openScheduleConfirmModal(schedule)}
-												class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-											>
-												<div class="size-4 text-center *:block flex justify-center">
-													<i class="fa-regular fa-handshake"></i>
-												</div>
-												<span class="font-semibold text-sm leading-4">Xác nhận</span>
-											</DropdownMenu.Item>
-											<DropdownMenu.Item
-												on:click={() => deleteSchedule(schedule)}
-												class=" =data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-											>
-												<div class="size-4 text-center *:block">
-													<i class="fa-regular fa-trash-can"></i>
-												</div>
-												<span class="font-semibold text-sm leading-4">Huỷ lịch</span>
-											</DropdownMenu.Item>
-										{/if}
-										{#if [ScheduleStatus.DONE, ScheduleStatus.CONFIRMED].includes(schedule.status)}
-											{#if schedule.endAt && schedule.endAt > currentMinute && schedule.status !== ScheduleStatus.DONE}
-												<DropdownMenu.Item
-													on:click={() => editSchedule(schedule)}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-												>
-													<div class="size-4 text-center *:block">
-														<i class="fa-regular fa-calendar-lines-pen"></i>
-													</div>
-													<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
-												</DropdownMenu.Item>
-											{/if}
-											{#if schedule.status === ScheduleStatus.CONFIRMED}
-												{#if currentMinute > schedule.startAt}
-													<DropdownMenu.Item
-														on:click={() => cancelSchedule(schedule)}
-														class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-													>
-														<div class="size-4 text-center *:block">
-															<i class="fa-regular fa-trash-can"></i>
-														</div>
-														<span class="font-semibold text-sm leading-4">
-															Huỷ lịch do bệnh nhân không tới
-														</span>
-													</DropdownMenu.Item>
-												{/if}
-												{#if today(getLocalTimeZone()).compare(selectedDate) === 0}
-													<DropdownMenu.Item
-														on:click={() => patientCheckin(schedule)}
-														class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-													>
-														<div class="size-4 text-center *:block">
-															<i class="fa-solid fa-check-to-slot"></i>
-														</div>
-														<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
-													</DropdownMenu.Item>
-												{/if}
-												<DropdownMenu.Item
-													on:click={() => deleteSchedule(schedule)}
-													class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-												>
-													<div class="size-4 text-center *:block">
-														<i class="fa-regular fa-calendar-circle-minus"></i>
-													</div>
-													<span class="font-semibold text-sm leading-4">Xoá lịch</span>
-												</DropdownMenu.Item>
-											{/if}
-										{/if}
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
-							{/if}
+										<div class="size-4 text-center *:block">
+											<i class="fa-solid fa-check-to-slot"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										disabled={schedule.status === ScheduleStatus.CANCEL ||
+											!schedule.endAt ||
+											schedule.endAt <= currentMinute}
+										on:click={() => editSchedule(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-calendar-lines-pen"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										disabled={schedule.status === ScheduleStatus.DONE ||
+											currentMinute <= schedule.startAt}
+										on:click={() => cancelSchedule(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-trash-can"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">
+											Huỷ lịch do bệnh nhân không tới
+										</span>
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										disabled={![ScheduleStatus.PENDING, ScheduleStatus.CONFIRMED].includes(
+											schedule.status
+										) ||
+											(schedule.endAt && currentMinute > schedule.endAt)}
+										on:click={() => deleteSchedule(schedule)}
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									>
+										<div class="size-4 text-center *:block">
+											<i class="fa-regular fa-calendar-circle-minus"></i>
+										</div>
+										<span class="font-semibold text-sm leading-4">Xoá lịch</span>
+									</DropdownMenu.Item>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
 						</div>
 					{/each}
 				</div>
@@ -1023,7 +1030,7 @@
 								>
 									<div class="bg-orange-400 w-1"></div>
 									<div
-										class="absolute w-32 text-center z-20 -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
+										class="absolute w-32 text-center z-20 -top-9 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
 									>
 										{selectedStartHours}:{String(selectedStartMinutes).padStart(2, '0')}
 										-
@@ -1054,12 +1061,12 @@
 									}}
 									class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg {editingSchedule
 										? 'z-[200]'
-										: ''}"
+										: 'z-20'}"
 								>
 									{#if !editingSchedule}
 										<DropdownMenu.Item
 											on:click={createAppointment}
-											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 										>
 											<div class="size-4 text-center *:block">
 												<i class="fa-regular fa-calendar-check"></i>
@@ -1069,7 +1076,7 @@
 									{/if}
 									<DropdownMenu.Item
 										on:click={cancelSelection}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 									>
 										<div class="size-4 text-center *:block">
 											<i class="fa-regular fa-circle-xmark"></i>
@@ -1080,7 +1087,8 @@
 							</DropdownMenu.Root>
 							<div class="pl-16 w-full relative">
 								<div
-									class="w-10 untouchable absolute top-0 left-16 bottom-0"
+									on:dblclick={scrollToLimitEnd}
+									class="w-10 untouchable absolute top-0 left-16 bottom-0 z-[1] select-none"
 									style="width: {blockPastWidth}px;"
 								>
 									<div class="w-0 ml-auto" bind:this={limitEndElement}></div>

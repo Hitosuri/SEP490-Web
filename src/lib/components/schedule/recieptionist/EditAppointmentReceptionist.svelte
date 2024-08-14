@@ -27,7 +27,6 @@
 		resetForm: false,
 		SPA: true,
 		onUpdate: ({ form }) => {
-			console.log(form);
 			if (!form.valid || !$userStore) {
 				return;
 			}

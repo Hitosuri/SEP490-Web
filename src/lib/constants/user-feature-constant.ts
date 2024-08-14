@@ -6,7 +6,8 @@ export enum UserFeature {
 	MATERIALS_MANAGEMENT = 3,
 	PATIENTS_MANAGEMENT = 4,
 	SCHEDULE_MANAGEMENT = 5,
-	PAYMENT_MANAGEMENT = 6
+	PAYMENT_MANAGEMENT = 6,
+	STATISTIC = 7
 }
 
 export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
@@ -28,7 +29,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/services',
 		lottieAnim: '/images/animations/treatment.lottie',
-		class: 'from-yellow-400 to-orange-400',
+		class: 'from-emerald-400 to-lime-400',
 		routes: ['/(app)/services'],
 		roles: [Role.Doctor]
 	},
@@ -39,7 +40,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/materials',
 		lottieAnim: '/images/animations/material.lottie',
-		class: 'from-indigo-400 to-purple-400',
+		class: 'from-yellow-400 to-orange-400',
 		routes: ['/(app)/materials'],
 		roles: [Role.Accountant]
 	},
@@ -61,7 +62,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/schedule',
 		lottieAnim: '/images/animations/schedule.lottie',
-		class: 'from-emerald-400 to-lime-400',
+		class: 'from-indigo-400 to-purple-400',
 		routes: ['/(app)/schedule'],
 		roles: [Role.Recieptionist, Role.Patient]
 	},
@@ -75,5 +76,16 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		class: 'from-teal-400 to-cyan-400',
 		routes: ['/(app)/invoices'],
 		roles: [Role.Recieptionist, Role.Accountant]
+	},
+	[UserFeature.STATISTIC]: {
+		id: UserFeature.STATISTIC,
+		title: 'Thống kê',
+		faIcon: 'fa-chart-simple',
+		hasDuotone: true,
+		url: '/statistic',
+		lottieAnim: '/images/animations/statistic.lottie',
+		class: 'from-yellow-400 to-lime-400',
+		routes: ['/(app)/statistic'],
+		roles: [Role.Admin]
 	}
 };

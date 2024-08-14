@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import SuperDebug, { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
-	import { Combobox, type Selected } from 'bits-ui';
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { type Selected } from 'bits-ui';
 	import { type Writable } from 'svelte/store';
 	import { createMaterialSchema } from '$lib/form-schemas/create-material-schema';
 	import { pascalToCamelcase } from '$lib/helpers/utils';
@@ -24,7 +22,17 @@
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
-	const dispatch = createEventDispatcher<{ cancel: undefined; finish: undefined }>();
+	const materialTypesForEditing: Selected<MaterialType>[] = [
+		{
+			label: 'Chưa chọn',
+			value: {
+				id: 0,
+				name: 'Chưa chọn',
+				code: ''
+			}
+		},
+		...materialTypes.slice(1)
+	];
 	const form = superForm(editMaterialForm, {
 		validators: zodClient(createMaterialSchema),
 		resetForm: false,
@@ -43,10 +51,12 @@
 			}
 		},
 		onUpdate: ({ form }) => {
+			console.log(form);
+
 			if (!form.valid || !$userStore) {
 				return;
 			}
-			const rielForm: Record<string, string | number | boolean> = { ...form.data };
+			const rielForm: Record<string, string | number | boolean | null> = { ...form.data };
 
 			Object.entries(rielForm).forEach((x) => {
 				if ((typeof x[1] === 'string' && !x[1].trim()) || (typeof x[1] === 'number' && x[1] <= 0)) {
@@ -67,7 +77,9 @@
 
 					if (!response.ok) {
 						const data = await response.json();
-						if (Array.isArray(data?.error) || Array.isArray(data)) {
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
 						} else if (typeof data.errors === 'object') {
@@ -83,7 +95,7 @@
 
 						return Promise.reject();
 					}
-					dispatch('finish');
+					closeModal(true);
 					return 'Cập nhật vật tư thành công';
 				},
 				{
@@ -153,7 +165,9 @@
 			$formData.dosage = data.body.dosage;
 			$formData.uses = data.body.uses;
 
-			selectedMaterialType = materialTypes.find((x) => x.value.id === data.body?.materialTypeId);
+			selectedMaterialType = materialTypesForEditing.find(
+				(x) => x.value.id === data.body?.materialTypeId
+			);
 			if (data.body.supplierId) {
 				selectedSupplier = {
 					label: data.body.supplierName,
@@ -288,7 +302,7 @@
 									Loại vật tư<sup class="text-red-500">*</sup>
 								</Label>
 								<DropdownSelect
-									items={materialTypes}
+									items={materialTypesForEditing}
 									bind:selected={selectedMaterialType}
 									regionInput="ring-1 px-3 ring-surface-300 focus:ring-primary justify-between mt-1 w-full"
 									regionContent="z-[1000]"
@@ -481,7 +495,6 @@
 					</button>
 				</fieldset>
 			</form>
-			<SuperDebug data={$formData} />
 		</div>
 	{/if}
 </div>

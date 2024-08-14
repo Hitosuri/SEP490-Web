@@ -62,9 +62,6 @@ export const autoHeightTextArea: Action<
 	if (options?.value == null) {
 		el.addEventListener('input', onInput);
 	}
-	el.addEventListener('resize', (e) => {
-		console.log(e);
-	});
 
 	return {
 		update: (g) => {

@@ -188,11 +188,14 @@
 		$formData.address = selectedSupplier?.address ?? '';
 		$formData.phone = selectedSupplier?.phoneNumber ?? '';
 	}
+	function deselectAll() {
+		selectedSupplier = undefined;
+		resetForm();
+	}
 
 	function selectType(supplier: Supplier) {
 		if (selectedSupplier?.id === supplier.id) {
-			selectedSupplier = undefined;
-			resetForm();
+			deselectAll();
 			return;
 		}
 
@@ -290,13 +293,22 @@
 		/>
 	</div>
 	<div class="flex-shrink-0 pl-4 border-l ml-4">
-		<p
-			class="{selectedSupplier
+		<div
+			class="rounded-lg h-[51px] font-semibold flex justify-center items-center relative {selectedSupplier
 				? 'bg-tertiary-500 text-white'
-				: 'bg-slate-300'} rounded-lg h-[51px] font-semibold flex justify-center items-center"
+				: 'bg-slate-300'}"
 		>
+			{#if selectedSupplier}
+				<button
+					type="button"
+					class="absolute bottom-full right-1 text-sm anchor"
+					on:click={deselectAll}
+				>
+					Trở về tạo nhà cung cấp
+				</button>
+			{/if}
 			{selectedSupplier ? 'Cập nhật loại nhà cung cấp' : 'Tạo loại nhà cung cấp'}
-		</p>
+		</div>
 		<form method="post" use:enhance class="space-y-4 mt-4">
 			<div>
 				<Field {form} name="name">

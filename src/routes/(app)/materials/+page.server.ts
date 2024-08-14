@@ -11,15 +11,18 @@ import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
 import { createExportMaterialSchema } from '$lib/form-schemas/create-export-material-schema';
 import { editExportMaterialSchema } from '$lib/form-schemas/edit-export-material-schema';
 import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
+import { handleFetch } from '$lib/helpers/utils';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.MATERIALS_MANAGEMENT].roles ?? []));
 
-	const response = await fetch(`${endpoints.materials.get}?page=1&size=10`, {
-		headers: {
-			Authorization: `Bearer ${locals.user?.token}`
-		}
-	});
+	const response = await handleFetch(
+		fetch(`${endpoints.materials.get}?page=1&size=10`, {
+			headers: {
+				Authorization: `Bearer ${locals.user?.token}`
+			}
+		})
+	);
 	const materialListPage: Pagination<Material[]> = await response.json();
 
 	return {

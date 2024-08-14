@@ -76,18 +76,20 @@
 	action="/profile?/editProfile"
 	use:enhance
 	method="post"
-	class="grid grid-cols-2 gap-y-6 py-4 px-6 gap-x-8"
+	class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 py-4 px-6 gap-x-8"
 >
 	<div class="flex gap-4">
 		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
+			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg flex-shrink-0"
 		>
 			<i class="fa-solid fa-user"></i>
 		</div>
 		<div>
 			<Field {form} name="name">
 				<Control let:attrs>
-					<Label class="text-sm font-semibold text-surface-500 select-none">Họ và tên</Label>
+					<Label class="text-xs sm:text-sm font-semibold text-surface-500 select-none"
+						>Họ và tên</Label
+					>
 					<input
 						{...attrs}
 						type="text"
@@ -101,13 +103,15 @@
 	</div>
 	<div class="flex gap-4">
 		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
+			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg flex-shrink-0"
 		>
 			<i class="fa-solid fa-at"></i>
 		</div>
-		<div>
-			<p class="text-sm font-semibold text-surface-500 select-none">Email</p>
-			<p class="text-xl font-medium tracking-wide text-surface-300">
+		<div class="overflow-hidden">
+			<p class="text-xs sm:text-sm font-semibold text-surface-500 select-none">Email</p>
+			<p
+				class="text-lg sm:text-xl font-medium tracking-wide text-surface-300 overflow-hidden text-ellipsis whitespace-nowrap"
+			>
 				{profile.email}
 				<i class="fa-solid fa-lock text-error-500 text-base ml-1"></i>
 			</p>
@@ -115,14 +119,16 @@
 	</div>
 	<div class="flex gap-4">
 		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
+			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg flex-shrink-0"
 		>
 			<i class="fa-solid fa-phone"></i>
 		</div>
 		<div>
 			<Field {form} name="phone">
 				<Control let:attrs>
-					<Label class="text-sm font-semibold text-surface-500 select-none">Số điện thoại</Label>
+					<Label class="text-xs sm:text-sm font-semibold text-surface-500 select-none"
+						>Số điện thoại</Label
+					>
 					<input
 						{...attrs}
 						type="text"
@@ -136,14 +142,16 @@
 	</div>
 	<div class="flex gap-4">
 		<div
-			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
+			class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg flex-shrink-0"
 		>
 			<i class="fa-solid fa-cake-candles"></i>
 		</div>
 		<div>
 			<Field {form} name="birthday">
 				<Control let:attrs>
-					<Label class="text-sm font-semibold text-surface-500 select-none">Ngày sinh</Label>
+					<Label class="text-xs sm:text-sm font-semibold text-surface-500 select-none"
+						>Ngày sinh</Label
+					>
 					<input
 						{...attrs}
 						type="hidden"
@@ -165,12 +173,12 @@
 	{#if !$userStore?.isPatient}
 		<div class="flex gap-4">
 			<div
-				class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg"
+				class="size-12 text-center h-fit bg-surface-700 text-white text-xl leading-[48px] rounded-tl-lg rounded-br-lg flex-shrink-0"
 			>
 				<i class="fa-solid fa-hand-holding-circle-dollar"></i>
 			</div>
 			<div>
-				<p class="text-sm font-semibold text-surface-500 select-none">Lương</p>
+				<p class="text-xs sm:text-sm font-semibold text-surface-500 select-none">Lương</p>
 				<p class="text-xl font-medium tracking-wide text-surface-300">
 					{formatCurrency(profile.salary)}
 					<i class="fa-solid fa-lock text-error-500 text-base ml-1"></i>
@@ -178,7 +186,7 @@
 			</div>
 		</div>
 	{/if}
-	<div class="col-span-2 flex justify-center *:w-36 gap-6 py-4">
+	<div class="sm:col-span-2 flex justify-center *:w-36 gap-6 py-4">
 		<button
 			type="button"
 			class="btn variant-ghost-error text-error-500 font-semibold"
