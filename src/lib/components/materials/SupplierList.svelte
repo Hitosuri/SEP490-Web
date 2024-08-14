@@ -301,7 +301,7 @@
 			{#if selectedSupplier}
 				<button
 					type="button"
-					class="absolute bottom-full right-0 text-sm anchor"
+					class="absolute bottom-full right-1 text-sm anchor"
 					on:click={deselectAll}
 				>
 					Trở về tạo nhà cung cấp
