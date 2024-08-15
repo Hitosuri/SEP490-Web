@@ -414,3 +414,24 @@ interface ScheduleStatisticSnapshot {
 	};
 	result?: Promise<ScheduleStatistic>;
 }
+
+interface MaterialStatistic {
+	materialId: number;
+	materialName: string;
+	importQuantity: number;
+	importValue: number;
+	exportQuantity: number;
+	expireQuantity: number;
+	availableQuantity: number;
+}
+
+interface MaterialStatisticSnapshot {
+	query: {
+		periodType: 'day' | 'month' | 'year';
+		year: number;
+		month: number;
+		day: number;
+		materialName: string;
+	};
+	result?: Promise<MaterialStatistic[]>;
+}

@@ -1,3 +1,4 @@
+import { browser } from '$app/environment';
 import { Role } from '$lib/helpers/authorization';
 import { error, isHttpError } from '@sveltejs/kit';
 
@@ -77,4 +78,19 @@ export async function handleFetch(
 
 			error(500, { message: 'Xảy ra lỗi không xác định' });
 		});
+}
+
+export function downloadFile(blob: Blob, fileName: string) {
+	if (!browser) {
+		return;
+	}
+
+	const anchorElement = document.createElement('a');
+	anchorElement.download = fileName;
+
+	const href = URL.createObjectURL(blob);
+	anchorElement.href = href;
+	anchorElement.click();
+
+	URL.revokeObjectURL(href);
 }

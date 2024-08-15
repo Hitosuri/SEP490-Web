@@ -18,6 +18,7 @@
 	import EditAppoimentByPatient from './EditAppoimentByPatient.svelte';
 	import Container from '$lib/components/common/Container.svelte';
 	import { MinuteTick } from '$lib/helpers/minute-tick';
+	import { scheduleStepInHour } from '$lib/constants/schedule-constant';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
@@ -29,6 +30,7 @@
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
+	const upperLimit = 23 / scheduleStepInHour;
 	let scheduleListElement: HTMLDivElement;
 	let scheduleMenuOpened = false;
 	let scheduleGrabing = false;
@@ -61,6 +63,7 @@
 	);
 	$: canCreateSchedule =
 		quarterCount >= lowerLimit &&
+		quarterCount < upperLimit &&
 		!blockRangeByDoctors[rowCount]?.some((x) => quarterCount >= x[0] && quarterCount < x[1]);
 	$: hoverHintTop = rowCount * 64;
 	$: hoverHintLeft = (quarterCount + 2) * 32;
@@ -84,12 +87,15 @@
 		const result = date.compare(today(getLocalTimeZone()));
 
 		if (result < 0) {
-			return 96;
+			return 24 / scheduleStepInHour;
 		} else if (result > 0) {
-			return 0;
+			return 7 / scheduleStepInHour;
 		} else {
 			const now = new Date();
-			return now.getHours() * 4 + Math.ceil(now.getMinutes() / 15);
+			return Math.max(
+				7 / scheduleStepInHour,
+				now.getHours() * 4 + Math.ceil(now.getMinutes() / 15)
+			);
 		}
 	}
 
@@ -616,8 +622,8 @@
 					>
 						<div class="absolute left-0 top-0 bottom-0 w-full flex *:h-full">
 							<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
-							{#each Array(24) as _}
-								<div class="w-32 shrink-0 border-r"></div>
+							{#each Array(24) as _, i}
+								<div class="w-32 shrink-0 border-r {i >= 23 ? 'untouchable' : ''}"></div>
 							{/each}
 							<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
 						</div>
