@@ -51,6 +51,7 @@
 			filtering({ ...form.data });
 		}
 	});
+	const upperLimit = 23 / scheduleStepInHour;
 	let scheduleGrabing = false;
 	let mouseAnchor: { x: number; y: number };
 	let scheduleScroll: { x: number; y: number };
@@ -103,6 +104,7 @@
 	);
 	$: canCreateSchedule =
 		quarterCount >= lowerLimit &&
+		quarterCount <= upperLimit &&
 		!blockRangeByDoctors[rowCount]?.some((x) => quarterCount >= x[0] && quarterCount < x[1]);
 	$: hoverHintTop = rowCount * 64;
 	$: hoverHintLeft = (quarterCount + 2) * 32;
@@ -151,12 +153,15 @@
 		const result = date.compare(today(getLocalTimeZone()));
 
 		if (result < 0) {
-			return 96;
+			return 24 / scheduleStepInHour;
 		} else if (result > 0) {
-			return 0;
+			return 7 / scheduleStepInHour;
 		} else {
 			const now = new Date();
-			return now.getHours() * 4 + Math.ceil((now.getMinutes() + 1) / 15);
+			return Math.max(
+				7 / scheduleStepInHour,
+				now.getHours() * 4 + Math.ceil((now.getMinutes() + 1) / 15)
+			);
 		}
 	}
 
@@ -277,13 +282,13 @@
 			timelineSelection = true;
 			selectedStart = selectedEnd = quarterCount;
 			timeChanged = true;
-			const posibleStartLimits = [...blockRangeByDoctors[rowCount].map((x) => x[1])];
-			const posibleEndLimits = [...blockRangeByDoctors[rowCount].map((x) => x[0])];
+			const posibleStartLimits = [lowerLimit, ...blockRangeByDoctors[rowCount].map((x) => x[1])];
+			const posibleEndLimits = [upperLimit, ...blockRangeByDoctors[rowCount].map((x) => x[0])];
 			posibleStartLimits.sort((a, b) => b - a);
 			posibleEndLimits.sort((a, b) => a - b);
 			rangeLimit = [
-				posibleStartLimits.find((x) => x < selectedStart) ?? 0,
-				posibleEndLimits.find((x) => x > selectedStart) ?? 24 * 4
+				posibleStartLimits.find((x) => x < selectedStart) ?? lowerLimit,
+				posibleEndLimits.find((x) => x > selectedStart) ?? upperLimit
 			];
 
 			scheduleMenuTriggerTop = selectedTop = rowCount * 64;
@@ -1001,8 +1006,8 @@
 						>
 							<div class="absolute left-0 top-0 bottom-0 w-full flex *:h-full">
 								<div class="w-16 border-r bg-surface-50 untouchable pointer-events-none"></div>
-								{#each Array(24) as _}
-									<div class="w-32 shrink-0 border-r"></div>
+								{#each Array(24) as _, i}
+									<div class="w-32 shrink-0 border-r {i >= 23 ? 'untouchable' : ''}"></div>
 								{/each}
 								<div class="w-16 border-r bg-surface-50 untouchable pointer-events-none"></div>
 							</div>
