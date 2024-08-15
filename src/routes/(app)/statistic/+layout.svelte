@@ -21,9 +21,19 @@
 			day: 0
 		}
 	});
+	const materialStatisticStore = writable<MaterialStatisticSnapshot>({
+		query: {
+			periodType: 'year',
+			year: 0,
+			month: 0,
+			day: 0,
+			materialName: ''
+		}
+	});
 
 	setContext('patientStatistic', patientStatisticStore);
 	setContext('scheduleStatistic', scheduleStatisticStore);
+	setContext('materialStatistic', materialStatisticStore);
 </script>
 
 <Container paddingTopHeader class="py-4">
@@ -53,6 +63,15 @@
 						: 'text-black/70'}"
 				>
 					Lịch khám
+				</a>
+				<a
+					href="/statistic/material"
+					class="rounded-md h-10 flex-1 flex-shrink-0 font-semibold flex items-center justify-center {$page
+						.route.id === '/(app)/statistic/material'
+						? 'bg-white shadow'
+						: 'text-black/70'}"
+				>
+					Vật tư
 				</a>
 			</div>
 		</div>
