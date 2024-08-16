@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Calendar, DropdownMenu, type Selected } from 'bits-ui';
+	import { Calendar, DropdownMenu, Slider, type Selected } from 'bits-ui';
 	import { today, getLocalTimeZone, type DateValue } from '@internationalized/date';
 	import { cubicOut } from 'svelte/easing';
 	import { fade, fly } from 'svelte/transition';
@@ -52,6 +52,8 @@
 		}
 	});
 	const upperLimit = 23 / scheduleStepInHour;
+	const baseStepWidth = 32;
+	const doctorColumnWidth = 160;
 	let scheduleGrabing = false;
 	let mouseAnchor: { x: number; y: number };
 	let scheduleScroll: { x: number; y: number };
@@ -80,9 +82,11 @@
 	let editingSchedule: ScheduleFull | undefined;
 	let timeChanged = false;
 	let currentMinute: Date = new Date();
+	let stepWidth = baseStepWidth;
 
+	$: hourWidth = stepWidth * 4;
 	$: lowerLimit = calculateLowerLimit(selectedDate);
-	$: blockPastWidth = lowerLimit * 32;
+	$: blockPastWidth = lowerLimit * stepWidth;
 	$: selectedDateSchedules = schedules.filter((x) => x.startAt.getDate() === selectedDate.day);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
 	$: blockRangeByDoctors = scheduleByDoctors.map((x) =>
@@ -107,12 +111,12 @@
 		quarterCount <= upperLimit &&
 		!blockRangeByDoctors[rowCount]?.some((x) => quarterCount >= x[0] && quarterCount < x[1]);
 	$: hoverHintTop = rowCount * 64;
-	$: hoverHintLeft = (quarterCount + 2) * 32;
+	$: hoverHintLeft = (quarterCount + 2) * stepWidth;
 	$: hoveringHours = Math.floor(quarterCount / 4);
 	$: hoveringMinutes = (quarterCount % 4) * 15;
-	$: selectedLeft = (Math.min(selectedStart, selectedEnd) + 2) * 32;
+	$: selectedLeft = (Math.min(selectedStart, selectedEnd) + 2) * stepWidth;
 	$: selectedRange = Math.abs(selectedEnd - selectedStart);
-	$: selectedWidth = selectedRange * 32;
+	$: selectedWidth = selectedRange * stepWidth;
 	$: selectedStartHours = Math.floor(Math.min(selectedStart, selectedEnd) / 4);
 	$: selectedStartMinutes = (Math.min(selectedStart, selectedEnd) % 4) * 15;
 	$: selectedEndHours = Math.floor(Math.max(selectedStart, selectedEnd) / 4);
@@ -662,7 +666,7 @@
 		/>
 		<div class="flex gap-4">
 			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_7rem_4rem] relative"
+				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_max(7rem,20%)_4rem] relative"
 			>
 				{#if editingSchedule}
 					{@const startAt = new Date(
@@ -916,13 +920,40 @@
 		</div>
 		<div class="flex flex-1 gap-4">
 			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 h-auto relative {editingSchedule
+				class="bg-white border shadow-md rounded-container-token p-4 pb-6 flex-1 h-auto relative {editingSchedule
 					? 'z-[200]'
 					: ''}"
 			>
+				<div class="absolute left-4 right-4 bottom-2 h-2 flex gap-x-1">
+					<span class="text-xs font-semibold pointer-events-none leading-[8px] w-9"
+						>{Math.round((stepWidth * 100) / baseStepWidth)}%</span
+					>
+					<div class="h-2 bg-primary-50 rounded-full flex-1">
+						<Slider.Root
+							min={0}
+							max={baseStepWidth * 3}
+							step={1}
+							let:thumbs
+							onValueChange={(values) => {
+								const width = scheduleListElement.getBoundingClientRect().width;
+								const center = (width - doctorColumnWidth) / 2;
+								const centerHour =
+									(center + scheduleListElement.scrollLeft) / (stepWidth / scheduleStepInHour);
+								stepWidth = baseStepWidth + values[0];
+								scheduleListElement.scrollLeft =
+									centerHour * (stepWidth / scheduleStepInHour) - center;
+							}}
+							class="bg-primary-50 mx-3 block relative h-2 rounded-full"
+						>
+							{#each thumbs as thumb}
+								<Slider.Thumb {thumb} class="h-2 w-6 rounded-full bg-primary-500" />
+							{/each}
+						</Slider.Root>
+					</div>
+				</div>
 				<div
 					bind:this={scheduleListElement}
-					class="absolute top-4 left-4 bottom-4 right-4 {scheduleMenuOpened
+					class="absolute top-4 left-4 bottom-6 right-4 {scheduleMenuOpened
 						? 'overflow-hidden pr-scroll-bar pb-scroll-bar'
 						: 'overflow-scroll'} {scheduleGrabing || timelineSelection ? 'select-none' : ''}"
 				>
@@ -939,7 +970,7 @@
 								{/each}
 								<div class="h-[42px] relative">
 									<form
-										class="absolute left-0 top-0 -right-16 border-b flex items-center justify-center h-full"
+										class="absolute left-0 top-0 border-b flex items-center justify-center h-full -right-10"
 										on:submit|preventDefault|stopPropagation={addDoctorSubmit}
 									>
 										{#key scheduleByDoctors}
@@ -959,7 +990,7 @@
 										<button
 											disabled={!addingDoctor}
 											type="submit"
-											class="btn variant-filled-primary h-full w-16 flex-shrink-0 rounded-none"
+											class="btn variant-filled-primary h-full flex-shrink-0 rounded-none transition-none w-10"
 										>
 											<i class="fa-solid fa-plus"></i>
 										</button>
@@ -967,9 +998,15 @@
 								</div>
 							</div>
 						</div>
-						<div class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10">
+						<div
+							class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10"
+							style="margin-left: -{stepWidth * 2 - 40}px;"
+						>
 							{#each Array(25) as _, i}
-								<div class="shrink-0 text-center leading-10 text-sm select-none font-semibold w-32">
+								<div
+									class="shrink-0 text-center leading-10 text-sm select-none font-semibold"
+									style="width: {hourWidth}px;"
+								>
 									<p>{i}:00</p>
 								</div>
 							{/each}
@@ -988,8 +1025,8 @@
 							on:mousemove={(e) => {
 								const bounding = e.currentTarget.getBoundingClientRect();
 								quarterCount = Math.min(
-									Math.max(Math.round((e.clientX - bounding.left - 62) / 32), 0),
-									96
+									Math.max(Math.round((e.clientX - bounding.left - stepWidth * 2) / stepWidth), 0),
+									24 / scheduleStepInHour
 								);
 								rowCount = Math.max(
 									Math.min(
@@ -1000,16 +1037,22 @@
 								);
 								if (timelineSelection) {
 									selectedEnd = Math.min(Math.max(quarterCount, rangeLimit[0]), rangeLimit[1]);
-									scheduleMenuTriggerLeft = (selectedEnd + 2) * 32;
+									scheduleMenuTriggerLeft = (selectedEnd + 2) * stepWidth;
 								}
 							}}
 						>
 							<div class="absolute left-0 top-0 bottom-0 w-full flex *:h-full">
-								<div class="w-16 border-r bg-surface-50 untouchable pointer-events-none"></div>
+								<div class="border-r bg-surface-50 untouchable pointer-events-none w-10"></div>
 								{#each Array(24) as _, i}
-									<div class="w-32 shrink-0 border-r {i >= 23 ? 'untouchable' : ''}"></div>
+									<div
+										class="shrink-0 border-r {i >= 23 ? 'untouchable' : ''}"
+										style="width: {hourWidth}px;"
+									></div>
 								{/each}
-								<div class="w-16 border-r bg-surface-50 untouchable pointer-events-none"></div>
+								<div
+									class="border-r bg-surface-50 untouchable pointer-events-none"
+									style="width: {stepWidth * 2}px;"
+								></div>
 							</div>
 							<div
 								class="h-12 my-2 w-1 bg-red-300 rounded-full absolute z-10 top-0 -translate-x-1/2 {scheduleHovering &&
@@ -1021,7 +1064,7 @@
 								style="left: {hoverHintLeft}px; top: {hoverHintTop}px;"
 							>
 								<div
-									class="absolute z-20 text-center -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
+									class="absolute z-20 text-center -top-11 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white select-none"
 								>
 									{hoveringHours}:{String(hoveringMinutes).padStart(2, '0')}
 								</div>
@@ -1035,7 +1078,7 @@
 								>
 									<div class="bg-orange-400 w-1"></div>
 									<div
-										class="absolute w-32 text-center z-20 -top-9 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white"
+										class="absolute text-center z-20 -top-9 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white select-none w-32"
 									>
 										{selectedStartHours}:{String(selectedStartMinutes).padStart(2, '0')}
 										-
@@ -1090,11 +1133,11 @@
 									</DropdownMenu.Item>
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
-							<div class="pl-16 w-full relative">
+							<div class="w-full relative pl-10">
 								<div
 									on:dblclick={scrollToLimitEnd}
-									class="w-10 untouchable absolute top-0 left-16 bottom-0 z-[1] select-none"
-									style="width: {blockPastWidth}px;"
+									class="w-10 untouchable absolute top-0 bottom-0 z-[1] select-none left-10"
+									style="width: {blockPastWidth}px"
 								>
 									<div class="w-0 ml-auto" bind:this={limitEndElement}></div>
 								</div>
@@ -1102,9 +1145,9 @@
 									<div class="h-16 w-full border-b border-dashed relative">
 										{#each pair[1] as schedule (schedule.id)}
 											{#if schedule.id !== editingSchedule?.id}
-												<TimelineItem {schedule} />
+												<TimelineItem {schedule} {stepWidth} />
 											{:else if timeChanged}
-												<TimelineItem {schedule} placeholder />
+												<TimelineItem {schedule} {stepWidth} placeholder />
 											{/if}
 										{/each}
 									</div>

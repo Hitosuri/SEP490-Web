@@ -1,54 +1,118 @@
 <script lang="ts">
-	import { ScheduleStatus, scheduleStatusInfo } from '$lib/constants/schedule-constant';
-	import { formatHourMinute } from '$lib/helpers/formatters';
+	import {
+		ScheduleStatus,
+		scheduleStatusInfo,
+		scheduleStepInHour,
+		scheduleStepInMinute
+	} from '$lib/constants/schedule-constant';
+	import { formatCompactDate, formatHourMinute } from '$lib/helpers/formatters';
+	import { Tooltip } from 'bits-ui';
 	import { createEventDispatcher } from 'svelte';
+	import { cubicOut } from 'svelte/easing';
+	import { fly } from 'svelte/transition';
 
 	export let schedule: ScheduleFull;
 	export let placeholder = false;
+	export let stepWidth = 32;
 
 	const dispatch = createEventDispatcher<{
 		hoverStart: number;
 		hoverEnd: number;
 	}>();
 
-	$: leftOffset = schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60;
+	$: leftOffset =
+		schedule.startAt.getHours() / scheduleStepInHour +
+		schedule.startAt.getMinutes() / scheduleStepInMinute;
 	$: width = Math.max(
 		schedule.status === ScheduleStatus.PENDING || !schedule.endAt
-			? 0.25
-			: schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60 - leftOffset,
+			? 1
+			: schedule.endAt.getHours() / scheduleStepInHour +
+					schedule.endAt.getMinutes() / scheduleStepInMinute -
+					leftOffset,
 		0
 	);
+	$: widthInPx = width * stepWidth;
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	class="h-full p-0.5 absolute top-0 overflow-hidden group z-[2]"
-	style="left: {leftOffset * 128}px; width: {width * 128}px"
+	style="left: {leftOffset * stepWidth}px; width: {widthInPx}px"
 	id="schedule-{schedule.id}"
 	on:mouseenter={() => dispatch('hoverStart', schedule.id)}
 	on:mouseleave={() => dispatch('hoverEnd', schedule.id)}
 >
 	{#if !placeholder}
-		<div
-			class="border rounded-md h-full flex overflow-hidden relative border-l-4 {(
-				scheduleStatusInfo[schedule.status]?.styleClasses ?? []
-			).join(' ')}"
-		>
-			{#if width * 4 > 2}
-				<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
-					<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
-						{schedule.patient.name ?? ''}
-					</p>
-					<p class="text-xs font-semibold text-surface-400">
+		<Tooltip.Root openDelay={500}>
+			<Tooltip.Trigger asChild let:builder>
+				<div
+					{...builder}
+					use:builder.action
+					class="border rounded-md h-full flex overflow-hidden relative {widthInPx >= 4
+						? 'border-l-4'
+						: ''} {(scheduleStatusInfo[schedule.status]?.styleClasses ?? []).join(' ')}"
+				>
+					{#if widthInPx > 80}
+						<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
+							<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
+								{schedule.patient.name ?? ''}
+							</p>
+							<p
+								class="text-xs font-semibold text-surface-400 whitespace-nowrap overflow-hidden text-ellipsis"
+							>
+								{formatHourMinute(schedule.startAt)}
+								-
+								{formatHourMinute(schedule.endAt) || '...'}
+							</p>
+						</div>
+					{:else}
+						<div
+							class="flex items-center font-bold justify-center flex-1 pointer-events-none select-none"
+						>
+							{schedule.order + 1}
+						</div>
+					{/if}
+				</div>
+			</Tooltip.Trigger>
+			<Tooltip.Content
+				transition={fly}
+				transitionConfig={{
+					duration: 200,
+					y: 30,
+					easing: cubicOut
+				}}
+				sideOffset={8}
+				class="shadow-md text-sm z-20 px-4 py-3 border rounded-md bg-white leading-6"
+			>
+				<p>
+					<span>Bệnh nhân:</span>
+					<span class={!schedule.patient.name ? 'text-warning-500' : 'font-semibold tracking-wide'}
+						>{schedule.patient.name}</span
+					>
+				</p>
+				<p>
+					<span>Bác sĩ:</span>
+					<span class="font-semibold tracking-wide">{schedule.doctor.name}</span>
+				</p>
+				<p>
+					<span>Thời gian khám:</span>
+					<span class="font-semibold tracking-wide">
 						{formatHourMinute(schedule.startAt)}
 						-
 						{formatHourMinute(schedule.endAt) || '...'}
-					</p>
-				</div>
-			{:else}
-				<div class="flex items-center font-bold justify-center flex-1">{schedule.order + 1}</div>
-			{/if}
-		</div>
+					</span>
+				</p>
+				<p>
+					<span>Ngày khám:</span>
+					<span class="font-semibold tracking-wide">{formatCompactDate(schedule.startAt)}</span>
+				</p>
+				<p>
+					<span>Mô tả:</span>
+					<span class="tracking-wide">{schedule.description ?? ''}</span>
+				</p>
+				<Tooltip.Arrow class="border-l border-t" />
+			</Tooltip.Content>
+		</Tooltip.Root>
 	{:else}
 		<div class="border-2 border-primary-500 border-dashed h-full rounded-md"></div>
 	{/if}
