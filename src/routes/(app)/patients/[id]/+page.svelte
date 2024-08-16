@@ -293,10 +293,12 @@
 				<div
 					class="grid grid-cols-[auto_2fr_1fr] overflow-y-scroll flex-1 items-center content-start"
 				>
-					{#each Array(10) as _, i}
+					{#each data.schedules as schedule, i}
 						<span class="py-2 w-16 text-center">{i + 1}</span>
-						<span class="py-2 text-center text-sm font-medium">13:00PM - 16/06/2024</span>
-						<span class="py-2 text-center">Bác sĩ A</span>
+						<span class="py-2 text-center text-sm font-medium">
+							{formatCompactDateTime(schedule.startAt)}
+						</span>
+						<span class="py-2 text-center">{schedule.doctor.name}</span>
 					{/each}
 				</div>
 			</div>

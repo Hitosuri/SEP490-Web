@@ -63,6 +63,8 @@ export default {
 		getByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatient`,
 		getOwnByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatientSelf`,
 		getOwnByDoctor: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByDoctorId`,
+		getByPatientId: (id: number) =>
+			`${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatientId?size=1000&patientId=${id}`,
 		createByRecieptionist: `${env.PUBLIC_API_HOST}/api/schedules/CreateByRecieptionist`,
 		createByPatient: `${env.PUBLIC_API_HOST}/api/schedules/CreateByPatient`,
 		editByRecieptionist: (id: number) =>
