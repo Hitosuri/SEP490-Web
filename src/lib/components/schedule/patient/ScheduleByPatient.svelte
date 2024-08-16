@@ -18,7 +18,7 @@
 	import EditAppoimentByPatient from './EditAppoimentByPatient.svelte';
 	import Container from '$lib/components/common/Container.svelte';
 	import { MinuteTick } from '$lib/helpers/minute-tick';
-	import { scheduleStepInHour } from '$lib/constants/schedule-constant';
+	import { scheduleStepInHour, scheduleStepInMinute } from '$lib/constants/schedule-constant';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
@@ -73,8 +73,6 @@
 	$: hoverHintLeft = quarterCount * stepWidth + 40;
 	$: hoveringHours = Math.floor(quarterCount / 4);
 	$: hoveringMinutes = (quarterCount % 4) * 15;
-
-	$: console.log(quarterCount);
 
 	onMount(() => {
 		MinuteTick.addEvent(calculateLowerLimitActive);
@@ -733,9 +731,13 @@
 								<div class="h-16 w-full border-b border-dashed relative">
 									{#each pair[1] as schedule (schedule.id)}
 										{@const leftOffset =
-											(schedule.startAt.getHours() + schedule.startAt.getMinutes() / 60) * 128}
+											(schedule.startAt.getHours() / scheduleStepInHour +
+												schedule.startAt.getMinutes() / scheduleStepInMinute) *
+											stepWidth}
 										{@const width = Math.max(
-											(schedule.endAt.getHours() + schedule.endAt.getMinutes() / 60) * 128 -
+											(schedule.endAt.getHours() / scheduleStepInHour +
+												schedule.endAt.getMinutes() / scheduleStepInMinute) *
+												stepWidth -
 												leftOffset,
 											0
 										)}

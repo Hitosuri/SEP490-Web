@@ -111,10 +111,10 @@
 		quarterCount <= upperLimit &&
 		!blockRangeByDoctors[rowCount]?.some((x) => quarterCount >= x[0] && quarterCount < x[1]);
 	$: hoverHintTop = rowCount * 64;
-	$: hoverHintLeft = (quarterCount + 2) * stepWidth;
+	$: hoverHintLeft = quarterCount * stepWidth + 40;
 	$: hoveringHours = Math.floor(quarterCount / 4);
 	$: hoveringMinutes = (quarterCount % 4) * 15;
-	$: selectedLeft = (Math.min(selectedStart, selectedEnd) + 2) * stepWidth;
+	$: selectedLeft = Math.min(selectedStart, selectedEnd) * stepWidth + 40;
 	$: selectedRange = Math.abs(selectedEnd - selectedStart);
 	$: selectedWidth = selectedRange * stepWidth;
 	$: selectedStartHours = Math.floor(Math.min(selectedStart, selectedEnd) / 4);
@@ -1025,7 +1025,7 @@
 							on:mousemove={(e) => {
 								const bounding = e.currentTarget.getBoundingClientRect();
 								quarterCount = Math.min(
-									Math.max(Math.round((e.clientX - bounding.left - stepWidth * 2) / stepWidth), 0),
+									Math.max(Math.round((e.clientX - bounding.left - 40) / stepWidth), 0),
 									24 / scheduleStepInHour
 								);
 								rowCount = Math.max(
