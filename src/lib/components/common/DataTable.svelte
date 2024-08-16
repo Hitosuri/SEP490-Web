@@ -277,7 +277,7 @@
 											{/if}
 											{#if actionMenu.length > 0}
 												{#each actionMenu as action (action)}
-													{#if !action.showWhen || (action.showWhen(extendedItem.item) && !action.showBelow)}
+													{#if !action.showBelow && (!action.showWhen || action.showWhen(extendedItem.item))}
 														<DropdownMenu.Item
 															on:click={() => action.click?.(extendedItem.item)}
 															class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
@@ -324,7 +324,7 @@
 													/>
 												{/if}
 												{#each actionMenu as action (action)}
-													{#if !action.showWhen || (action.showWhen(extendedItem.item) && action.showBelow)}
+													{#if action.showBelow && (!action.showWhen || action.showWhen(extendedItem.item))}
 														<DropdownMenu.Item
 															on:click={() => action.click?.(extendedItem.item)}
 															class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
