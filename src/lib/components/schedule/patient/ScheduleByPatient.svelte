@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Calendar, ContextMenu, DropdownMenu, type Selected } from 'bits-ui';
+	import { Calendar, ContextMenu, DropdownMenu, Slider, type Selected } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
 	import TimelineItem from '../TimelineItem.svelte';
@@ -31,6 +31,8 @@
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const modalStore = getModalStore();
 	const upperLimit = 23 / scheduleStepInHour;
+	const baseStepWidth = 32;
+	const doctorColumnWidth = 160;
 	let scheduleListElement: HTMLDivElement;
 	let scheduleMenuOpened = false;
 	let scheduleGrabing = false;
@@ -46,9 +48,11 @@
 	let canCreateSchedule = true;
 	let limitEndElement: HTMLDivElement;
 	let currentMinute: Date = new Date();
+	let stepWidth = baseStepWidth;
 
+	$: hourWidth = stepWidth * 4;
 	$: lowerLimit = calculateLowerLimit(selectedDate);
-	$: blockPastWidth = lowerLimit * 32;
+	$: blockPastWidth = lowerLimit * stepWidth;
 	$: selectedDateSchedules = allSchedule.filter((x) => x.startAt.getDate() === selectedDate.day);
 	$: waitConfirmSchedules = patientSchedules.filter((x) => x.status === 1);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
@@ -66,9 +70,11 @@
 		quarterCount < upperLimit &&
 		!blockRangeByDoctors[rowCount]?.some((x) => quarterCount >= x[0] && quarterCount < x[1]);
 	$: hoverHintTop = rowCount * 64;
-	$: hoverHintLeft = (quarterCount + 2) * 32;
+	$: hoverHintLeft = quarterCount * stepWidth + 40;
 	$: hoveringHours = Math.floor(quarterCount / 4);
 	$: hoveringMinutes = (quarterCount % 4) * 15;
+
+	$: console.log(quarterCount);
 
 	onMount(() => {
 		MinuteTick.addEvent(calculateLowerLimitActive);
@@ -542,7 +548,34 @@
 				</div>
 			</Calendar.Root>
 		</div>
-		<div class="bg-white border shadow-md rounded-container-token p-4 flex-1 h-fit">
+		<div class="bg-white border shadow-md rounded-container-token p-4 pb-6 flex-1 h-fit relative">
+			<div class="absolute left-4 right-4 bottom-2 h-2 flex gap-x-1">
+				<span class="text-xs font-semibold pointer-events-none leading-[8px] w-9"
+					>{Math.round((stepWidth * 100) / baseStepWidth)}%</span
+				>
+				<div class="h-2 bg-primary-50 rounded-full flex-1">
+					<Slider.Root
+						min={0}
+						max={baseStepWidth * 3}
+						step={1}
+						let:thumbs
+						onValueChange={(values) => {
+							const width = scheduleListElement.getBoundingClientRect().width;
+							const center = (width - doctorColumnWidth) / 2;
+							const centerHour =
+								(center + scheduleListElement.scrollLeft) / (stepWidth / scheduleStepInHour);
+							stepWidth = baseStepWidth + values[0];
+							scheduleListElement.scrollLeft =
+								centerHour * (stepWidth / scheduleStepInHour) - center;
+						}}
+						class="bg-primary-50 mx-3 block relative h-2 rounded-full"
+					>
+						{#each thumbs as thumb}
+							<Slider.Thumb {thumb} class="h-2 w-6 rounded-full bg-primary-500" />
+						{/each}
+					</Slider.Root>
+				</div>
+			</div>
 			<div
 				bind:this={scheduleListElement}
 				class="min-h-56 {scheduleMenuOpened
@@ -564,7 +597,7 @@
 							{/each}
 							<div class="h-[42px] relative">
 								<form
-									class="absolute left-0 top-0 -right-16 border-b flex items-center justify-center h-full text-sm"
+									class="absolute left-0 top-0 -right-10 border-b flex items-center justify-center h-full text-sm"
 									on:submit|preventDefault|stopPropagation={addDoctorSubmit}
 								>
 									{#key scheduleByDoctors}
@@ -579,7 +612,7 @@
 									<button
 										disabled={!addingDoctor}
 										type="submit"
-										class="btn variant-filled-primary h-full w-16 flex-shrink-0 rounded-none"
+										class="btn variant-filled-primary h-full w-10 flex-shrink-0 rounded-none"
 									>
 										<i class="fa-solid fa-plus"></i>
 									</button>
@@ -587,9 +620,15 @@
 							</div>
 						</div>
 					</div>
-					<div class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10">
+					<div
+						class="bg-slate-50 sticky border-b-2 -translate-y-10 top-10 h-10 w-fit flex z-10"
+						style="margin-left: -{stepWidth * 2 - 40}px;"
+					>
 						{#each Array(25) as _, i}
-							<div class="shrink-0 text-center leading-10 text-sm select-none font-semibold w-32">
+							<div
+								class="shrink-0 text-center leading-10 text-sm select-none font-semibold"
+								style="width: {hourWidth}px;"
+							>
 								<p>{i}:00</p>
 							</div>
 						{/each}
@@ -611,7 +650,7 @@
 								return;
 							}
 							quarterCount = Math.min(
-								Math.max(Math.floor((e.clientX - bounding.left - 62) / 32), 0),
+								Math.max(Math.floor((e.clientX - bounding.left - 40) / stepWidth), 0),
 								96
 							);
 							rowCount = Math.max(
@@ -621,18 +660,24 @@
 						}}
 					>
 						<div class="absolute left-0 top-0 bottom-0 w-full flex *:h-full">
-							<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
+							<div class="w-10 bg-surface-50 untouchable pointer-events-none"></div>
 							{#each Array(24) as _, i}
-								<div class="w-32 shrink-0 border-r {i >= 23 ? 'untouchable' : ''}"></div>
+								<div
+									class="shrink-0 border-r {i >= 23 ? 'untouchable' : ''}"
+									style="width: {hourWidth}px;"
+								></div>
 							{/each}
-							<div class="w-16 bg-surface-50 untouchable pointer-events-none"></div>
+							<div
+								class="border-r bg-surface-50 untouchable pointer-events-none"
+								style="width: {stepWidth * 2}px;"
+							></div>
 						</div>
 						<div
-							class="h-16 w-8 absolute z-10 top-0 {(scheduleHovering && canCreateSchedule) ||
+							class="h-16 absolute z-10 top-0 {(scheduleHovering && canCreateSchedule) ||
 							scheduleMenuOpened
 								? 'opacity-100'
 								: 'opacity-0 pointer-events-none'}"
-							style="left: {hoverHintLeft}px; top: {hoverHintTop}px;"
+							style="left: {hoverHintLeft}px; top: {hoverHintTop}px; width: {stepWidth}px"
 						>
 							<ContextMenu.Root bind:open={scheduleMenuOpened}>
 								<ContextMenu.Trigger class="h-full w-full px-0.5 py-2">
@@ -676,10 +721,10 @@
 								{hoveringHours}:{String(hoveringMinutes).padStart(2, '0')}
 							</div>
 						</div>
-						<div class="pl-16 w-full relative">
+						<div class="pl-10 w-full relative">
 							<div
 								on:dblclick={scrollToLimitEnd}
-								class="w-10 untouchable absolute top-0 left-16 bottom-0 z-[1]"
+								class="w-10 untouchable absolute top-0 left-10 bottom-0 z-[1]"
 								style="width: {blockPastWidth}px;"
 							>
 								<div class="w-0 ml-auto" bind:this={limitEndElement}></div>
@@ -702,7 +747,7 @@
 												id="schedule-{schedule.id}"
 											></div>
 										{:else if ownSchedule.status !== 1}
-											<TimelineItem schedule={ownSchedule} />
+											<TimelineItem schedule={ownSchedule} {stepWidth} />
 										{/if}
 									{/each}
 								</div>

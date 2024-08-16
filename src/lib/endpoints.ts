@@ -61,7 +61,7 @@ export default {
 	schedule: {
 		getByRecieptionist: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByRecieptionist`,
 		getByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatient`,
-		getOwnByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatientId`,
+		getOwnByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatientSelf`,
 		getOwnByDoctor: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByDoctorId`,
 		createByRecieptionist: `${env.PUBLIC_API_HOST}/api/schedules/CreateByRecieptionist`,
 		createByPatient: `${env.PUBLIC_API_HOST}/api/schedules/CreateByPatient`,
