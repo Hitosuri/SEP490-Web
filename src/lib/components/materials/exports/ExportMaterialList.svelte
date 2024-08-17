@@ -19,19 +19,17 @@
 	import AssignExportMaterialForm from './AssignExportMaterialForm.svelte';
 
 	export function onTabActive() {
-		if (firstActive) {
+		if (exportGroupsPromise) {
 			return;
 		}
 
-		firstActive = true;
-		filtering('', '', currentPage, pageSize, true, true, true);
+		filtering(requesterName, supplierName, currentPage, pageSize, true, true, true);
 	}
 	export let createExportMaterialForm: SuperValidated<z.infer<typeof createExportMaterialSchema>>;
 	export let editExportMaterialForm: SuperValidated<z.infer<typeof editExportMaterialSchema>>;
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
-	let firstActive = false;
 	let exportGroupsPromise: Promise<ExportGroup[]> | undefined;
 	let filterTimer: NodeJS.Timeout | undefined;
 	let currentPage = 1;
@@ -40,12 +38,16 @@
 	let requesterName = '';
 	let supplierName = '';
 	let isProcessing = true;
-	let lastestFilterOption: Record<string, string | boolean> = {};
+	let lastestFilterOption: Record<string, string | boolean> = {
+		page: String(currentPage),
+		size: String(pageSize),
+		requesterName,
+		supplierName,
+		isProcessing
+	};
 	let openedItems: string[] = [];
 
-	$: if (firstActive) {
-		filtering(requesterName, supplierName, currentPage, pageSize);
-	}
+	$: filtering(requesterName, supplierName, currentPage, pageSize);
 
 	function filtering(
 		requesterName: string,
@@ -59,6 +61,18 @@
 		requesterName = requesterName.trim();
 		supplierName = supplierName.trim();
 
+		const filterOption: Record<string, string | boolean> = {
+			page: String(page),
+			size: String(size),
+			requesterName,
+			supplierName,
+			isProcessing
+		};
+
+		if (!forceFilter && isEqual(lastestFilterOption, filterOption)) {
+			return;
+		}
+
 		if (filterTimer) {
 			clearTimeout(filterTimer);
 			filterTimer = undefined;
@@ -67,18 +81,6 @@
 		filterTimer = setTimeout(
 			() => {
 				if (!$userStore) {
-					return;
-				}
-
-				const filterOption: Record<string, string | boolean> = {
-					page: String(page),
-					size: String(size),
-					requesterName,
-					supplierName,
-					isProcessing
-				};
-
-				if (!forceFilter && isEqual(lastestFilterOption, filterOption)) {
 					return;
 				}
 
@@ -307,9 +309,7 @@
 			{#each exportGroups as exportGroup, i (exportGroup.group)}
 				<Accordion.Item
 					value={exportGroup.group}
-					class="group border border-l-4 rounded-lg {exportGroup.lastHandleBy
-						? 'border-success-300'
-						: 'border-surface-200'}"
+					class="group border border-l-4 rounded-lg border-surface-200"
 				>
 					<Accordion.Header>
 						<Accordion.Trigger class="flex w-full gap-2 items-center px-6 h-16 group">

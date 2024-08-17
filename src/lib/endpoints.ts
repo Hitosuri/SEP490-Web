@@ -34,7 +34,6 @@ export default {
 		create: `${env.PUBLIC_API_HOST}/api/materials/create`,
 		detail: (id: number) => `${env.PUBLIC_API_HOST}/api/materials/${id}`,
 		edit: (id: number) => `${env.PUBLIC_API_HOST}/api/materials/update/${id}`,
-		import: `${env.PUBLIC_API_HOST}/api/materials/import`,
 		export: {
 			get: `${env.PUBLIC_API_HOST}/api/materials/export-all`,
 			create: `${env.PUBLIC_API_HOST}/api/export/create`,
@@ -43,6 +42,10 @@ export default {
 			detail: (id: string) => `${env.PUBLIC_API_HOST}/api/export/${id}`,
 			deleteGroup: (id: string) =>
 				`${env.PUBLIC_API_HOST}/api/export/export/remove/group:Guid?group=${id}`
+		},
+		import: {
+			get: `${env.PUBLIC_API_HOST}/api/materials/import-history`,
+			create: `${env.PUBLIC_API_HOST}/api/materials/import`
 		}
 	},
 	availableMaterial: {
@@ -63,6 +66,8 @@ export default {
 		getByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatient`,
 		getOwnByPatient: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatientSelf`,
 		getOwnByDoctor: `${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByDoctorId`,
+		getByPatientId: (id: number) =>
+			`${env.PUBLIC_API_HOST}/api/schedules/GetListScheduleByPatientId?size=1000&patientId=${id}`,
 		createByRecieptionist: `${env.PUBLIC_API_HOST}/api/schedules/CreateByRecieptionist`,
 		createByPatient: `${env.PUBLIC_API_HOST}/api/schedules/CreateByPatient`,
 		editByRecieptionist: (id: number) =>

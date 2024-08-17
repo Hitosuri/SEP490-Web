@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 		error(400, { message: 'Id của bệnh nhân phải là số' });
 	}
 
-	const [patient, records] = await Promise.all([
+	const [patient, records, schedules] = await Promise.all([
 		handleFetch(
 			fetch(`${endpoints.patients.detail(patientId)}`, {
 				headers: {
@@ -24,12 +24,27 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 			{ 404: 'loop' }
 		).then<ApiResponse<Patient>>((x) => x.json()),
 		handleFetch(
-			fetch(`${endpoints.records.get(patientId)}`, {
+			fetch(endpoints.records.get(patientId), {
 				headers: {
 					Authorization: `Bearer ${locals.user?.token}`
 				}
 			})
-		).then<ApiResponse<RecordListItem[]>>((x) => x.json())
+		).then<ApiResponse<RecordListItem[]>>((x) => x.json()),
+		handleFetch(
+			fetch(endpoints.schedule.getByPatientId(patientId), {
+				headers: {
+					Authorization: `Bearer ${locals.user?.token}`
+				}
+			})
+		)
+			.then<Pagination<ScheduleFull[]>>((x) => x.json())
+			.then((x) => {
+				x.data.forEach((s) => {
+					s.startAt = new Date(s.startAt);
+					s.endAt = s.endAt ? new Date(s.endAt) : undefined;
+				});
+				return x;
+			})
 	]);
 
 	if (!patient.body || !records.body) {
@@ -48,6 +63,7 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 	return {
 		patient: patient.body,
 		records: records.body,
+		schedules: schedules.data,
 		editPatientForm: await superValidate(zod(editPatientSchema))
 	};
 };

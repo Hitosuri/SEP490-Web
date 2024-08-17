@@ -435,3 +435,12 @@ interface MaterialStatisticSnapshot {
 	};
 	result?: Promise<MaterialStatistic[]>;
 }
+
+interface ImportMaterial {
+	materialName: string;
+	importDate: Date;
+	expiryDate: Date;
+	quantity: number;
+	inputPrice: number;
+	importedBy: string;
+}

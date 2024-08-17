@@ -27,6 +27,7 @@
 	}[] = [];
 	export let groupFn: ((item: T) => K) | undefined = undefined;
 	export let shadow = true;
+	export let showSelection = false;
 
 	const dispatch = createEventDispatcher<{
 		pageChange: number;
@@ -107,27 +108,31 @@
 		<table class="w-full">
 			<thead>
 				<tr class="text-sm *:bg-slate-100 *:font-semibold *:text-surface-400">
-					<th class="text-[0] table-cell-fit rounded-tl-lg rounded-bl-lg !pl-6">
-						<Checkbox.Root
-							class="checkbox {selectedAllState
-								? 'bg-primary-500 border-none'
-								: 'bg-white'} -translate-x-[2px] block"
-							bind:checked={selectedAllState}
-							onCheckedChange={onSelectedAllStateChanged}
-						>
-							<Checkbox.Indicator
-								let:isChecked
-								let:isIndeterminate
-								class="*:block text-white text-sm"
+					{#if showSelection}
+						<th class="text-[0] table-cell-fit rounded-tl-lg rounded-bl-lg !pl-6">
+							<Checkbox.Root
+								class="checkbox {selectedAllState
+									? 'bg-primary-500 border-none'
+									: 'bg-white'} -translate-x-[2px] block"
+								bind:checked={selectedAllState}
+								onCheckedChange={onSelectedAllStateChanged}
 							>
-								{#if isChecked}
-									<i class="fa-solid fa-check"></i>
-								{:else if isIndeterminate}
-									<i class="fa-solid fa-minus"></i>
-								{/if}
-							</Checkbox.Indicator>
-						</Checkbox.Root>
-					</th>
+								<Checkbox.Indicator
+									let:isChecked
+									let:isIndeterminate
+									class="*:block text-white text-sm"
+								>
+									{#if isChecked}
+										<i class="fa-solid fa-check"></i>
+									{:else if isIndeterminate}
+										<i class="fa-solid fa-minus"></i>
+									{/if}
+								</Checkbox.Indicator>
+							</Checkbox.Root>
+						</th>
+					{:else}
+						<th class="table-cell-fit rounded-tl-lg rounded-bl-lg !pl-6 text-start">#</th>
+					{/if}
 					{#each fields as field}
 						{#if field.sortable}
 							<th
@@ -159,7 +164,13 @@
 								</button>
 							</th>
 						{:else}
-							<th class="select-none">{field.displayName}</th>
+							<th
+								class="select-none px-4 py-2 {field.align === 'right'
+									? 'text-end'
+									: field.align === 'left'
+										? 'text-start'
+										: 'text-center'}">{field.displayName}</th
+							>
 						{/if}
 					{/each}
 					<th class="rounded-tr-lg rounded-br-lg w-0">
@@ -194,19 +205,27 @@
 					{@const href =
 						showDetail && !detailEmitEvent ? { detailUrl: showDetail(extendedItem.item) } : {}}
 					<tr class="*:even:bg-slate-100 *:py-4 *:px-4 group">
-						<td class="rounded-tl-lg rounded-bl-lg text-[0] relative overflow-hidden !pl-6">
-							<input
-								class="checkbox bg-white size-4"
-								type="checkbox"
-								name=""
-								bind:checked={extendedItem.selected}
-							/>
-							<div
-								class="absolute w-1 rounded-full h-2/3 left-2 top-1/2 -translate-y-1/2 bg-primary-400 {extendedItem.selected
-									? 'block'
-									: 'hidden'}"
-							></div>
-						</td>
+						{#if showSelection}
+							<td class="rounded-tl-lg rounded-bl-lg text-[0] relative overflow-hidden !pl-6">
+								<input
+									class="checkbox bg-white size-4"
+									type="checkbox"
+									name=""
+									bind:checked={extendedItem.selected}
+								/>
+								<div
+									class="absolute w-1 rounded-full h-2/3 left-2 top-1/2 -translate-y-1/2 bg-primary-400 {extendedItem.selected
+										? 'block'
+										: 'hidden'}"
+								></div>
+							</td>
+						{:else}
+							<td
+								class="rounded-tl-lg rounded-bl-lg relative overflow-hidden !pl-6 text-surface-400 font-semibold"
+							>
+								{i + 1}
+							</td>
+						{/if}
 						{#each fields as field}
 							{@const content =
 								field.formatter?.(extendedItem.item[field.name]) ??
@@ -233,7 +252,7 @@
 						{/each}
 						<td class="rounded-tr-lg rounded-br-lg !py-0">
 							<slot name="action-cell" item={extendedItem.item}>
-								{#if showDetail || detailEmitEvent || showEdit || showDelete}
+								{#if showDetail || detailEmitEvent || showEdit || showDelete || actionMenu.length > 0}
 									<DropdownMenu.Root preventScroll={false}>
 										<DropdownMenu.Trigger
 											class="btn text-xl p-0 size-9 text-surface-400 hover:variant-soft-primary transition-all"
@@ -277,7 +296,7 @@
 											{/if}
 											{#if actionMenu.length > 0}
 												{#each actionMenu as action (action)}
-													{#if !action.showWhen || (action.showWhen(extendedItem.item) && !action.showBelow)}
+													{#if !action.showBelow && (!action.showWhen || action.showWhen(extendedItem.item))}
 														<DropdownMenu.Item
 															on:click={() => action.click?.(extendedItem.item)}
 															class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
@@ -324,7 +343,7 @@
 													/>
 												{/if}
 												{#each actionMenu as action (action)}
-													{#if !action.showWhen || (action.showWhen(extendedItem.item) && action.showBelow)}
+													{#if action.showBelow && (!action.showWhen || action.showWhen(extendedItem.item))}
 														<DropdownMenu.Item
 															on:click={() => action.click?.(extendedItem.item)}
 															class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"

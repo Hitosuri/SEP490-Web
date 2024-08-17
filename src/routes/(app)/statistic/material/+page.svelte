@@ -217,7 +217,7 @@
 			},
 			{
 				loading: 'Đang tải...',
-				success: (msg) => msg ?? `Trạng thái của lịch hẹn đã chuyển thành`,
+				success: (msg) => msg ?? 'Tải thống kê thành công',
 				error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tải kết quả thống kê'
 			}
 		);
@@ -225,9 +225,9 @@
 </script>
 
 <svelte:head>
-	<title>Thống kê lịch khám</title>
+	<title>Thống kê vật tư</title>
 </svelte:head>
-<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Thống kê lịch khám</h1>
+<h1 class="text-4xl font-semibold px-8 py-6 text-surface-900">Thống kê vật tư</h1>
 <div class="flex gap-6 items-center overflow-auto">
 	<div class="relative max-w-56 min-w-40">
 		<input

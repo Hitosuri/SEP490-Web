@@ -8,6 +8,7 @@
 	import SupplierList from '$lib/components/materials/SupplierList.svelte';
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
 	import ExportMaterialList from '$lib/components/materials/exports/ExportMaterialList.svelte';
+	import ImportMaterialList from '$lib/components/materials/ImportMaterialList.svelte';
 
 	export let data: PageData;
 
@@ -15,6 +16,7 @@
 	let onMaterialTypeTabActive: () => void;
 	let onSupplierTabActive: () => void;
 	let onExportTabActive: () => void;
+	let onImportTabActive: () => void;
 </script>
 
 <svelte:head>
@@ -26,6 +28,8 @@
 		<title>Danh sách nhà cung cấp</title>
 	{:else if tabValue === 'export'}
 		<title>Lịch sử xuất vật tư</title>
+	{:else if tabValue === 'import'}
+		<title>Lịch sử nhập vật tư</title>
 	{/if}
 </svelte:head>
 <Container heightFull heightScreenMin paddingTopHeader class="pt-4 flex flex-col">
@@ -34,9 +38,6 @@
 		bind:value={tabValue}
 		class="rounded-2xl bg-white shadow-md p-4 border"
 		onValueChange={(value) => {
-			if (value === 'material') {
-				usingSubFeature.set(undefined);
-			}
 			if (value === 'material-type') {
 				onMaterialTypeTabActive();
 				usingSubFeature.set([
@@ -46,8 +47,7 @@
 						faIcon: 'fa-solid fa-stethoscope'
 					}
 				]);
-			}
-			if (value === 'supplier') {
+			} else if (value === 'supplier') {
 				onSupplierTabActive();
 				usingSubFeature.set([
 					{
@@ -56,8 +56,7 @@
 						faIcon: 'fa-solid fa-boxes-packing'
 					}
 				]);
-			}
-			if (value === 'export') {
+			} else if (value === 'export') {
 				onExportTabActive();
 				usingSubFeature.set([
 					{
@@ -66,6 +65,17 @@
 						faIcon: 'fa-solid fa-file-export'
 					}
 				]);
+			} else if (value === 'import') {
+				onImportTabActive();
+				usingSubFeature.set([
+					{
+						active: true,
+						title: 'Lịch sử nhập vật tư',
+						faIcon: 'fa-solid fa-file-import'
+					}
+				]);
+			} else {
+				usingSubFeature.set(undefined);
 			}
 		}}
 	>
@@ -77,10 +87,16 @@
 				Vật tư
 			</Tabs.Trigger>
 			<Tabs.Trigger
+				value="import"
+				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
+			>
+				Lịch sử nhập
+			</Tabs.Trigger>
+			<Tabs.Trigger
 				value="export"
 				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
 			>
-				Xuất vật tư
+				Lịch sử xuất
 			</Tabs.Trigger>
 			<Tabs.Trigger
 				value="material-type"
@@ -101,6 +117,12 @@
 				materialListPage={data.materialListPage}
 				createMaterialForm={data.createMaterialForm}
 				importMaterialForm={data.importMaterialForm}
+			/>
+		</Tabs.Content>
+		<Tabs.Content value="import">
+			<ImportMaterialList
+				bind:onTabActive={onImportTabActive}
+				importMaterialFilterForm={data.importMaterialFilterForm}
 			/>
 		</Tabs.Content>
 		<Tabs.Content value="export">

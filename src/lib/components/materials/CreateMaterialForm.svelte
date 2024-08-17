@@ -79,15 +79,16 @@
 						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object') {
-							Object.keys(data.errors).forEach((k) => {
+						} else if (typeof data.errors === 'object' || typeof data === 'object') {
+							const errorsDict = data.errors ?? data;
+							Object.keys(errorsDict).forEach((k) => {
 								const fieldName = pascalToCamelcase(k);
 								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(data.errors[k]) ? data.errors[k][0] : data.errors[k];
+									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
 									setError(form, fieldName, value);
 								}
 							});
-							return Promise.reject();
+							return Promise.reject(Object.values(errorsDict).join(', '));
 						}
 
 						return Promise.reject();

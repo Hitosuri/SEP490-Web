@@ -705,10 +705,10 @@
 					class="grid pb-2 border-b font-semibold text-sm text-surface-400 tracking-wide pr-scroll-bar"
 				>
 					<span class="text-center">#</span>
-					<span class="text-center">Bệnh nhân</span>
-					<span class="text-center">Thời gian</span>
-					<span class="text-center">Bác sĩ</span>
-					<span class="text-center">Trạng thái</span>
+					<span class="text-center whitespace-nowrap">Bệnh nhân</span>
+					<span class="text-center whitespace-nowrap">Thời gian</span>
+					<span class="text-center whitespace-nowrap">Bác sĩ</span>
+					<span class="text-center whitespace-nowrap">Trạng thái</span>
 					<span class="text-center">BN đã xác nhận</span>
 					<span></span>
 				</div>
@@ -726,7 +726,7 @@
 							>
 						</div>
 						<div
-							class="text-center flex flex-col items-center justify-center h-full {odd
+							class="text-center h-full flex flex-col items-center justify-center {odd
 								? ''
 								: 'bg-slate-50'} schedule-row-{schedule.id}"
 						>
@@ -740,7 +740,11 @@
 							</a>
 							<p class="text-xs text-surface-400">{schedule.patient.phone ?? ''}</p>
 						</div>
-						<span class="py-3.5 text-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}">
+						<div
+							class="py-3.5 text-center flex items-center justify-center h-full {odd
+								? ''
+								: 'bg-slate-50'} schedule-row-{schedule.id}"
+						>
 							<span class="badge variant-soft-tertiary">
 								{formatHourMinute(schedule.startAt)}
 							</span>
@@ -748,11 +752,17 @@
 							<span class="badge variant-soft-tertiary">
 								{formatHourMinute(schedule.endAt) || '...'}
 							</span>
-						</span>
-						<span class="py-3.5 text-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}"
-							>{schedule.doctor.name}</span
+						</div>
+						<span
+							class="py-3.5 h-full text-center {odd
+								? ''
+								: 'bg-slate-50'} schedule-row-{schedule.id}">{schedule.doctor.name}</span
 						>
-						<div class="py-3.5 text-center h-auto {odd ? '' : 'bg-slate-50'}">
+						<div
+							class="py-3.5 h-full text-center flex justify-center items-center {odd
+								? ''
+								: 'bg-slate-50'}"
+						>
 							<span
 								class="{(scheduleStatusInfo[schedule.status]?.styleClasses ?? []).join(
 									' '
@@ -761,7 +771,11 @@
 								{scheduleStatusInfo[schedule.status]?.label ?? ''}
 							</span>
 						</div>
-						<div class="py-3.5 text-center {odd ? '' : 'bg-slate-50'}">
+						<div
+							class="py-3.5 h-full text-center flex items-center justify-center {odd
+								? ''
+								: 'bg-slate-50'}"
+						>
 							<input
 								type="checkbox"
 								checked={schedule.isPatientConfirm}
