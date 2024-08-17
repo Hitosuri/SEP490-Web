@@ -8,7 +8,7 @@
 	import Loading from '../common/Loading.svelte';
 	import isEqual from 'lodash-es/isEqual';
 	import endpoints from '$lib/endpoints';
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import CustomPagination from '../common/CustomPagination.svelte';
 	import { Tooltip } from 'bits-ui';
@@ -19,12 +19,11 @@
 
 	export let materialTypeCreateForm: SuperValidated<z.infer<typeof materialTypeCreateSchema>>;
 	export function onTabActive() {
-		if (firstActive) {
+		if (materialTypesPromise) {
 			return;
 		}
 
-		firstActive = true;
-		filtering('', '', currentPage, pageSize, true, true, true);
+		filtering(nameValue, codeValue, currentPage, pageSize, true, true, true);
 	}
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
@@ -59,15 +58,16 @@
 						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object') {
-							Object.keys(data.errors).forEach((k) => {
+						} else if (typeof data.errors === 'object' || typeof data === 'object') {
+							const errorsDict = data.errors ?? data;
+							Object.keys(errorsDict).forEach((k) => {
 								const fieldName = pascalToCamelcase(k);
 								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(data.errors[k]) ? data.errors[k][0] : data.errors[k];
+									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
 									setError(form, fieldName, value);
 								}
 							});
-							return Promise.reject();
+							return Promise.reject(Object.values(errorsDict).join(', '));
 						}
 
 						return Promise.reject();
@@ -98,13 +98,15 @@
 	let totalItems = 0;
 	let pageSize = 20;
 	let materialTypesPromise: Promise<MaterialType[]> | undefined;
-	let lastestFilterOption: Record<string, string> = {};
-	let firstActive = false;
+	let lastestFilterOption: Record<string, string> = {
+		page: String(currentPage),
+		size: String(pageSize),
+		materialTypeName: nameValue,
+		code: codeValue
+	};
 	let selectedMaterialType: MaterialType | undefined;
 
-	$: if (firstActive) {
-		filtering(nameValue, codeValue, 1, pageSize, false, false, true);
-	}
+	$: filtering(nameValue, codeValue, 1, pageSize, false, false, true);
 
 	function filtering(
 		name: string,
@@ -118,6 +120,17 @@
 		name = name.trim();
 		code = code.trim();
 
+		const filterOption: Record<string, string> = {
+			page: String(page),
+			size: String(size),
+			materialTypeName: name,
+			code
+		};
+
+		if (!forceFilter && isEqual(lastestFilterOption, filterOption)) {
+			return;
+		}
+
 		if (filterTimer) {
 			clearTimeout(filterTimer);
 			filterTimer = undefined;
@@ -126,17 +139,6 @@
 		filterTimer = setTimeout(
 			() => {
 				if (!$userStore) {
-					return;
-				}
-
-				const filterOption: Record<string, string> = {
-					page: String(page),
-					size: String(size),
-					materialTypeName: name,
-					code
-				};
-
-				if (!forceFilter && isEqual(lastestFilterOption, filterOption)) {
 					return;
 				}
 

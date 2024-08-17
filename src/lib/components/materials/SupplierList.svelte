@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -19,18 +18,16 @@
 
 	export let createSupplierForm: SuperValidated<z.infer<typeof createSupplierSchema>>;
 	export function onTabActive() {
-		if (firstActive) {
+		if (suppliersPromise) {
 			return;
 		}
 
-		firstActive = true;
-		filtering('', '', currentPage, pageSize, true, true, true);
+		filtering(nameValue, phoneValue, currentPage, pageSize, true, true, true);
 	}
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const form = superForm(createSupplierForm, {
 		SPA: true,
-		invalidateAll: false,
 		resetForm: false,
 		validators: zodClient(createSupplierSchema),
 		onUpdate: ({ form }) => {
@@ -59,15 +56,16 @@
 						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 							const msg = (data?.error ?? data).join(', ');
 							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object') {
-							Object.keys(data.errors).forEach((k) => {
+						} else if (typeof data.errors === 'object' || typeof data === 'object') {
+							const errorsDict = data.errors ?? data;
+							Object.keys(errorsDict).forEach((k) => {
 								const fieldName = pascalToCamelcase(k);
 								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(data.errors[k]) ? data.errors[k][0] : data.errors[k];
+									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
 									setError(form, fieldName, value);
 								}
 							});
-							return Promise.reject();
+							return Promise.reject(Object.values(errorsDict).join(', '));
 						}
 
 						return Promise.reject();
@@ -98,13 +96,15 @@
 	let totalItems = 0;
 	let pageSize = 20;
 	let suppliersPromise: Promise<Supplier[]> | undefined;
-	let lastestFilterOption: Record<string, string> = {};
-	let firstActive = false;
+	let lastestFilterOption: Record<string, string> = {
+		page: String(currentPage),
+		size: String(pageSize),
+		name: nameValue,
+		phoneNumber: phoneValue
+	};
 	let selectedSupplier: Supplier | undefined;
 
-	$: if (firstActive) {
-		filtering(nameValue, phoneValue, 1, pageSize, false, false, true);
-	}
+	$: filtering(nameValue, phoneValue, 1, pageSize, false, false, true);
 
 	function filtering(
 		name: string,
@@ -118,6 +118,17 @@
 		name = name.trim();
 		phoneNumber = phoneNumber.trim();
 
+		const filterOption: Record<string, string> = {
+			page: String(page),
+			size: String(size),
+			name: name,
+			phoneNumber
+		};
+
+		if (!forceFilter && isEqual(lastestFilterOption, filterOption)) {
+			return;
+		}
+
 		if (filterTimer) {
 			clearTimeout(filterTimer);
 			filterTimer = undefined;
@@ -126,17 +137,6 @@
 		filterTimer = setTimeout(
 			() => {
 				if (!$userStore) {
-					return;
-				}
-
-				const filterOption: Record<string, string> = {
-					page: String(page),
-					size: String(size),
-					name: name,
-					phoneNumber
-				};
-
-				if (!forceFilter && isEqual(lastestFilterOption, filterOption)) {
 					return;
 				}
 

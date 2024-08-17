@@ -12,6 +12,7 @@ import { createExportMaterialSchema } from '$lib/form-schemas/create-export-mate
 import { editExportMaterialSchema } from '$lib/form-schemas/edit-export-material-schema';
 import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 import { handleFetch } from '$lib/helpers/utils';
+import { importMaterialFilterSchema } from '$lib/form-schemas/import-material-filter-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.MATERIALS_MANAGEMENT].roles ?? []));
@@ -33,6 +34,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 		importMaterialForm: await superValidate(zod(importMaterialSchema)),
 		createExportMaterialForm: await superValidate(zod(createExportMaterialSchema)),
 		editExportMaterialForm: await superValidate(zod(editExportMaterialSchema)),
+		importMaterialFilterForm: await superValidate(zod(importMaterialFilterSchema)),
 		materialListPage
 	};
 };
