@@ -32,6 +32,7 @@
 	import { toast } from 'svelte-sonner';
 	import { MinuteTick } from '$lib/helpers/minute-tick';
 	import EditAppointmentReceptionist from './EditAppointmentReceptionist.svelte';
+	import { round } from 'lodash-es';
 
 	export let scheduleFilterForm: SuperValidated<z.infer<typeof scheduleFilterSchema>>;
 	export let schedules: ScheduleFull[];
@@ -1094,9 +1095,9 @@
 									<div
 										class="absolute text-center z-20 -top-9 left-1/2 shadow-md text-tertiary-600 text-sm font-semibold -translate-x-1/2 px-2 py-1 border rounded-md bg-white select-none w-32"
 									>
-										{selectedStartHours}:{String(selectedStartMinutes).padStart(2, '0')}
+										{selectedStartHours}:{String(Math.round(selectedStartMinutes)).padStart(2, '0')}
 										-
-										{selectedEndHours}:{String(selectedEndMinutes).padStart(2, '0')}
+										{selectedEndHours}:{String(Math.round(selectedEndMinutes)).padStart(2, '0')}
 									</div>
 									<div class="bg-orange-400 w-1 ml-auto"></div>
 								</div>

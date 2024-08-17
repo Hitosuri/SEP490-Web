@@ -25,8 +25,8 @@
 		!patientQueue || patientQueue.length === 0
 			? undefined
 			: patientQueue[0].startAt.getTime() - new Date().getTime();
-	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > stepInMiliseconds);
-	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= stepInMiliseconds);
+	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > 0);
+	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= 0);
 
 	onMount(async () => {
 		if (browser && $userStore?.roles.includes(Role.Doctor)) {
