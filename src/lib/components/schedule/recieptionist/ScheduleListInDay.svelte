@@ -36,7 +36,10 @@
 			shortLabel: 'Check-in',
 			icon: 'fa-solid fa-check-to-slot',
 			availableWhen: (schedule, time) =>
-				schedule.status !== ScheduleStatus.PENDING &&
+				schedule.status === ScheduleStatus.CONFIRMED &&
+				time.getTime() <=
+					schedule.startAt.getTime() +
+						((schedule.endAt ?? schedule.startAt).getTime() - schedule.startAt.getTime()) / 3 &&
 				time.getHours() >= 7 &&
 				time.getHours() < 23 &&
 				schedule.startAt.toLocaleDateString() === time.toLocaleDateString(),
@@ -164,22 +167,26 @@
 				/>
 			</div>
 			<div
-				class="h-full flex items-center justify-center {odd
+				class="h-full flex items-center justify-end {odd
 					? ''
 					: 'bg-slate-50'} schedule-row-{schedule.id}"
 			>
 				{#if firstAction}
 					<button
 						type="button"
-						class="variant-filled-primary py-1 px-2 rounded-l-md border-r"
+						class="variant-filled-primary py-1 px-2 rounded-l-md border-r text-sm font-semibold"
 						on:click={() => dispatch(firstAction.event, schedule)}>{firstAction.shortLabel}</button
 					>
+				{:else}
+					<button type="button" class="variant-filled-surface py-1 px-4 rounded-l-md border-r text-sm">
+						<i class="fa-solid fa-ban"></i>
+					</button>
 				{/if}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger
-						class="variant-filled-primary py-1 pr-2 group {firstAction
-							? 'rounded-r-md pl-2'
-							: 'rounded-md pl-10'}"
+						class="{firstAction
+							? 'variant-filled-primary'
+							: 'variant-filled-surface'} py-1 px-2 rounded-r-md group mr-1.5 text-sm"
 					>
 						<i class="fa-solid fa-chevron-down group-data-[state=open]:rotate-180 transition-all"
 						></i>
