@@ -100,7 +100,7 @@
 		<form use:enhance method="post" class="flex flex-col">
 			<fieldset disabled={requesting} class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
 				<div class="font-medium text-surface-500">Bệnh nhân:</div>
-				<div class="text-end font-semibold">{schedule.patient.name}</div>
+				<div class="text-end font-semibold">{schedule.patient.name ?? ''}</div>
 				<div class="font-medium text-surface-500">Bác sĩ:</div>
 				<div class="text-end {doctor?.name ? 'font-semibold' : 'font-normal text-warning-500'}">
 					{doctor?.name ?? '(Chưa chọn)'}
@@ -135,7 +135,7 @@
 						</div>
 					</Control>
 				</Field>
-				<div class="font-medium text-surface-500">Tạo lịch cho bệnh nhân khác:</div>
+				<div class="font-medium text-surface-500">Tạo lịch hộ bệnh nhân khác:</div>
 				<div class="flex justify-end">
 					<SlideToggle name="create-for-another" size="sm" bind:checked={createForAnother} />
 				</div>

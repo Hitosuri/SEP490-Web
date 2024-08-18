@@ -48,6 +48,9 @@
 	let currentError = errorTypes.find((x) => x.condition($page.status));
 </script>
 
+<svelte:head>
+	<title>{$page.error?.message ?? currentError?.description ?? 'Đã có lỗi xảy ra'}</title>
+</svelte:head>
 <div class="p-4 h-full flex items-center">
 	<div class="relative w-full">
 		{#if currentError}
@@ -64,7 +67,7 @@
 					{currentError.title ?? `Đã xảy ra lỗi ${$page.status}`}
 				</h2>
 				<p class="mt-4 text-sm md:text-base lg:text-lg text-surface-500">
-					{currentError.description ?? $page.error?.message}
+					{$page.error?.message ?? currentError.description}
 				</p>
 				<a href="/" class="btn btn-sm md:btn-base variant-filled-secondary font-medium mt-4">
 					<i class="fa-solid fa-arrow-left mr-4"></i>

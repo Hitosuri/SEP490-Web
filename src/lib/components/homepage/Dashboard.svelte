@@ -16,7 +16,7 @@
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
-	const stepInMiliseconds = 1000 * 60 * scheduleStepInMinute;
+	// const stepInMiliseconds = 1000 * 60 * scheduleStepInMinute;
 	let patientQueue: QueueItem[] | undefined = undefined;
 	let lastDataTime: Date = new Date();
 	const allFeature = Object.values(userFeatureDetails);
@@ -25,8 +25,8 @@
 		!patientQueue || patientQueue.length === 0
 			? undefined
 			: patientQueue[0].startAt.getTime() - new Date().getTime();
-	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > 0);
-	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= 0);
+	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > -500);
+	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= -500);
 
 	onMount(async () => {
 		if (browser && $userStore?.roles.includes(Role.Doctor)) {

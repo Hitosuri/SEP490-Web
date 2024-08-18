@@ -48,19 +48,27 @@ export async function handleFetch(
 			const bodyText = await response.text();
 			let message = '';
 
-			try {
-				const data = JSON.parse(bodyText);
-				if (typeof data?.error === 'string') {
-					message = data?.error;
-				} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-					message = (data?.error ?? data).join(', ');
+			if (response.status === 500) {
+				message = defaultErrorMessage[500] ?? '';
+			} else if (!bodyText?.trim()) {
+				message = defaultErrorMessage[response.status] ?? '';
+			}
+
+			if (!message) {
+				try {
+					const data = JSON.parse(bodyText);
+					if (typeof data?.error === 'string') {
+						message = data?.error;
+					} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+						message = (data?.error ?? data).join(', ');
+					}
+				} catch (error) {
+					message =
+						{
+							...defaultErrorMessage,
+							...messages
+						}[response.status] ?? bodyText;
 				}
-			} catch (error) {
-				message =
-					{
-						...defaultErrorMessage,
-						...messages
-					}[response.status] ?? bodyText;
 			}
 
 			error(response.status, { message });

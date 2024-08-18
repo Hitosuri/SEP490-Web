@@ -6,7 +6,7 @@
 	import { z } from 'zod';
 	import DropdownSelect from '../common/DropdownSelect.svelte';
 	import { createEventDispatcher } from 'svelte';
-	import { ScheduleStatus, scheduleStatusInfo } from '$lib/constants/schedule-constant';
+	import { scheduleStatusInfo } from '$lib/constants/schedule-constant';
 
 	export let form: SuperForm<z.infer<typeof scheduleFilterSchema>>;
 	export let isFiltering: boolean = false;

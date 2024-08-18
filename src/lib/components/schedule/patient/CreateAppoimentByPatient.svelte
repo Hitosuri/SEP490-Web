@@ -158,7 +158,7 @@
 				</Field>
 			</div>
 			<div class="flex gap-4 items-center col-span-2">
-				<span class="font-semibold text-surface-500 select-none">Tạo lịch cho bệnh nhân khác</span>
+				<span class="font-semibold text-surface-500 select-none">Tạo lịch hộ bệnh nhân khác</span>
 				<SlideToggle size="sm" name="create-for-another" bind:checked={createForAnother} />
 			</div>
 			{#if createForAnother}

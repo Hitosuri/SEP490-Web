@@ -54,8 +54,12 @@
 				>
 					{#if widthInPx > 80}
 						<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
-							<p class="font-medium overflow-hidden text-ellipsis whitespace-nowrap text-black">
-								{schedule.patient.name ?? ''}
+							<p
+								class="overflow-hidden text-ellipsis whitespace-nowrap {schedule.patient.name
+									? 'text-black font-medium'
+									: 'text-warning-500'}"
+							>
+								{schedule.patient.name ?? 'Chưa có tên'}
 							</p>
 							<p
 								class="text-xs font-semibold text-surface-400 whitespace-nowrap overflow-hidden text-ellipsis"
