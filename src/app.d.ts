@@ -444,3 +444,11 @@ interface ImportMaterial {
 	inputPrice: number;
 	importedBy: string;
 }
+
+interface ScheduleMenuItem {
+	label: string;
+	shortLabel: string;
+	icon: string;
+	availableWhen: (schedule: ScheduleFull, currentTime: Date) => boolean;
+	click: (schedule: ScheduleFull) => void;
+}

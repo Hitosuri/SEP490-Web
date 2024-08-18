@@ -78,7 +78,7 @@
 			(c, p) => {
 				c[p[0]] = Array.isArray(p[1])
 					? [...p[1]]
-					: [...(p[1].materialId ?? []), ...(p[1].quantity ?? []), ...(p[1].note ?? [])];
+					: [...(p[1]?.materialId ?? []), ...(p[1]?.quantity ?? []), ...(p[1]?.note ?? [])];
 				return c;
 			},
 			{} as Record<number | string, string[]>

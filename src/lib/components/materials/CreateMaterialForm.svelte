@@ -11,7 +11,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { type Writable } from 'svelte/store';
 	import { createMaterialSchema } from '$lib/form-schemas/create-material-schema';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import DropdownSelect from '../common/DropdownSelect.svelte';
 	import SearchCombobox from '../common/SearchCombobox.svelte';
 	import { SlideToggle } from '@skeletonlabs/skeleton';
@@ -62,40 +62,19 @@
 			});
 
 			toast.promise(
-				async (): Promise<string> => {
-					const response = await fetch(endpoints.materials.create, {
+				handleToastFetch(
+					fetch(endpoints.materials.create, {
 						method: 'POST',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: JSON.stringify(rielForm)
-					});
-					const data = await response.json();
-
-					if (!response.ok) {
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object' || typeof data === 'object') {
-							const errorsDict = data.errors ?? data;
-							Object.keys(errorsDict).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
-									setError(form, fieldName, value);
-								}
-							});
-							return Promise.reject(Object.values(errorsDict).join(', '));
-						}
-
-						return Promise.reject();
-					}
-					dispatch('finish');
-					return 'Tạo vật tư thành công';
-				},
+					}),
+					{ success: 'Tạo vật tư thành công' },
+					() => dispatch('finish'),
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Tạo vật tư thành công',

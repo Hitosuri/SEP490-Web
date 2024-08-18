@@ -252,7 +252,7 @@
 						{/each}
 						<td class="rounded-tr-lg rounded-br-lg !py-0">
 							<slot name="action-cell" item={extendedItem.item}>
-								{#if showDetail || detailEmitEvent || showEdit || showDelete || actionMenu.length > 0}
+								{#if showDetail || detailEmitEvent || showEdit || showDelete || actionMenu.filter( (x) => (!x.showWhen ? true : x.showWhen(extendedItem.item)) ).length > 0}
 									<DropdownMenu.Root preventScroll={false}>
 										<DropdownMenu.Trigger
 											class="btn text-xl p-0 size-9 text-surface-400 hover:variant-soft-primary transition-all"

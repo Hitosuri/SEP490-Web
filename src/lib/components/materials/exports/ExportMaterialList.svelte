@@ -17,6 +17,7 @@
 	import { toast } from 'svelte-sonner';
 	import CustomPagination from '$lib/components/common/CustomPagination.svelte';
 	import AssignExportMaterialForm from './AssignExportMaterialForm.svelte';
+	import { Role } from '$lib/helpers/authorization';
 
 	export function onTabActive() {
 		if (exportGroupsPromise) {
@@ -292,14 +293,16 @@
 	>
 		<i class="fa-solid fa-rotate-left"></i>
 	</button>
-	<button
-		type="button"
-		class="btn variant-filled-primary rounded-md font-medium ml-auto"
-		on:click={showCreateForm}
-	>
-		<i class="fa-solid fa-plus"></i>
-		<span class="pl-1">Thêm</span>
-	</button>
+	{#if $userStore?.roles.includes(Role.Accountant)}
+		<button
+			type="button"
+			class="btn variant-filled-primary rounded-md font-medium ml-auto"
+			on:click={showCreateForm}
+		>
+			<i class="fa-solid fa-plus"></i>
+			<span class="pl-1">Thêm</span>
+		</button>
+	{/if}
 </div>
 {#if exportGroupsPromise}
 	{#await exportGroupsPromise}
@@ -320,16 +323,17 @@
 								Tạo bởi:
 								<span class="font-semibold">{exportGroup.createBy}</span>
 							</span>
-							{#if exportGroup.exportMaterials.every((x) => x.quantity === x.avaliableMaterials.length)}
+							{#if $userStore?.roles.includes(Role.Accountant) && exportGroup.exportMaterials.every((x) => x.quantity === x.avaliableMaterials.length)}
 								<button
 									on:click|stopPropagation={() => showEditForm(exportGroup)}
 									type="button"
 									class="btn btn-sm rounded-md variant-filled-tertiary h-8"
 								>
 									<i class="fa-regular fa-pen-to-square"></i>
+									<span class="ml-1 font-medium">Sửa</span>
 								</button>
 							{/if}
-							{#if exportGroup.exportMaterials.some((x) => x.quantity !== x.avaliableMaterials.length)}
+							{#if $userStore?.roles.includes(Role.Accountant) && exportGroup.exportMaterials.some((x) => x.quantity !== x.avaliableMaterials.length)}
 								<button
 									on:click|stopPropagation={() => showAssignForm(exportGroup)}
 									type="button"

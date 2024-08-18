@@ -42,7 +42,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		lottieAnim: '/images/animations/material.lottie',
 		class: 'from-yellow-400 to-orange-400',
 		routes: ['/(app)/materials'],
-		roles: [Role.Accountant]
+		roles: [Role.Accountant, Role.Doctor, Role.Nurse]
 	},
 	[UserFeature.PATIENTS_MANAGEMENT]: {
 		id: UserFeature.PATIENTS_MANAGEMENT,
@@ -86,6 +86,6 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		lottieAnim: '/images/animations/statistic.lottie',
 		class: 'from-yellow-400 to-lime-400',
 		routes: ['/(app)/statistic'],
-		roles: [Role.Admin]
+		roles: [Role.Admin, Role.Accountant]
 	}
 };

@@ -72,11 +72,14 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 			x.endAt = x.endAt ? new Date(x.endAt) : undefined;
 		});
 
-		const pendingSchedules = scheduleOfPatient.data.filter((x) => x.status === 1).map((x) => x.id);
-		allSchedule.data = allSchedule.data.filter((x) => !pendingSchedules.includes(x.id));
 		allSchedule.data.forEach((x) => {
 			x.startAt = new Date(x.startAt);
-			x.endAt = new Date(x.endAt);
+			if (x.endAt) {
+				x.endAt = new Date(x.endAt);
+			} else {
+				x.endAt = new Date(x.startAt);
+				x.endAt.setMinutes(x.endAt.getMinutes() + 15);
+			}
 		});
 
 		return {

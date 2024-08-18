@@ -15,11 +15,6 @@
 	export let placeholder = false;
 	export let stepWidth = 32;
 
-	const dispatch = createEventDispatcher<{
-		hoverStart: number;
-		hoverEnd: number;
-	}>();
-
 	$: leftOffset =
 		schedule.startAt.getHours() / scheduleStepInHour +
 		schedule.startAt.getMinutes() / scheduleStepInMinute;
@@ -39,30 +34,29 @@
 	class="h-full py-0.5 absolute top-0 overflow-hidden group z-[2]"
 	style="left: {leftOffset * stepWidth}px; width: {widthInPx}px"
 	id="schedule-{schedule.id}"
-	on:mouseenter={() => dispatch('hoverStart', schedule.id)}
-	on:mouseleave={() => dispatch('hoverEnd', schedule.id)}
 >
 	{#if !placeholder}
 		<Tooltip.Root openDelay={500}>
-			<Tooltip.Trigger asChild let:builder>
+			<Tooltip.Trigger asChild let:builder={triggerBuilder}>
 				<div
-					{...builder}
-					use:builder.action
+					{...triggerBuilder}
+					use:triggerBuilder.action
 					class="border rounded-md h-full flex overflow-hidden relative {widthInPx >= 4
 						? 'border-l-4'
 						: ''} {(scheduleStatusInfo[schedule.status]?.styleClasses ?? []).join(' ')}"
 				>
-					{#if widthInPx > 80}
+					{#if widthInPx > 64}
 						<div class="flex-1 flex flex-col justify-center px-3 select-text w-full gap-1">
 							<p
-								class="overflow-hidden text-ellipsis whitespace-nowrap {schedule.patient.name
+								class="overflow-hidden tracking-tighter text-ellipsis whitespace-nowrap {schedule
+									.patient.name
 									? 'text-black font-medium'
 									: 'text-warning-500'}"
 							>
 								{schedule.patient.name ?? 'Chưa có tên'}
 							</p>
 							<p
-								class="text-xs font-semibold text-surface-400 whitespace-nowrap overflow-hidden text-ellipsis"
+								class="text-xs font-semibold tracking-tighter text-surface-400 whitespace-nowrap overflow-hidden text-ellipsis"
 							>
 								{formatHourMinute(schedule.startAt)}
 								-

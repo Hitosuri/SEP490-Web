@@ -18,7 +18,11 @@
 	import EditAppoimentByPatient from './EditAppoimentByPatient.svelte';
 	import Container from '$lib/components/common/Container.svelte';
 	import { MinuteTick } from '$lib/helpers/minute-tick';
-	import { scheduleStepInHour, scheduleStepInMinute } from '$lib/constants/schedule-constant';
+	import {
+		ScheduleStatus,
+		scheduleStepInHour,
+		scheduleStepInMinute
+	} from '$lib/constants/schedule-constant';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
@@ -54,8 +58,10 @@
 	$: lowerLimit = calculateLowerLimit(selectedDate);
 	$: blockPastWidth = lowerLimit * stepWidth;
 	$: selectedDateSchedules = allSchedule.filter((x) => x.startAt.getDate() === selectedDate.day);
-	$: waitConfirmSchedules = patientSchedules.filter((x) => x.status === 1);
+	$: waitConfirmSchedules = patientSchedules.filter((x) => x.status === ScheduleStatus.PENDING);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
+	$: console.log(scheduleByDoctors);
+
 	$: blockRangeByDoctors = scheduleByDoctors.map((x) =>
 		x[1].map(
 			(y) =>
@@ -283,7 +289,7 @@
 					x.endAt = x.endAt ? new Date(x.endAt) : undefined;
 				});
 				pendingSchedules = scheduleOfPatientData.data
-					.filter((x) => x.status === 1)
+					.filter((x) => x.status === ScheduleStatus.PENDING)
 					.map((x) => x.id);
 
 				patientSchedules = scheduleOfPatientData.data;
@@ -405,6 +411,17 @@
 	function cancelCreateSchedule() {
 		selectionInDoctor = undefined;
 	}
+
+	function scrollToSchedule(schedule: ScheduleFull) {
+		const el = document.getElementById(`schedule-${schedule.id}`);
+		if (el) {
+			el.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center',
+				inline: 'center'
+			});
+		}
+	}
 </script>
 
 <svelte:head>
@@ -422,8 +439,15 @@
 			<div class="flex flex-wrap gap-4">
 				{#each waitConfirmSchedules as schedule (schedule.id)}
 					<div
-						class="bg-white border pl-3 sm:pl-5 pr-1 sm:pr-3 py-2 sm:py-3 shadow-md rounded-md flex items-center gap-4 bg-"
+						class="bg-white border pr-1 sm:pr-3 py-2 sm:py-3 shadow-md rounded-md flex items-center gap-4 bg-"
 					>
+						<button
+							type="button"
+							class="font-bold text-success-800 rounded-r pr-2 pl-4 py-1 bg-slate-200 text-sm"
+							on:click={() => scrollToSchedule(schedule)}
+						>
+							{schedule.order + 1}
+						</button>
 						<div>
 							<p class="text-xs sm:text-sm font-bold text-surface-400">
 								{formatCompactDateTime(schedule.startAt)}
@@ -454,7 +478,7 @@
 										<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
-										disabled={schedule.startAt.getTime() - currentMinute.getTime() < 1000 * 60 * 60}
+										disabled={schedule.startAt.getTime() < currentMinute.getTime()}
 										on:click={() => deleteSchedule(schedule)}
 										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 									>
@@ -479,7 +503,7 @@
 		<div>
 			<Calendar.Root
 				locale="vi"
-				class="rounded-container-token sm:p-4 w-full"
+				class="rounded-container-token sm:p-3 w-full"
 				let:months
 				let:weekdays
 				preventDeselect={true}
@@ -524,7 +548,7 @@
 										{#each weekDates as date}
 											<Calendar.Cell
 												{date}
-												class="relative flex-1 h-8 max-w-10 sm:max-w-full sm:h-10 !p-0 text-center my-1"
+												class="relative flex-1 h-8 max-w-10 sm:max-w-full sm:h-10 !p-0 text-center my-0.5"
 											>
 												<Calendar.Day
 													{date}
@@ -671,7 +695,7 @@
 							></div>
 						</div>
 						<div
-							class="h-16 absolute z-10 top-0 {(scheduleHovering && canCreateSchedule) ||
+							class="h-16 absolute z-10 {(scheduleHovering && canCreateSchedule) ||
 							scheduleMenuOpened
 								? 'opacity-100'
 								: 'opacity-0 pointer-events-none'}"
@@ -748,7 +772,7 @@
 												style="left: {leftOffset}px; width: {width}px"
 												id="schedule-{schedule.id}"
 											></div>
-										{:else if ownSchedule.status !== 1}
+										{:else}
 											<TimelineItem schedule={ownSchedule} {stepWidth} />
 										{/if}
 									{/each}

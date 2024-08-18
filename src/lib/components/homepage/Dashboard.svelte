@@ -13,6 +13,7 @@
 	import { userFeatureDetails } from '$lib/constants/user-feature-constant';
 	import { browser } from '$app/environment';
 	import { intersection } from 'lodash-es';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
@@ -25,8 +26,8 @@
 		!patientQueue || patientQueue.length === 0
 			? undefined
 			: patientQueue[0].startAt.getTime() - new Date().getTime();
-	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > -500);
-	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= -500);
+	$: canPullSchedule = Boolean(timeToNextPatient && timeToNextPatient > 500);
+	$: firstPatientReady = Boolean(timeToNextPatient && timeToNextPatient <= 500);
 
 	onMount(async () => {
 		if (browser && $userStore?.roles.includes(Role.Doctor)) {
@@ -85,29 +86,17 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.pullSchedule($userStore.id), {
+					handleToastFetch(
+						fetch(endpoints.schedule.pullSchedule($userStore.id), {
 							method: 'PUT',
 							headers: {
 								'content-type': 'application/json',
 								Authorization: `Bearer ${$userStore.token}`
 							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						getPatientQueue();
-						return 'Cập nhật lịch hẹn thành công';
-					},
+						}),
+						{ success: 'Cập nhật lịch hẹn thành công' },
+						getPatientQueue
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? 'Cập nhật lịch hẹn thành công',
