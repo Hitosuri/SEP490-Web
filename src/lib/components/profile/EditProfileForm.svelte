@@ -30,7 +30,10 @@
 
 			toast.promise(
 				async (): Promise<string> => {
-					const response = await fetch(endpoints.profile.edit, {
+					const url = $userStore.isPatient
+						? endpoints.profile.editByPatient
+						: endpoints.profile.edit;
+					const response = await fetch(url, {
 						method: 'PUT',
 						headers: {
 							'content-type': 'application/json',
