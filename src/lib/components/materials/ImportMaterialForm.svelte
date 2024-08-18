@@ -7,7 +7,7 @@
 	import endpoints from '$lib/endpoints';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { type Writable } from 'svelte/store';
-	import { downloadFile, pascalToCamelcase } from '$lib/helpers/utils';
+	import { downloadFile, handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { FileDropzone, getModalStore, SlideToggle } from '@skeletonlabs/skeleton';
 	import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
 	import DatePicker from '../common/DatePicker.svelte';
@@ -55,39 +55,18 @@
 			});
 
 			toast.promise(
-				async (): Promise<string> => {
-					const response = await fetch(endpoints.materials.import.create, {
+				handleToastFetch(
+					fetch(endpoints.materials.import.create, {
 						method: 'POST',
 						headers: {
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: formData
-					});
-					const data = await response.json();
-
-					if (!response.ok) {
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object' || typeof data === 'object') {
-							const errorsDict = data.errors ?? data;
-							Object.keys(errorsDict).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
-									setError(form, fieldName, value);
-								}
-							});
-							return Promise.reject(Object.values(errorsDict).join(', '));
-						}
-
-						return Promise.reject();
-					}
-					closeModal(true);
-					return 'Nhập vật tư thành công';
-				},
+					}),
+					{ success: 'Nhập vật tư thành công' },
+					() => closeModal(true),
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Nhập vật tư thành công',
@@ -137,31 +116,20 @@
 			downloadFile(templateBlob, 'template.csv');
 		} else {
 			toast.promise(
-				async (): Promise<string> => {
-					const response = await fetch(endpoints.materials.template, {
+				handleToastFetch(
+					fetch(endpoints.materials.template, {
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						}
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						}
-
-						return Promise.reject();
+					}),
+					{ success: 'Tải file mẫu nhập thành công' },
+					async (response) => {
+						const blob = await response.blob();
+						templateBlob = blob;
+						downloadFile(blob, 'template.csv');
 					}
-
-					const blob = await response.blob();
-					templateBlob = blob;
-					downloadFile(blob, 'template.csv');
-					return 'Tải file mẫu nhập thành công';
-				},
+				),
 				{
 					loading: 'Đang tải...',
 					success: (msg) => msg ?? 'Tải file mẫu nhập thành công',

@@ -15,7 +15,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
 	import { toast } from 'svelte-sonner';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 
 	export let materialTypeCreateForm: SuperValidated<z.infer<typeof materialTypeCreateSchema>>;
 	export function onTabActive() {
@@ -38,47 +38,28 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const url = selectedMaterialType
-						? endpoints.materialTypes.edit(selectedMaterialType.id)
-						: endpoints.materialTypes.create;
-					const response = await fetch(url, {
-						method: selectedMaterialType ? 'PUT' : 'POST',
-						headers: {
-							'content-type': 'application/json',
-							Authorization: `Bearer ${$userStore.token}`
-						},
-						body: JSON.stringify(form.data)
-					});
-					const data = await response.json();
-
-					if (!response.ok) {
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object' || typeof data === 'object') {
-							const errorsDict = data.errors ?? data;
-							Object.keys(errorsDict).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
-									setError(form, fieldName, value);
-								}
-							});
-							return Promise.reject(Object.values(errorsDict).join(', '));
-						}
-
-						return Promise.reject();
-					}
-
-					filtering(nameValue, codeValue, currentPage, pageSize, true, true);
-
-					return selectedMaterialType
-						? 'Cập nhật loại vật tư thành công'
-						: 'Tạo loại vật tư thành công';
-				},
+				handleToastFetch(
+					() => {
+						const url = selectedMaterialType
+							? endpoints.materialTypes.edit(selectedMaterialType.id)
+							: endpoints.materialTypes.create;
+						return fetch(url, {
+							method: selectedMaterialType ? 'PUT' : 'POST',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							},
+							body: JSON.stringify(form.data)
+						});
+					},
+					{
+						success: selectedMaterialType
+							? 'Cập nhật loại vật tư thành công'
+							: 'Tạo loại vật tư thành công'
+					},
+					() => filtering(nameValue, codeValue, currentPage, pageSize, true, true),
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) =>

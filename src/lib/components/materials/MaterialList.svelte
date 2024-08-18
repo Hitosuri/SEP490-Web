@@ -26,6 +26,7 @@
 	import ImportMaterialForm from './ImportMaterialForm.svelte';
 	import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
 	import EditMaterialForm from './EditMaterialForm.svelte';
+	import { Role } from '$lib/helpers/authorization';
 
 	export let materialFilterForm: SuperValidated<z.infer<typeof materialFilterSchema>>;
 	export let createMaterialForm: SuperValidated<z.infer<typeof createMaterialSchema>>;
@@ -567,54 +568,60 @@
 		<i class="fa-regular fa-sliders"></i>
 		<span class="pl-2">Tìm kiếm kết hợp</span>
 	</button>
-	<Dialog.Root>
-		<Dialog.Trigger class="btn variant-filled-primary rounded-md font-medium">
-			<i class="fa-solid fa-plus"></i>
-			<span class="pl-1">Thêm</span>
-		</Dialog.Trigger>
-		<Dialog.Portal>
-			<Dialog.Overlay
-				transition={fade}
-				transitionConfig={{
-					duration: 200,
-					easing: cubicOut
-				}}
-				class="fixed inset-0 z-50 bg-black/80"
-			/>
-			<Dialog.Content
-				transition={fly}
-				transitionConfig={{
-					duration: 200,
-					y: 100,
-					easing: cubicOut
-				}}
-				class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full sm:w-5/6 md:w-3/4 lg:w-3/5 xl:w-1/2 2xl:w-[720px] p-4"
-			>
-				{#if materialTypes}
-					<CreateMaterialForm {createMaterialForm} {materialTypes} on:finish={createMaterialFinish}>
-						<svelte:fragment slot="closeBtn">
-							<Dialog.Close asChild let:builder>
-								<button
-									use:builder.action
-									{...builder}
-									bind:this={createMatereialFormCloseBtn}
-									class="btn-icon text-2xl !outline-none text-black/60 hover:text-black transition-colors"
-								>
-									<i class="fa-solid fa-xmark"></i>
-								</button>
-							</Dialog.Close>
-						</svelte:fragment>
-						<svelte:fragment slot="cancelBtn">
-							<Dialog.Close class="variant-soft-surface">
-								<i class="fa-solid fa-delete-left"></i>
-								<span class="pl-1">Huỷ</span>
-							</Dialog.Close>
-						</svelte:fragment>
-					</CreateMaterialForm>
-				{/if}
-			</Dialog.Content>
-		</Dialog.Portal>
-	</Dialog.Root>
+	{#if $userStore?.roles.includes(Role.Accountant)}
+		<Dialog.Root>
+			<Dialog.Trigger class="btn variant-filled-primary rounded-md font-medium">
+				<i class="fa-solid fa-plus"></i>
+				<span class="pl-1">Thêm</span>
+			</Dialog.Trigger>
+			<Dialog.Portal>
+				<Dialog.Overlay
+					transition={fade}
+					transitionConfig={{
+						duration: 200,
+						easing: cubicOut
+					}}
+					class="fixed inset-0 z-50 bg-black/80"
+				/>
+				<Dialog.Content
+					transition={fly}
+					transitionConfig={{
+						duration: 200,
+						y: 100,
+						easing: cubicOut
+					}}
+					class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full sm:w-5/6 md:w-3/4 lg:w-3/5 xl:w-1/2 2xl:w-[720px] p-4"
+				>
+					{#if materialTypes}
+						<CreateMaterialForm
+							{createMaterialForm}
+							{materialTypes}
+							on:finish={createMaterialFinish}
+						>
+							<svelte:fragment slot="closeBtn">
+								<Dialog.Close asChild let:builder>
+									<button
+										use:builder.action
+										{...builder}
+										bind:this={createMatereialFormCloseBtn}
+										class="btn-icon text-2xl !outline-none text-black/60 hover:text-black transition-colors"
+									>
+										<i class="fa-solid fa-xmark"></i>
+									</button>
+								</Dialog.Close>
+							</svelte:fragment>
+							<svelte:fragment slot="cancelBtn">
+								<Dialog.Close class="variant-soft-surface">
+									<i class="fa-solid fa-delete-left"></i>
+									<span class="pl-1">Huỷ</span>
+								</Dialog.Close>
+							</svelte:fragment>
+						</CreateMaterialForm>
+					{/if}
+				</Dialog.Content>
+			</Dialog.Portal>
+		</Dialog.Root>
+	{/if}
 </div>
 <div
 	class="grid transition-all duration-200 ease-out {advancedFilterOpen
@@ -814,9 +821,13 @@
 		{
 			icon: 'fa-regular fa-file-import',
 			label: 'Nhập vật tư',
-			click: importMaterial
+			click: importMaterial,
+			showWhen: () => !!$userStore?.roles.includes(Role.Accountant)
 		}
 	]}
+	showEdit={!!(
+		$userStore?.roles.includes(Role.Accountant) || $userStore?.roles.includes(Role.Doctor)
+	)}
 	on:pageChange={(e) => {
 		currentPage = e.detail;
 		filtering(lastestFilterOption, e.detail, pageSize, true);

@@ -9,7 +9,7 @@
 	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 
 	type Assignment = z.infer<
 		typeof editExportMaterialSchema
@@ -32,41 +32,22 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const response = await fetch(endpoints.materials.export.assign, {
+				handleToastFetch(
+					fetch(endpoints.materials.export.assign, {
 						method: 'POST',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: JSON.stringify(form.data)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object' || typeof data === 'object') {
-							const errorsDict = data.errors ?? data;
-							Object.keys(errorsDict).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
-									setError(form, fieldName, value);
-								}
-							});
-							return Promise.reject(Object.values(errorsDict).join(', '));
-						}
-
-						return Promise.reject();
-					}
-					$modalStore[0].response?.(true);
-					closeModal();
-					return 'Cập nhật phiếu xuất vật tư thành công';
-				},
+					}),
+					{ success: 'Cập nhật phiếu xuất vật tư thành công' },
+					() => {
+						$modalStore[0].response?.(true);
+						closeModal();
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Cập nhật phiếu xuất vật tư thành công',

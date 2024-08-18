@@ -13,7 +13,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
 	import { toast } from 'svelte-sonner';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { createSupplierSchema } from '$lib/form-schemas/create-supplier-schema';
 
 	export let createSupplierForm: SuperValidated<z.infer<typeof createSupplierSchema>>;
@@ -36,47 +36,28 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const url = selectedSupplier
-						? endpoints.suppliers.edit(selectedSupplier.id)
-						: endpoints.suppliers.create;
-					const response = await fetch(url, {
-						method: selectedSupplier ? 'PUT' : 'POST',
-						headers: {
-							'content-type': 'application/json',
-							Authorization: `Bearer ${$userStore.token}`
-						},
-						body: JSON.stringify(form.data)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object' || typeof data === 'object') {
-							const errorsDict = data.errors ?? data;
-							Object.keys(errorsDict).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
-									setError(form, fieldName, value);
-								}
-							});
-							return Promise.reject(Object.values(errorsDict).join(', '));
-						}
-
-						return Promise.reject();
-					}
-
-					filtering(nameValue, phoneValue, currentPage, pageSize, true, true);
-
-					return selectedSupplier
-						? 'Cập nhật loại nhà cung cấp thành công'
-						: 'Tạo loại nhà cung cấp thành công';
-				},
+				handleToastFetch(
+					() => {
+						const url = selectedSupplier
+							? endpoints.suppliers.edit(selectedSupplier.id)
+							: endpoints.suppliers.create;
+						return fetch(url, {
+							method: selectedSupplier ? 'PUT' : 'POST',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							},
+							body: JSON.stringify(form.data)
+						});
+					},
+					{
+						success: selectedSupplier
+							? 'Cập nhật loại nhà cung cấp thành công'
+							: 'Tạo loại nhà cung cấp thành công'
+					},
+					() => filtering(nameValue, phoneValue, currentPage, pageSize, true, true),
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) =>

@@ -9,9 +9,13 @@
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
 	import ExportMaterialList from '$lib/components/materials/exports/ExportMaterialList.svelte';
 	import ImportMaterialList from '$lib/components/materials/ImportMaterialList.svelte';
+	import { getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import { Role } from '$lib/helpers/authorization';
 
 	export let data: PageData;
 
+	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	let tabValue = 'material';
 	let onMaterialTypeTabActive: () => void;
 	let onSupplierTabActive: () => void;
@@ -86,12 +90,14 @@
 			>
 				Vật tư
 			</Tabs.Trigger>
-			<Tabs.Trigger
-				value="import"
-				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
-			>
-				Lịch sử nhập
-			</Tabs.Trigger>
+			{#if $userStore?.roles.includes(Role.Accountant)}
+				<Tabs.Trigger
+					value="import"
+					class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
+				>
+					Lịch sử nhập
+				</Tabs.Trigger>
+			{/if}
 			<Tabs.Trigger
 				value="export"
 				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
@@ -104,12 +110,14 @@
 			>
 				Loại vật tư
 			</Tabs.Trigger>
-			<Tabs.Trigger
-				value="supplier"
-				class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
-			>
-				Nhà cung cấp
-			</Tabs.Trigger>
+			{#if $userStore?.roles.includes(Role.Accountant)}
+				<Tabs.Trigger
+					value="supplier"
+					class="rounded-md h-10 flex-1 flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow data-[state=inactive]:text-black/70 font-semibold"
+				>
+					Nhà cung cấp
+				</Tabs.Trigger>
+			{/if}
 		</Tabs.List>
 		<Tabs.Content value="material">
 			<MaterialList
@@ -119,12 +127,14 @@
 				importMaterialForm={data.importMaterialForm}
 			/>
 		</Tabs.Content>
-		<Tabs.Content value="import">
-			<ImportMaterialList
-				bind:onTabActive={onImportTabActive}
-				importMaterialFilterForm={data.importMaterialFilterForm}
-			/>
-		</Tabs.Content>
+		{#if $userStore?.roles.includes(Role.Accountant)}
+			<Tabs.Content value="import">
+				<ImportMaterialList
+					bind:onTabActive={onImportTabActive}
+					importMaterialFilterForm={data.importMaterialFilterForm}
+				/>
+			</Tabs.Content>
+		{/if}
 		<Tabs.Content value="export">
 			<ExportMaterialList
 				bind:onTabActive={onExportTabActive}
@@ -138,11 +148,13 @@
 				bind:onTabActive={onMaterialTypeTabActive}
 			/>
 		</Tabs.Content>
-		<Tabs.Content value="supplier">
-			<SupplierList
-				createSupplierForm={data.createSupplierForm}
-				bind:onTabActive={onSupplierTabActive}
-			/>
-		</Tabs.Content>
+		{#if $userStore?.roles.includes(Role.Accountant)}
+			<Tabs.Content value="supplier">
+				<SupplierList
+					createSupplierForm={data.createSupplierForm}
+					bind:onTabActive={onSupplierTabActive}
+				/>
+			</Tabs.Content>
+		{/if}
 	</Tabs.Root>
 </Container>

@@ -51,6 +51,56 @@
 	const upperLimit = 23 / scheduleStepInHour;
 	const baseStepWidth = 32;
 	const doctorColumnWidth = 160;
+	const scheduleActions: ScheduleMenuItem[] = [
+		{
+			label: 'Xác nhận lịch tạo bởi bệnh nhân',
+			shortLabel: 'Xác nhận',
+			icon: 'fa-regular fa-handshake',
+			availableWhen: (schedule) => schedule.status === ScheduleStatus.PENDING,
+			click: (schedule) => openScheduleConfirmModal(schedule)
+		},
+		{
+			label: 'Bệnh nhân đã tới phòng khám',
+			shortLabel: 'Check-in',
+			icon: 'fa-solid fa-check-to-slot',
+			availableWhen: (schedule, time) =>
+				schedule.status === ScheduleStatus.CONFIRMED &&
+				time.getTime() <=
+					schedule.startAt.getTime() +
+						((schedule.endAt ?? schedule.startAt).getTime() - schedule.startAt.getTime()) / 3 &&
+				time.getHours() >= 7 &&
+				time.getHours() < 23 &&
+				schedule.startAt.toLocaleDateString() === time.toLocaleDateString(),
+			click: (schedule) => patientCheckin(schedule)
+		},
+		{
+			label: 'Huỷ lịch do bệnh nhân không tới',
+			shortLabel: 'Huỷ',
+			icon: 'fa-regular fa-calendar-circle-minus',
+			availableWhen: (schedule, time) =>
+				schedule.status === ScheduleStatus.PENDING ||
+				(schedule.status == ScheduleStatus.CONFIRMED && time > schedule.startAt),
+			click: (schedule) => cancelSchedule(schedule)
+		},
+		{
+			label: 'Sửa lịch hẹn',
+			shortLabel: 'Sửa',
+			icon: 'fa-regular fa-calendar-lines-pen',
+			availableWhen: (schedule, time) =>
+				schedule.status !== ScheduleStatus.CANCEL && !!schedule.endAt && schedule.endAt > time,
+			click: (schedule) => editSchedule(schedule)
+		},
+		{
+			label: 'Xoá lịch hẹn',
+			shortLabel: 'Xoá',
+			icon: 'fa-regular fa-trash-can',
+			availableWhen: (schedule, time) =>
+				(schedule.status === ScheduleStatus.PENDING ||
+					schedule.status == ScheduleStatus.CONFIRMED) &&
+				(!schedule.endAt || time < schedule.endAt),
+			click: (schedule) => deleteSchedule(schedule)
+		}
+	];
 	let scheduleGrabing = false;
 	let mouseAnchor: { x: number; y: number };
 	let scheduleScroll: { x: number; y: number };
@@ -81,7 +131,6 @@
 	let stepWidth = baseStepWidth;
 	let endSliderValue = 0;
 	let endHovering = false;
-	$: console.log(endSliderValue);
 
 	$: onEndSliderValueChanged(endSliderValue);
 	$: hourWidth = stepWidth * 4;
@@ -675,15 +724,7 @@
 			}}
 		/>
 		<div class="flex gap-4">
-			<ScheduleListInDay
-				{scrollToSchedule}
-				{selectedDateSchedules}
-				on:checkin={(e) => patientCheckin(e.detail)}
-				on:confirm={(e) => openScheduleConfirmModal(e.detail)}
-				on:cancel={(e) => cancelSchedule(e.detail)}
-				on:edit={(e) => editSchedule(e.detail)}
-				on:delete={(e) => deleteSchedule(e.detail)}
-			>
+			<ScheduleListInDay {scrollToSchedule} {selectedDateSchedules} actions={scheduleActions}>
 				{#if editingSchedule}
 					{@const startAt = new Date(
 						selectedDate.year,

@@ -31,12 +31,13 @@
 		},
 		onResult: (e) => {
 			requesting = false;
-			if (e.result.type === 'failure') {
-				const msg = e.result?.data?.form?.message ?? 'Xảy ra lỗi khi đăng nhập';
-				submitingReject?.(msg);
-			}
 			if (e.result.type === 'redirect') {
 				submitingResolve?.('Đăng nhập thành công');
+			} else if (e.result.type === 'failure') {
+				const msg = e.result?.data?.form?.message ?? 'Xảy ra lỗi khi đăng nhập';
+				submitingReject?.(msg);
+			} else {
+				submitingReject?.('Xảy ra lỗi khi đăng nhập');
 			}
 			submitingResolve = undefined;
 			submitingReject = undefined;

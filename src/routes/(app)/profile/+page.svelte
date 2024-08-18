@@ -141,12 +141,12 @@
 					<thead>
 						<tr>
 							<th class="h-10 table-cell-fit px-4"></th>
-							<th class="text-start px-4">Bác sĩ</th>
-							<th class="text-end px-4">Số điện thoại</th>
-							<th class="text-start px-4">Lý do</th>
-							<th class="px-4">Thời gian khám</th>
-							<th class="px-4">Trạng thái</th>
-							<th class="px-4">Tái khám</th>
+							<th class="text-start px-4 whitespace-nowrap">Bác sĩ</th>
+							<th class="text-center px-4 whitespace-nowrap">Số điện thoại</th>
+							<th class="text-start px-4 whitespace-nowrap">Lý do</th>
+							<th class="px-4 whitespace-nowrap">Thời gian khám</th>
+							<th class="px-4 whitespace-nowrap">Trạng thái</th>
+							<th class="px-4 whitespace-nowrap">Tái khám</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -180,7 +180,7 @@
 									</Tooltip.Root>
 								</td>
 								<td class="text-start px-4">{record.doctorName}</td>
-								<td class="text-end px-4">{record.doctorPhone}</td>
+								<td class="text-center px-4">{record.doctorPhone}</td>
 								<td class="text-start px-4">{record.reason}</td>
 								<td class="text-center px-4">{formatCompactDateTime(record.visitDate)}</td>
 								<td class="text-center px-4">{recordStatusInfo[record.status]?.label}</td>

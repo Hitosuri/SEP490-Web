@@ -9,70 +9,8 @@
 
 	export let selectedDateSchedules: ScheduleFull[];
 	export let scrollToSchedule: ((schedule: ScheduleFull) => void) | undefined = undefined;
+	export let actions: ScheduleMenuItem[] = [];
 
-	const dispatch = createEventDispatcher<{
-		confirm: ScheduleFull;
-		checkin: ScheduleFull;
-		edit: ScheduleFull;
-		cancel: ScheduleFull;
-		delete: ScheduleFull;
-	}>();
-	const actions: {
-		label: string;
-		shortLabel: string;
-		icon: string;
-		availableWhen: (schedule: ScheduleFull, currentTime: Date) => boolean;
-		event: 'confirm' | 'checkin' | 'edit' | 'cancel' | 'delete';
-	}[] = [
-		{
-			label: 'Xác nhận lịch tạo bởi bệnh nhân',
-			shortLabel: 'Xác nhận',
-			icon: 'fa-regular fa-handshake',
-			availableWhen: (schedule) => schedule.status === ScheduleStatus.PENDING,
-			event: 'confirm'
-		},
-		{
-			label: 'Bệnh nhân đã tới phòng khám',
-			shortLabel: 'Check-in',
-			icon: 'fa-solid fa-check-to-slot',
-			availableWhen: (schedule, time) =>
-				schedule.status === ScheduleStatus.CONFIRMED &&
-				time.getTime() <=
-					schedule.startAt.getTime() +
-						((schedule.endAt ?? schedule.startAt).getTime() - schedule.startAt.getTime()) / 3 &&
-				time.getHours() >= 7 &&
-				time.getHours() < 23 &&
-				schedule.startAt.toLocaleDateString() === time.toLocaleDateString(),
-			event: 'checkin'
-		},
-		{
-			label: 'Huỷ lịch do bệnh nhân không tới',
-			shortLabel: 'Huỷ',
-			icon: 'fa-regular fa-calendar-circle-minus',
-			availableWhen: (schedule, time) =>
-				schedule.status === ScheduleStatus.PENDING ||
-				(schedule.status == ScheduleStatus.CONFIRMED && time > schedule.startAt),
-			event: 'cancel'
-		},
-		{
-			label: 'Sửa lịch hẹn',
-			shortLabel: 'Sửa',
-			icon: 'fa-regular fa-calendar-lines-pen',
-			availableWhen: (schedule, time) =>
-				schedule.status !== ScheduleStatus.CANCEL && !!schedule.endAt && schedule.endAt > time,
-			event: 'edit'
-		},
-		{
-			label: 'Xoá lịch hẹn',
-			shortLabel: 'Xoá',
-			icon: 'fa-regular fa-trash-can',
-			availableWhen: (schedule, time) =>
-				(schedule.status === ScheduleStatus.PENDING ||
-					schedule.status == ScheduleStatus.CONFIRMED) &&
-				(!schedule.endAt || time < schedule.endAt),
-			event: 'delete'
-		}
-	];
 	let currentMinute: Date = new Date();
 
 	onMount(() => {
@@ -175,7 +113,7 @@
 					<button
 						type="button"
 						class="variant-filled-primary py-1 px-2 rounded-l-md border-r text-sm font-medium"
-						on:click={() => dispatch(firstAction.event, schedule)}>{firstAction.shortLabel}</button
+						on:click={() => firstAction.click(schedule)}>{firstAction.shortLabel}</button
 					>
 				{:else}
 					<button
@@ -206,7 +144,7 @@
 						{#each actions as action}
 							<DropdownMenu.Item
 								disabled={!action.availableWhen(schedule, currentMinute)}
-								on:click={() => dispatch(action.event, schedule)}
+								on:click={() => action.click(schedule)}
 								class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
 							>
 								<div class="size-4 text-center *:block flex justify-center">
