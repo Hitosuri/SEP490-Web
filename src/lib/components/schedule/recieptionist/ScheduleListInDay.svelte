@@ -174,11 +174,14 @@
 				{#if firstAction}
 					<button
 						type="button"
-						class="variant-filled-primary py-1 px-2 rounded-l-md border-r text-sm font-semibold"
+						class="variant-filled-primary py-1 px-2 rounded-l-md border-r text-sm font-medium"
 						on:click={() => dispatch(firstAction.event, schedule)}>{firstAction.shortLabel}</button
 					>
 				{:else}
-					<button type="button" class="variant-filled-surface py-1 px-4 rounded-l-md border-r text-sm">
+					<button
+						type="button"
+						class="variant-filled-surface py-1 px-4 rounded-l-md border-r text-sm"
+					>
 						<i class="fa-solid fa-ban"></i>
 					</button>
 				{/if}

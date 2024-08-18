@@ -12,6 +12,7 @@ export default {
 		getByUser: `${env.PUBLIC_API_HOST}/api/user/ViewProfile`,
 		getByPatient: `${env.PUBLIC_API_HOST}/api/patient/ViewProfile`,
 		edit: `${env.PUBLIC_API_HOST}/api/user/EditProfile`,
+		editByPatient: `${env.PUBLIC_API_HOST}/api/patient/EditPatientProfile`,
 		changePasswordByUser: `${env.PUBLIC_API_HOST}/api/user/ChangePassword`,
 		changePasswordByPatient: `${env.PUBLIC_API_HOST}/api/patient/ChangePassword`
 	},
