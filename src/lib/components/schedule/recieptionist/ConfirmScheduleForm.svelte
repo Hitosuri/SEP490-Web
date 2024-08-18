@@ -116,8 +116,8 @@
 			<i class="fa-solid fa-xmark"></i>
 		</button>
 	</div>
-	<h1 class="font-semibold text-2xl mt-6">Tạo lịch hẹn</h1>
-	<p class="font-semibold text-surface-400 mb-6">Tạo lịch hẹn khám cho bệnh nhân</p>
+	<h1 class="font-semibold text-2xl mt-6">Xác nhận lịch hẹn</h1>
+	<p class="font-semibold text-surface-400 mb-6">Xác nhận lịch hẹn được tạo bởi bệnh nhân</p>
 	<form use:enhance method="post">
 		<fieldset disabled={requesting} class="grid grid-cols-2 gap-4">
 			<div>

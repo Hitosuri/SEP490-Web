@@ -9,7 +9,6 @@
 	import { scheduleStatusInfo } from '$lib/constants/schedule-constant';
 
 	export let form: SuperForm<z.infer<typeof scheduleFilterSchema>>;
-	export let isFiltering: boolean = false;
 
 	const { form: formData, enhance } = form;
 	const dispatch = createEventDispatcher<{
@@ -126,7 +125,6 @@
 		<span>Tìm kiếm</span>
 	</button>
 	<button
-		disabled={!isFiltering}
 		type="button"
 		class="btn variant-filled-tertiary mt-4 block p-0 size-[42px]"
 		on:click={() => {

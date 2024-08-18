@@ -28,7 +28,6 @@
 	import { toast } from 'svelte-sonner';
 	import { MinuteTick } from '$lib/helpers/minute-tick';
 	import EditAppointmentReceptionist from './EditAppointmentReceptionist.svelte';
-	import { round } from 'lodash-es';
 	import ScheduleListInDay from './ScheduleListInDay.svelte';
 
 	export let scheduleFilterForm: SuperValidated<z.infer<typeof scheduleFilterSchema>>;
@@ -80,7 +79,11 @@
 	let editingSchedule: ScheduleFull | undefined;
 	let timeChanged = false;
 	let stepWidth = baseStepWidth;
+	let endSliderValue = 0;
+	let endHovering = false;
+	$: console.log(endSliderValue);
 
+	$: onEndSliderValueChanged(endSliderValue);
 	$: hourWidth = stepWidth * 4;
 	$: lowerLimit = calculateLowerLimit(selectedDate);
 	$: blockPastWidth = lowerLimit * stepWidth;
@@ -118,12 +121,6 @@
 	$: selectedStartMinutes = (Math.min(selectedStart, selectedEnd) % 4) * 15;
 	$: selectedEndHours = Math.floor(Math.max(selectedStart, selectedEnd) / 4);
 	$: selectedEndMinutes = (Math.max(selectedStart, selectedEnd) % 4) * 15;
-	$: isFiltering = !!(
-		lastFilterOptions.doctorName ||
-		lastFilterOptions.patientPhone ||
-		lastFilterOptions.isPatientConfirm ||
-		lastFilterOptions.status
-	);
 
 	onMount(() => {
 		MinuteTick.addEvent(calculateLowerLimitActive);
@@ -132,6 +129,18 @@
 	onDestroy(() => {
 		MinuteTick.removeEvent(calculateLowerLimitActive);
 	});
+
+	function onEndSliderValueChanged(value: number) {
+		if (!editingSchedule) {
+			return;
+		}
+
+		if (selectedEnd > selectedStart) {
+			selectedEnd = selectedStart + value + 1;
+		} else {
+			selectedStart = selectedEnd + value + 1;
+		}
+	}
 
 	function scrollToLimitEnd() {
 		if (!limitEndElement) {
@@ -274,22 +283,26 @@
 		filtering(lastFilterOptions);
 	}
 
+	function calculateRangeLimit(): [number, number] {
+		const posibleStartLimits = [lowerLimit, ...blockRangeByDoctors[rowCount].map((x) => x[1])];
+		const posibleEndLimits = [upperLimit, ...blockRangeByDoctors[rowCount].map((x) => x[0])];
+		posibleStartLimits.sort((a, b) => b - a);
+		posibleEndLimits.sort((a, b) => a - b);
+		return [
+			posibleStartLimits.find((x) => x < selectedStart) ?? lowerLimit,
+			posibleEndLimits.find((x) => x > selectedStart) ?? upperLimit
+		];
+	}
+
 	function scheduleDragStart(e: MouseEvent & { currentTarget: EventTarget & HTMLDivElement }) {
-		if (scheduleByDoctors.length === 0) {
+		if (scheduleByDoctors.length === 0 || endHovering) {
 			return;
 		}
 		if (e.button === 0 && !scheduleGrabing && canCreateSchedule) {
 			timelineSelection = true;
 			selectedStart = selectedEnd = quarterCount;
 			timeChanged = true;
-			const posibleStartLimits = [lowerLimit, ...blockRangeByDoctors[rowCount].map((x) => x[1])];
-			const posibleEndLimits = [upperLimit, ...blockRangeByDoctors[rowCount].map((x) => x[0])];
-			posibleStartLimits.sort((a, b) => b - a);
-			posibleEndLimits.sort((a, b) => a - b);
-			rangeLimit = [
-				posibleStartLimits.find((x) => x < selectedStart) ?? lowerLimit,
-				posibleEndLimits.find((x) => x > selectedStart) ?? upperLimit
-			];
+			rangeLimit = calculateRangeLimit();
 
 			scheduleMenuTriggerTop = selectedTop = rowCount * 64;
 			selectionInDoctor = scheduleByDoctors[rowCount][0];
@@ -525,7 +538,9 @@
 		selectedEnd =
 			schedule.endAt.getHours() / scheduleStepInHour +
 			schedule.endAt.getMinutes() / scheduleStepInMinute;
+		endSliderValue = Math.abs(selectedEnd - selectedStart) - 1;
 		timeChanged = false;
+		rangeLimit = calculateRangeLimit();
 		selectionInDoctor = schedule.doctor;
 	}
 
@@ -655,7 +670,6 @@
 		{/if}
 		<ListFilterForm
 			{form}
-			bind:isFiltering
 			on:reset={() => {
 				filtering({});
 			}}
@@ -876,6 +890,9 @@
 							}}
 							on:mouseleave={() => (scheduleHovering = false)}
 							on:mousemove={(e) => {
+								if (endHovering) {
+									return;
+								}
 								const bounding = e.currentTarget.getBoundingClientRect();
 								quarterCount = Math.min(
 									Math.max(Math.round((e.clientX - bounding.left - 40) / stepWidth), 0),
@@ -890,6 +907,7 @@
 								);
 								if (timelineSelection) {
 									selectedEnd = Math.min(Math.max(quarterCount, rangeLimit[0]), rangeLimit[1]);
+									endSliderValue = Math.abs(selectedEnd - selectedStart) - 1;
 									scheduleMenuTriggerLeft = (selectedEnd + 2) * stepWidth;
 								}
 							}}
@@ -911,7 +929,8 @@
 								class="h-12 my-2 w-1 bg-red-300 rounded-full absolute z-10 top-0 -translate-x-1/2 {scheduleHovering &&
 								!scheduleMenuOpened &&
 								(selectedRange === 0 || !timelineSelection) &&
-								canCreateSchedule
+								canCreateSchedule &&
+								!endHovering
 									? 'opacity-100'
 									: 'opacity-0'}"
 								style="left: {hoverHintLeft}px; top: {hoverHintTop}px;"
@@ -923,7 +942,7 @@
 								</div>
 							</div>
 							<div
-								class="w-4 h-16 p-0.5 absolute {selectedRange > 0 ? 'block' : 'hidden'}"
+								class="w-4 h-16 py-0.5 absolute {selectedRange > 0 ? 'block' : 'hidden'}"
 								style="left: {selectedLeft}px; top: {selectedTop}px; width: {selectedWidth}px"
 							>
 								<div
@@ -940,6 +959,27 @@
 									<div class="bg-orange-400 w-1 ml-auto"></div>
 								</div>
 							</div>
+							{#if editingSchedule}
+								<div
+									class="absolute z-50 h-16 flex items-center"
+									style="left: {selectedLeft +
+										stepWidth -
+										8}px; top: {selectedTop}px; width: {(rangeLimit[1] -
+										Math.min(selectedStart, selectedEnd) -
+										1) *
+										stepWidth +
+										12}px"
+								>
+									<input
+										type="range"
+										class="end-slider"
+										max={rangeLimit[1] - Math.min(selectedStart, selectedEnd) - 1}
+										bind:value={endSliderValue}
+										on:mouseenter={() => (endHovering = true)}
+										on:mouseleave={() => (endHovering = false)}
+									/>
+								</div>
+							{/if}
 							<DropdownMenu.Root
 								preventScroll={false}
 								bind:open={scheduleMenuOpened}
@@ -1032,3 +1072,17 @@
 		</div>
 	</div>
 </div>
+
+<style lang="postcss">
+	.end-slider {
+		@apply appearance-none h-10 relative bg-transparent pointer-events-none;
+	}
+
+	.end-slider::-webkit-slider-thumb {
+		@apply appearance-none w-3 h-10 bg-primary-500 transition-opacity duration-100 opacity-0 rounded-full pointer-events-auto;
+	}
+
+	.end-slider::-webkit-slider-thumb:hover {
+		@apply shadow shadow-black/40 opacity-100;
+	}
+</style>
