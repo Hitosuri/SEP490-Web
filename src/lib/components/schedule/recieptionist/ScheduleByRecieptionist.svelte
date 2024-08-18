@@ -9,11 +9,7 @@
 	import endpoints from '$lib/endpoints';
 	import { getContext, onDestroy, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
-	import {
-		formatCompactDate,
-		formatCompactDateTime,
-		formatHourMinute
-	} from '$lib/helpers/formatters';
+	import { formatCompactDate, formatCompactDateTime } from '$lib/helpers/formatters';
 	import TimelineItem from '$lib/components/schedule/TimelineItem.svelte';
 	import { scheduleFilterSchema } from '$lib/form-schemas/schedule-filter-schema';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -33,6 +29,7 @@
 	import { MinuteTick } from '$lib/helpers/minute-tick';
 	import EditAppointmentReceptionist from './EditAppointmentReceptionist.svelte';
 	import { round } from 'lodash-es';
+	import ScheduleListInDay from './ScheduleListInDay.svelte';
 
 	export let scheduleFilterForm: SuperValidated<z.infer<typeof scheduleFilterSchema>>;
 	export let schedules: ScheduleFull[];
@@ -82,7 +79,6 @@
 	let limitEndElement: HTMLDivElement;
 	let editingSchedule: ScheduleFull | undefined;
 	let timeChanged = false;
-	let currentMinute: Date = new Date();
 	let stepWidth = baseStepWidth;
 
 	$: hourWidth = stepWidth * 4;
@@ -149,8 +145,7 @@
 		});
 	}
 
-	function calculateLowerLimitActive(time: Date) {
-		currentMinute = time;
+	function calculateLowerLimitActive() {
 		lowerLimit = calculateLowerLimit(selectedDate);
 	}
 
@@ -666,8 +661,14 @@
 			}}
 		/>
 		<div class="flex gap-4">
-			<div
-				class="bg-white border shadow-md rounded-container-token p-4 flex-1 flex flex-col h-[19.25rem] *:grid-cols-[3rem_1fr_8rem_1fr_6rem_max(7rem,20%)_4rem] relative"
+			<ScheduleListInDay
+				{scrollToSchedule}
+				{selectedDateSchedules}
+				on:checkin={(e) => patientCheckin(e.detail)}
+				on:confirm={(e) => openScheduleConfirmModal(e.detail)}
+				on:cancel={(e) => cancelSchedule(e.detail)}
+				on:edit={(e) => editSchedule(e.detail)}
+				on:delete={(e) => deleteSchedule(e.detail)}
 			>
 				{#if editingSchedule}
 					{@const startAt = new Date(
@@ -702,170 +703,7 @@
 						/>
 					</div>
 				{/if}
-				<div
-					class="grid pb-2 border-b font-semibold text-sm text-surface-400 tracking-wide pr-scroll-bar"
-				>
-					<span class="text-center">#</span>
-					<span class="text-center whitespace-nowrap">Bệnh nhân</span>
-					<span class="text-center whitespace-nowrap">Thời gian</span>
-					<span class="text-center whitespace-nowrap">Bác sĩ</span>
-					<span class="text-center whitespace-nowrap">Trạng thái</span>
-					<span class="text-center">BN đã xác nhận</span>
-					<span></span>
-				</div>
-				<div class="grid overflow-y-scroll flex-1 items-center content-start">
-					{#each selectedDateSchedules as schedule, i (schedule.id)}
-						{@const odd = i % 2 === 0}
-						<div
-							class="text-center pt-1.5 h-full {odd
-								? ''
-								: 'bg-slate-50'} schedule-row-{schedule.id}"
-						>
-							<button
-								class="btn rounded-none hover:underline font-medium"
-								on:click={() => scrollToSchedule(schedule)}>{schedule.order + 1}</button
-							>
-						</div>
-						<div
-							class="text-center h-full flex flex-col items-center justify-center {odd
-								? ''
-								: 'bg-slate-50'} schedule-row-{schedule.id}"
-						>
-							<a
-								href="/patients/{schedule.patient.id}"
-								class="hover:underline {!schedule.patient.name
-									? 'text-warning-500'
-									: 'font-medium'}"
-							>
-								{schedule.patient.name ?? 'Chưa có tên'}
-							</a>
-							<p class="text-xs text-surface-400">{schedule.patient.phone ?? ''}</p>
-						</div>
-						<div
-							class="py-3.5 text-center flex items-center justify-center h-full {odd
-								? ''
-								: 'bg-slate-50'} schedule-row-{schedule.id}"
-						>
-							<span class="badge variant-soft-tertiary">
-								{formatHourMinute(schedule.startAt)}
-							</span>
-							-
-							<span class="badge variant-soft-tertiary">
-								{formatHourMinute(schedule.endAt) || '...'}
-							</span>
-						</div>
-						<span
-							class="py-3.5 h-full text-center {odd
-								? ''
-								: 'bg-slate-50'} schedule-row-{schedule.id}">{schedule.doctor.name}</span
-						>
-						<div
-							class="py-3.5 h-full text-center flex justify-center items-center {odd
-								? ''
-								: 'bg-slate-50'}"
-						>
-							<span
-								class="{(scheduleStatusInfo[schedule.status]?.styleClasses ?? []).join(
-									' '
-								)} border px-2 py-1 rounded-full w-fit text-sm font-medium tracking-tight"
-							>
-								{scheduleStatusInfo[schedule.status]?.label ?? ''}
-							</span>
-						</div>
-						<div
-							class="py-3.5 h-full text-center flex items-center justify-center {odd
-								? ''
-								: 'bg-slate-50'}"
-						>
-							<input
-								type="checkbox"
-								checked={schedule.isPatientConfirm}
-								class="checkbox pointer-events-none"
-							/>
-						</div>
-						<div
-							class="h-full flex items-center {odd ? '' : 'bg-slate-50'} schedule-row-{schedule.id}"
-						>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger
-									class="btn mx-auto block text-surface-400 p-0 size-7 text-lg hover:variant-soft-primary"
-								>
-									<i class="fa-solid fa-ellipsis"></i>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content
-									transition={fly}
-									transitionConfig={{
-										duration: 200,
-										y: 30,
-										easing: cubicOut
-									}}
-									class="w-fit rounded-md border border-surface-100 bg-white p-1 shadow-lg z-10"
-								>
-									<DropdownMenu.Item
-										disabled={schedule.status !== ScheduleStatus.PENDING}
-										on:click={() => openScheduleConfirmModal(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block flex justify-center">
-											<i class="fa-regular fa-handshake"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Xác nhận</span>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										disabled={schedule.status !== ScheduleStatus.CONFIRMED ||
-											today(getLocalTimeZone()).compare(selectedDate) !== 0}
-										on:click={() => patientCheckin(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-solid fa-check-to-slot"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Bệnh nhân đã tới</span>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										disabled={schedule.status === ScheduleStatus.CANCEL ||
-											!schedule.endAt ||
-											schedule.endAt <= currentMinute}
-										on:click={() => editSchedule(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-regular fa-calendar-lines-pen"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										disabled={schedule.status === ScheduleStatus.DONE ||
-											currentMinute <= schedule.startAt}
-										on:click={() => cancelSchedule(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-regular fa-trash-can"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">
-											Huỷ lịch do bệnh nhân không tới
-										</span>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										disabled={![ScheduleStatus.PENDING, ScheduleStatus.CONFIRMED].includes(
-											schedule.status
-										) ||
-											(schedule.endAt && currentMinute > schedule.endAt)}
-										on:click={() => deleteSchedule(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-regular fa-calendar-circle-minus"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Xoá lịch</span>
-									</DropdownMenu.Item>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						</div>
-					{/each}
-				</div>
-			</div>
+			</ScheduleListInDay>
 			<div class={editingSchedule ? 'z-[200]' : ''}>
 				{#key editingSchedule}
 					<Calendar.Root

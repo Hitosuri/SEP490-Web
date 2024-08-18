@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 			confirmed = true;
 		}
 
-		const token = params.token.slice(0, -1);
+		const token = confirmed ? params.token.slice(0, -1) : params.token;
 		const url = endpoints.schedule.confirmFromPatient(token, confirmed);
 
 		const response = await handleFetch(

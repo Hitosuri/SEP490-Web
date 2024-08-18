@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { createEventDispatcher, getContext, onMount, type ComponentEvents } from 'svelte';
+	import { getContext, onMount, type ComponentEvents } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import SuperDebug, { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
-	import { Combobox, type Selected } from 'bits-ui';
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
 	import { type Writable } from 'svelte/store';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { downloadFile, pascalToCamelcase } from '$lib/helpers/utils';
 	import { FileDropzone, getModalStore, SlideToggle } from '@skeletonlabs/skeleton';
 	import { importMaterialSchema } from '$lib/form-schemas/import-material-schema';
 	import DatePicker from '../common/DatePicker.svelte';
@@ -103,6 +100,7 @@
 	let requesting = false;
 	let files: FileList | undefined;
 	let fileInput: HTMLInputElement;
+	let templateBlob: Blob | undefined;
 
 	$: $formData.materialId = material.id;
 	$: $formData.fileSize = files?.[0]?.size ?? 0;
@@ -127,6 +125,50 @@
 	function expireAtChanged(e: ComponentEvents<DatePicker>['valueChange']) {
 		if (e.detail) {
 			$formData.expiredAt = e.detail;
+		}
+	}
+
+	async function downloadExport() {
+		if (!$userStore) {
+			return;
+		}
+
+		if (templateBlob) {
+			downloadFile(templateBlob, 'template.csv');
+		} else {
+			toast.promise(
+				async (): Promise<string> => {
+					const response = await fetch(endpoints.materials.template, {
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						}
+					});
+
+					if (!response.ok) {
+						const data = await response.json();
+						if (typeof data?.error === 'string') {
+							return Promise.reject(data?.error);
+						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+							const msg = (data?.error ?? data).join(', ');
+							return Promise.reject(msg);
+						}
+
+						return Promise.reject();
+					}
+
+					const blob = await response.blob();
+					templateBlob = blob;
+					downloadFile(blob, 'template.csv');
+					return 'Tải file mẫu nhập thành công';
+				},
+				{
+					loading: 'Đang tải...',
+					success: (msg) => msg ?? 'Tải file mẫu nhập thành công',
+					error: (msg) =>
+						String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình tải kết quả file mẫu nhập'
+				}
+			);
 		}
 	}
 </script>
@@ -256,6 +298,13 @@
 								</svelte:fragment>
 							</FileDropzone>
 						{/if}
+						<button
+							type="button"
+							class="anchor font-medium text-sm ml-auto block w-fit mt-2"
+							on:click={downloadExport}
+						>
+							Tải về file mẫu nhập vật tư.
+						</button>
 					</Control>
 					<FieldErrors class="text-sm mt-1" />
 				</Field>

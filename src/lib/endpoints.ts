@@ -34,6 +34,7 @@ export default {
 		create: `${env.PUBLIC_API_HOST}/api/materials/create`,
 		detail: (id: number) => `${env.PUBLIC_API_HOST}/api/materials/${id}`,
 		edit: (id: number) => `${env.PUBLIC_API_HOST}/api/materials/update/${id}`,
+		template: `${env.PUBLIC_API_HOST}/api/materials/template`,
 		export: {
 			get: `${env.PUBLIC_API_HOST}/api/materials/export-all`,
 			create: `${env.PUBLIC_API_HOST}/api/export/create`,
