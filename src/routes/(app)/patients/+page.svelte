@@ -339,7 +339,7 @@
 					label: 'Huỷ cấm',
 					icon: 'fa-regular fa-universal-access',
 					click: (patient) => banPatient(patient, false),
-					showWhen: (patient) => patient.status === 2
+					showWhen: (patient) => patient.status !== 1
 				}
 			]}
 			on:sortField={(e) => selectSorting(e.detail)}

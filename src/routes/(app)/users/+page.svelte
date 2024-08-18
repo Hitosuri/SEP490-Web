@@ -608,14 +608,14 @@
 					label: 'Cấm nhân viên',
 					icon: 'fa-solid fa-ban',
 					click: (user) => banUser(user, true),
-					showWhen: (user) => user.status === 1,
+					showWhen: (user) => user.status === 1 && $userStore?.id !== user.id,
 					showBelow: true
 				},
 				{
 					label: 'Huỷ cấm',
 					icon: 'fa-regular fa-universal-access',
 					click: (user) => banUser(user, false),
-					showWhen: (user) => user.status === 2,
+					showWhen: (user) => user.status !== 1 && $userStore?.id !== user.id,
 					showBelow: true
 				}
 			]}
