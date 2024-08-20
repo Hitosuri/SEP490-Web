@@ -11,7 +11,7 @@
 	import { fade } from 'svelte/transition';
 	import { formatCurrency } from '$lib/helpers/formatters';
 	import { toast } from 'svelte-sonner';
-	import { downloadFile } from '$lib/helpers/utils';
+	import { downloadFile, handleToastFetch } from '$lib/helpers/utils';
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const materialStatisticStore =
@@ -180,41 +180,32 @@
 			return;
 		}
 		toast.promise(
-			async (): Promise<string> => {
-				const filterOptions = {
-					periodType: selectedFilterType.value,
-					year: selectedYear.value,
-					month: selectedMonth.value,
-					day: selectedDay.value,
-					materialName: materialName.trim()
-				};
-				const searchParams = new URLSearchParams();
-				for (const [key, value] of Object.entries(filterOptions)) {
-					searchParams.set(key, String(value));
-				}
-				const url = `${endpoints.statistics.exportMaterial}?${searchParams}`;
-				const response = await fetch(url, {
-					headers: {
-						'content-type': 'application/json',
-						Authorization: `Bearer ${$userStore.token}`
+			handleToastFetch(
+				() => {
+					const filterOptions = {
+						periodType: selectedFilterType.value,
+						year: selectedYear.value,
+						month: selectedMonth.value,
+						day: selectedDay.value,
+						materialName: materialName.trim()
+					};
+					const searchParams = new URLSearchParams();
+					for (const [key, value] of Object.entries(filterOptions)) {
+						searchParams.set(key, String(value));
 					}
-				});
-
-				if (!response.ok) {
-					const data = await response.json();
-					if (typeof data?.error === 'string') {
-						return Promise.reject(data?.error);
-					} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-						const msg = (data?.error ?? data).join(', ');
-						return Promise.reject(msg);
-					}
-
-					return Promise.reject();
+					const url = `${endpoints.statistics.exportMaterial}?${searchParams}`;
+					return fetch(url, {
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						}
+					});
+				},
+				{ success: 'Tải thống kê thành công' },
+				async (response) => {
+					downloadFile(await response.blob(), 'material-statistic.csv');
 				}
-
-				downloadFile(await response.blob(), 'material-statistic.csv');
-				return 'Tải thống kê thành công';
-			},
+			),
 			{
 				loading: 'Đang tải...',
 				success: (msg) => msg ?? 'Tải thống kê thành công',

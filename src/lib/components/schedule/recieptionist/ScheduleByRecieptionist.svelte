@@ -29,6 +29,7 @@
 	import { MinuteTick } from '$lib/helpers/minute-tick';
 	import EditAppointmentReceptionist from './EditAppointmentReceptionist.svelte';
 	import ScheduleListInDay from './ScheduleListInDay.svelte';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	export let scheduleFilterForm: SuperValidated<z.infer<typeof scheduleFilterSchema>>;
 	export let schedules: ScheduleFull[];
@@ -538,29 +539,19 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.checkin(schedule.id), {
+					handleToastFetch(
+						fetch(endpoints.schedule.checkin(schedule.id), {
 							method: 'PUT',
 							headers: {
 								'content-type': 'application/json',
 								Authorization: `Bearer ${$userStore.token}`
 							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						filtering(lastFilterOptions);
-						return `Trạng thái của lịch hẹn đã chuyển thành '${scheduleStatusInfo[ScheduleStatus.DONE].label}'`;
-					},
+						}),
+						{
+							success: `Trạng thái của lịch hẹn đã chuyển thành '${scheduleStatusInfo[ScheduleStatus.DONE].label}'`
+						},
+						() => filtering(lastFilterOptions)
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) =>
@@ -615,29 +606,17 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.deleteByRecieptionist(schedule.id), {
+					handleToastFetch(
+						fetch(endpoints.schedule.deleteByRecieptionist(schedule.id), {
 							method: 'DELETE',
 							headers: {
 								'content-type': 'application/json',
 								Authorization: `Bearer ${$userStore.token}`
 							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						filtering(lastFilterOptions);
-						return 'Xoá lịch hẹn thành công';
-					},
+						}),
+						{ success: 'Xoá lịch hẹn thành công' },
+						() => filtering(lastFilterOptions)
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? 'Xoá lịch hẹn thành công',
@@ -660,29 +639,17 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.cancel(schedule.id), {
+					handleToastFetch(
+						fetch(endpoints.schedule.cancel(schedule.id), {
 							method: 'PUT',
 							headers: {
 								'content-type': 'application/json',
 								Authorization: `Bearer ${$userStore.token}`
 							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						filtering(lastFilterOptions);
-						return 'Huỷ lịch hẹn thành công';
-					},
+						}),
+						{ success: 'Huỷ lịch hẹn thành công' },
+						() => filtering(lastFilterOptions)
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? 'Huỷ lịch hẹn thành công',

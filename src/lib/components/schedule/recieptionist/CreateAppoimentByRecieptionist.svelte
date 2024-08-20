@@ -13,7 +13,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { formatFullDate, formatISODateWithOffset } from '$lib/helpers/formatters';
 	import { type Writable } from 'svelte/store';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 	import NumberInput from '$lib/components/common/NumberInput.svelte';
 
@@ -38,44 +38,22 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const { startAt, endAt, ...others } = form.data;
-					const response = await fetch(endpoints.schedule.createByRecieptionist, {
+				handleToastFetch(
+					fetch(endpoints.schedule.createByRecieptionist, {
 						method: 'POST',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
-						body: JSON.stringify({
-							...others,
-							startAt: startAt,
-							endAt: endAt
-						})
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data === 'object') {
-							Object.keys(data).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									setError(form, fieldName, data[k]);
-								}
-							});
-							return Promise.reject();
-						}
-
-						return Promise.reject();
-					}
-					dispatch('finish');
-					closeModal();
-					return 'Tạo lịch hẹn thành công';
-				},
+						body: JSON.stringify(form.data)
+					}),
+					{ success: 'Tạo lịch hẹn thành công' },
+					() => {
+						dispatch('finish');
+						closeModal();
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Tạo lịch hẹn thành công',

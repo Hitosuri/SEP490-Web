@@ -9,7 +9,6 @@
 	import { toast } from 'svelte-sonner';
 	import type { Writable } from 'svelte/store';
 	import Container from '../common/Container.svelte';
-	import { scheduleStepInMinute } from '$lib/constants/schedule-constant';
 	import { userFeatureDetails } from '$lib/constants/user-feature-constant';
 	import { browser } from '$app/environment';
 	import { intersection } from 'lodash-es';
@@ -47,7 +46,13 @@
 			}
 		});
 
-		if (!r.ok) {
+		if (!r.ok && r.status !== 404) {
+			return;
+		}
+
+		if (r.status === 404) {
+			patientQueue = [];
+			lastDataTime = new Date();
 			return;
 		}
 

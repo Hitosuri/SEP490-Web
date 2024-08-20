@@ -9,7 +9,7 @@
 	import { CalendarDate } from '@internationalized/date';
 	import { createPatientSchema } from '$lib/form-schemas/create-patient-schema';
 	import endpoints from '$lib/endpoints';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { type Writable } from 'svelte/store';
 
 	export let createPatientForm: SuperValidated<z.infer<typeof createPatientSchema>>;
@@ -36,44 +36,21 @@
 			});
 
 			toast.promise(
-				async () => {
-					const response = await fetch(endpoints.patients.create, {
+				handleToastFetch(
+					fetch(endpoints.patients.create, {
 						method: 'POST',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: JSON.stringify(requestBody)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						let msg = '';
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error)) {
-							msg = data.error.join(', ');
-							data.error.forEach((err: string) => {
-								if (typeof err === 'string') {
-									if (err.startsWith('Bệnh nhân với số điện thoại')) {
-										setError(form, 'phone', err);
-									} else if (err.startsWith('Bệnh nhân với Email ')) {
-										setError(form, 'email', err);
-									}
-								}
-							});
-						} else if (typeof data === 'object') {
-							Object.keys(data).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									setError(form, fieldName, data[k]);
-								}
-							});
-						}
-						return Promise.reject(msg);
-					}
-					dispatch('finish');
-				},
+					}),
+					{ success: 'Tạo bệnh nhân thành công' },
+					() => {
+						dispatch('finish');
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: 'Tạo bệnh nhân thành công',

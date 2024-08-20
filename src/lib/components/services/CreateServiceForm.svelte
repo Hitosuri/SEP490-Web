@@ -10,7 +10,7 @@
 	import type { z } from 'zod';
 	import MaterialEditRow from './MaterialEditRow.svelte';
 	import { toast } from 'svelte-sonner';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 
 	export let createTreatmentForm: SuperValidated<z.infer<typeof createTreatmentSchema>>;
 
@@ -26,40 +26,21 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const response = await fetch(endpoints.treatments.create, {
+				handleToastFetch(
+					fetch(endpoints.treatments.create, {
 						method: 'POST',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: JSON.stringify(form.data)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data.errors === 'object' || typeof data === 'object') {
-							const errorsDict = data.errors ?? data;
-							Object.keys(errorsDict).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									const value = Array.isArray(errorsDict[k]) ? errorsDict[k][0] : errorsDict[k];
-									setError(form, fieldName, value);
-								}
-							});
-							return Promise.reject(Object.values(errorsDict).join(', '));
-						}
-
-						return Promise.reject();
-					}
-					closeModal(true);
-					return 'Tạo dịch vụ thành công';
-				},
+					}),
+					{ success: 'Tạo dịch vụ thành công' },
+					() => {
+						closeModal(true);
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Tạo dịch vụ thành công',

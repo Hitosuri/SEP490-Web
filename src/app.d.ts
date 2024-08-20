@@ -452,3 +452,12 @@ interface ScheduleMenuItem {
 	availableWhen: (schedule: ScheduleFull, currentTime: Date) => boolean;
 	click: (schedule: ScheduleFull) => void;
 }
+
+interface Application {
+	id: number;
+	userName: string;
+	startAt: Date;
+	endAt: Date;
+	reason: string;
+	isConfirm: boolean;
+}

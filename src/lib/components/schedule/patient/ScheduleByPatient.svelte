@@ -23,6 +23,7 @@
 		scheduleStepInHour,
 		scheduleStepInMinute
 	} from '$lib/constants/schedule-constant';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
@@ -132,29 +133,17 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.schedule.deleteByPatient(schedule.id), {
+					handleToastFetch(
+						fetch(endpoints.schedule.deleteByPatient(schedule.id), {
 							method: 'DELETE',
 							headers: {
 								'content-type': 'application/json',
 								Authorization: `Bearer ${$userStore.token}`
 							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						filtering();
-						return 'Xoá lịch hẹn thành công';
-					},
+						}),
+						{ success: 'Xoá lịch hẹn thành công' },
+						() => filtering()
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? 'Xoá lịch hẹn thành công',
