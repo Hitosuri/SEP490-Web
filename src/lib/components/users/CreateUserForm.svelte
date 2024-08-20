@@ -11,7 +11,7 @@
 	import { ToggleGroup } from 'bits-ui';
 	import { Role, roleTranslation, userRoles } from '$lib/helpers/authorization';
 	import endpoints from '$lib/endpoints';
-	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
+	import { getRoleId, handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { type Writable } from 'svelte/store';
 
 	export let createUserForm: SuperValidated<z.infer<typeof createUserSchema>>;
@@ -28,42 +28,27 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const { roles, ...others } = form.data;
-					const rielForm: Record<string, string | number[] | number | Date> = { ...others };
-					rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
+				handleToastFetch(
+					() => {
+						const { roles, ...others } = form.data;
+						const rielForm: Record<string, string | number[] | number | Date> = { ...others };
+						rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
 
-					const response = await fetch(endpoints.users.create, {
-						method: 'POST',
-						headers: {
-							'content-type': 'application/json',
-							Authorization: `Bearer ${$userStore.token}`
-						},
-						body: JSON.stringify(rielForm)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data === 'object') {
-							Object.keys(data).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									setError(form, fieldName, data[k]);
-								}
-							});
-							return Promise.reject();
-						}
-
-						return Promise.reject();
-					}
-					dispatch('finish');
-					return 'Tạo nhân viên thành công';
-				},
+						return fetch(endpoints.users.create, {
+							method: 'POST',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							},
+							body: JSON.stringify(rielForm)
+						});
+					},
+					{ success: 'Tạo nhân viên thành công' },
+					() => {
+						dispatch('finish');
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Tạo nhân viên thành công',

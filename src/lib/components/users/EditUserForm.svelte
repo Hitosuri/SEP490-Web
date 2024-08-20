@@ -10,7 +10,7 @@
 	import { editUserSchema } from '$lib/form-schemas/edit-user-schema';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import endpoints from '$lib/endpoints';
-	import { getRoleId, pascalToCamelcase } from '$lib/helpers/utils';
+	import { getRoleId, handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { type Writable } from 'svelte/store';
 
 	export let editUserForm: SuperValidated<z.infer<typeof editUserSchema>>;
@@ -29,50 +29,35 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const { roles, status, ...others } = form.data;
-					const rielForm: Record<string, string | boolean | number | number[]> = { ...others };
+				handleToastFetch(
+					() => {
+						const { roles, status, ...others } = form.data;
+						const rielForm: Record<string, string | boolean | number | number[]> = { ...others };
 
-					if (user.roles.includes(Role.Admin && !roles.includes(Role.Admin))) {
-						roles.push(Role.Admin);
-					}
-
-					rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
-					rielForm.status = status ? 1 : 2;
-
-					const response = await fetch(endpoints.users.edit(form.data.id), {
-						method: 'PUT',
-						headers: {
-							'content-type': 'application/json',
-							Authorization: `Bearer ${$userStore.token}`
-						},
-						body: JSON.stringify(rielForm)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data === 'object') {
-							Object.keys(data).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									setError(form, fieldName, data[k]);
-								}
-							});
-							return Promise.reject();
+						if (user.roles.includes(Role.Admin && !roles.includes(Role.Admin))) {
+							roles.push(Role.Admin);
 						}
 
-						return Promise.reject();
-					}
-					dispatch('finish');
-					$modalStore[0]?.response?.(true);
-					closeModal();
-					return 'Cập nhật thông tin thành công';
-				},
+						rielForm.roleIds = roles.map(getRoleId).filter((x) => x !== 0);
+						rielForm.status = status ? 1 : 2;
+
+						return fetch(endpoints.users.edit(form.data.id), {
+							method: 'PUT',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							},
+							body: JSON.stringify(rielForm)
+						});
+					},
+					{ success: 'Cập nhật thông tin thành công' },
+					() => {
+						dispatch('finish');
+						$modalStore[0]?.response?.(true);
+						closeModal();
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Cập nhật thông tin thành công',

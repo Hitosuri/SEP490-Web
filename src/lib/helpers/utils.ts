@@ -62,6 +62,8 @@ export async function handleFetch(
 						message = data?.error;
 					} else if (Array.isArray(data?.error) || Array.isArray(data)) {
 						message = (data?.error ?? data).join(', ');
+					} else if (typeof data.errors === 'object' || typeof data === 'object') {
+						message = Object.values(data.errors ?? data).join(', ');
 					}
 				} catch (error) {
 					message =

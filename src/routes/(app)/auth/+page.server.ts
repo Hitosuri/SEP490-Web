@@ -32,19 +32,25 @@ export const actions: Actions = {
 				}
 			);
 
-			const data = await response.json();
+			const bodyText = await response.text();
 
 			if (!response.ok) {
-				if (typeof data?.error === 'string') {
-					form.message = data.error;
-				} else if (Array.isArray(data?.error)) {
-					form.message = data.error.join(', ');
-				} else {
+				try {
+					const data = JSON.parse(bodyText);
+					if (typeof data?.error === 'string') {
+						form.message = data?.error;
+					} else if (Array.isArray(data?.error) || Array.isArray(data)) {
+						form.message = (data?.error ?? data).join(', ');
+					} else if (typeof data.errors === 'object' || typeof data === 'object') {
+						form.message = Object.values(data.errors ?? data).join(', ');
+					}
+				} catch (error) {
 					form.message = 'Xảy ra lỗi khi đăng nhập';
 				}
 				return fail(response.status, { form });
 			}
 
+			const data = JSON.parse(bodyText);
 			const user = data.body;
 			cookies.set(cookieName, user.token, {
 				path: '/',
@@ -52,6 +58,11 @@ export const actions: Actions = {
 				secure: true
 			});
 		} catch (error) {
+			if (error instanceof Error && error.message === 'fetch failed') {
+				form.message =
+					'Không kết nối được tới máy chú, vui lòng kiểm tra kết nối mạng hoặc thử lại sau';
+			}
+
 			return fail(500, { form });
 		}
 

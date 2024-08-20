@@ -4,7 +4,7 @@
 	import endpoints from '$lib/endpoints';
 	import { editScheduleSchema } from '$lib/form-schemas/edit-schedule-schema';
 	import { formatCompactDate, formatFullDate, formatHourMinute } from '$lib/helpers/formatters';
-	import { pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
 	import { SlideToggle } from '@skeletonlabs/skeleton';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { createEventDispatcher, getContext } from 'svelte';
@@ -32,38 +32,21 @@
 			}
 
 			toast.promise(
-				async (): Promise<string> => {
-					const response = await fetch(endpoints.schedule.editByRecieptionist(schedule.id), {
+				handleToastFetch(
+					fetch(endpoints.schedule.editByRecieptionist(schedule.id), {
 						method: 'PUT',
 						headers: {
 							'content-type': 'application/json',
 							Authorization: `Bearer ${$userStore.token}`
 						},
 						body: JSON.stringify(form.data)
-					});
-
-					if (!response.ok) {
-						const data = await response.json();
-						if (typeof data?.error === 'string') {
-							return Promise.reject(data?.error);
-						} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-							const msg = (data?.error ?? data).join(', ');
-							return Promise.reject(msg);
-						} else if (typeof data === 'object') {
-							Object.keys(data).forEach((k) => {
-								const fieldName = pascalToCamelcase(k);
-								if (Object.keys(form.data).includes(fieldName)) {
-									setError(form, fieldName, data[k]);
-								}
-							});
-							return Promise.reject();
-						}
-
-						return Promise.reject();
-					}
-					dispatch('updated');
-					return 'Cập nhật lịch hẹn thành công';
-				},
+					}),
+					{ success: 'Cập nhật lịch hẹn thành công' },
+					() => {
+						dispatch('updated');
+					},
+					form
+				),
 				{
 					loading: 'Đang xử lý...',
 					success: (msg) => msg ?? 'Cập nhật lịch hẹn thành công',

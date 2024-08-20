@@ -18,6 +18,7 @@
 	import CustomPagination from '$lib/components/common/CustomPagination.svelte';
 	import AssignExportMaterialForm from './AssignExportMaterialForm.svelte';
 	import { Role } from '$lib/helpers/authorization';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	export function onTabActive() {
 		if (exportGroupsPromise) {
@@ -198,32 +199,17 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(
-							endpoints.materials.export.deleteGroup(exportGroup.group),
-							{
-								method: 'DELETE',
-								headers: {
-									'content-type': 'application/json',
-									Authorization: `Bearer ${$userStore.token}`
-								}
+					handleToastFetch(
+						fetch(endpoints.materials.export.deleteGroup(exportGroup.group), {
+							method: 'DELETE',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
 							}
-						);
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						filtering(requesterName, supplierName, currentPage, pageSize, true, true);
-						return 'Phiếu xuất vật tư được xoá thành công';
-					},
+						}),
+						{ success: 'Phiếu xuất vật tư được xoá thành công' },
+						() => filtering(requesterName, supplierName, currentPage, pageSize, true, true)
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? 'Phiếu xuất vật tư được xoá thành công',

@@ -126,5 +126,13 @@ export default {
 		scheduleAndDoctor: `${env.PUBLIC_API_HOST}/api/statistics/StatisticByScheduleAndDoctor`,
 		material: `${env.PUBLIC_API_HOST}/api/statistics/material-statistic`,
 		exportMaterial: `${env.PUBLIC_API_HOST}/api/statistics/export-material-statistic`
+	},
+	application: {
+		getByAdmin: `${env.PUBLIC_API_HOST}/api/Applications/GetListApplicationByAdmin`,
+		getByUser: `${env.PUBLIC_API_HOST}/api/Applications/GetListApplicationByUser`,
+		create: `${env.PUBLIC_API_HOST}/api/Applications/CreateApplications`,
+		edit: `${env.PUBLIC_API_HOST}/api/Applications/UpdateApplication`,
+		confirm: `${env.PUBLIC_API_HOST}/api/Applications/ConfirmApplicationById`,
+		delete: `${env.PUBLIC_API_HOST}/api/Applications/DeletedScheduleByPatient`
 	}
 };

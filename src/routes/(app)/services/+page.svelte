@@ -26,6 +26,7 @@
 	import TreatmentDetail from '$lib/components/services/TreatmentDetail.svelte';
 	import EditServiceForm from '$lib/components/services/EditServiceForm.svelte';
 	import { toast } from 'svelte-sonner';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	export let data: PageData;
 
@@ -303,29 +304,17 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const response = await fetch(endpoints.treatments.delete(treatment.id), {
+					handleToastFetch(
+						fetch(endpoints.treatments.delete(treatment.id), {
 							method: 'DELETE',
 							headers: {
 								'content-type': 'application/json',
 								Authorization: `Bearer ${$userStore.token}`
 							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-						filtering(lastestFilterOption, currentPage, pageSize, true, true);
-						return `Đã xoá dịch vụ ${treatment.name}`;
-					},
+						}),
+						{ success: `Đã xoá dịch vụ ${treatment.name}` },
+						() => filtering(lastestFilterOption, currentPage, pageSize, true, true)
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? `Đã xoá dịch vụ ${treatment.name}`,

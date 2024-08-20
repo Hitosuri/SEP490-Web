@@ -42,7 +42,7 @@
 	const cRegionInput = 'input flex h-[42px] select-none items-center p-2 rounded-container-token';
 	const cRegionTrigger = 'ml-auto hover:variant-soft-surface p-1.5 btn text-lg';
 	const cRegionSegment =
-		'rounded px-1 hover:bg-surface-50 focus:bg-surface-50 focus:text-foreground outline-0 aria-[valuetext=Empty]:text-surface-300';
+		'rounded px-0.5 hover:bg-surface-50 focus:bg-surface-50 focus:text-foreground outline-0 aria-[valuetext=Empty]:text-surface-300';
 	const cRegionContent = 'x-50';
 
 	$: classesRegionInput = twMerge(cRegionInput, regionInput);
@@ -81,7 +81,7 @@
 		{#each segments as { part, value }}
 			<div class="inline-block select-none">
 				{#if part === 'literal'}
-					<DatePicker.Segment {part} class="p-1 opacity-60">
+					<DatePicker.Segment {part} class="p-0.5 opacity-60">
 						{value}
 					</DatePicker.Segment>
 				{:else}

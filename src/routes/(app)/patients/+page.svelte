@@ -15,6 +15,7 @@
 	import Container from '$lib/components/common/Container.svelte';
 	import { toast } from 'svelte-sonner';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	export let data: PageData;
 
@@ -188,33 +189,22 @@
 				}
 
 				toast.promise(
-					async (): Promise<string> => {
-						const searchParams = new URLSearchParams();
-						searchParams.set('patientId', String(patient.id));
-						searchParams.set('status', ban ? '2' : '1');
+					handleToastFetch(
+						() => {
+							const searchParams = new URLSearchParams();
+							searchParams.set('patientId', String(patient.id));
+							searchParams.set('status', ban ? '2' : '1');
 
-						const response = await fetch(`${endpoints.patients.ban}?${searchParams}`, {
-							method: 'POST',
-							headers: {
-								Authorization: `Bearer ${$userStore.token}`
-							}
-						});
-
-						if (!response.ok) {
-							const data = await response.json();
-							if (typeof data?.error === 'string') {
-								return Promise.reject(data?.error);
-							} else if (Array.isArray(data?.error) || Array.isArray(data)) {
-								const msg = (data?.error ?? data).join(', ');
-								return Promise.reject(msg);
-							}
-
-							return Promise.reject();
-						}
-
-						filtering(lastestFilterOption, currentPage, pageSize, true, true);
-						return `${ban ? 'Cấm' : 'Huỷ cấm'} bệnh nhân thành công`;
-					},
+							return fetch(`${endpoints.patients.ban}?${searchParams}`, {
+								method: 'POST',
+								headers: {
+									Authorization: `Bearer ${$userStore.token}`
+								}
+							});
+						},
+						{ success: `${ban ? 'Cấm' : 'Huỷ cấm'} bệnh nhân thành công` },
+						() => filtering(lastestFilterOption, currentPage, pageSize, true, true)
+					),
 					{
 						loading: 'Đang xử lý...',
 						success: (msg) => msg ?? `${ban ? 'Cấm' : 'Huỷ cấm'} bệnh nhân thành công`,

@@ -222,7 +222,7 @@
 		items={filterTypes}
 		bind:selected={selectedFilterType}
 		let:ValueComponent
-		regionInput="border hover:border-surface-300/70 shadow px-3"
+		regionInput="border hover:border-surface-300/70 shadow px-3 py-2"
 	>
 		<i class="fa-regular fa-filter text-surface-300"></i>
 		<span class="pl-1 text-sm font-medium">Thống kê theo:</span>
@@ -240,7 +240,7 @@
 				bind:selected={selectedDay}
 				let:ValueComponent
 				regionContent="max-h-60 overflow-auto"
-				regionInput="px-3"
+				regionInput="px-3 py-2"
 			>
 				<span class="text-sm font-medium">Ngày:</span>
 				<ValueComponent class="font-semibold" />
@@ -257,7 +257,7 @@
 				bind:selected={selectedMonth}
 				let:ValueComponent
 				regionContent="max-h-60 overflow-auto"
-				regionInput="px-3"
+				regionInput="px-3 py-2"
 			>
 				<span class="text-sm font-medium">Tháng:</span>
 				<ValueComponent class="font-semibold" />
@@ -272,7 +272,7 @@
 			items={yearList}
 			bind:selected={selectedYear}
 			let:ValueComponent
-			regionInput="px-3"
+			regionInput="px-3 py-2"
 			regionContent="max-h-60 overflow-auto"
 		>
 			<span class="text-sm font-medium">Năm:</span>
