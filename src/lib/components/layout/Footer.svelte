@@ -1,5 +1,9 @@
+<script>
+	import Container from '../common/Container.svelte';
+</script>
+
 <div class="bg-surface-900">
-	<div class="container mx-auto text-white">
+	<Container class="text-white">
 		<div class="border-b border-surface-600 py-12 flex justify-between items-start">
 			<div>
 				<img class="h-12" src="/images/prodental-white.png" alt="" />
@@ -28,5 +32,5 @@
 			©2024,
 			<a href="/" title="nhakhoatrinh.com" class="hover:underline">nhakhoatrinh.com</a>
 		</p>
-	</div>
+	</Container>
 </div>

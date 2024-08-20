@@ -221,42 +221,7 @@
 			<div class="px-3">
 				<img class="h-12" src="/images/prodental-white.png" alt="" />
 			</div>
-			<a href="#" class="group hover:drop-shadow-md">
-				<div class="flex flex-col h-8 justify-end relative">
-					<p
-						class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
-					>
-						Dịch vụ
-					</p>
-					<div
-						class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
-			<a href="#" class="group hover:drop-shadow-md">
-				<div class="flex flex-col h-8 justify-end relative">
-					<p
-						class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
-					>
-						Tư vấn
-					</p>
-					<div
-						class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
-			<a href="#" class="group hover:drop-shadow-md">
-				<div class="flex flex-col h-8 justify-end relative">
-					<p
-						class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
-					>
-						Về chúng tôi
-					</p>
-					<div
-						class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
+			<!-- TODO -->
 		</Container>
 		{#if $userStore}
 			<HeaderUserDropdown userAuth={$userStore} inLandingHeader on:logout={illegalLogout} />
