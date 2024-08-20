@@ -132,6 +132,8 @@
 	let stepWidth = baseStepWidth;
 	let endSliderValue = 0;
 	let endHovering = false;
+	let warningTimeout: NodeJS.Timeout | undefined;
+	let allowWarning = true;
 
 	$: onEndSliderValueChanged(endSliderValue);
 	$: hourWidth = stepWidth * 4;
@@ -346,6 +348,28 @@
 
 	function scheduleDragStart(e: MouseEvent & { currentTarget: EventTarget & HTMLDivElement }) {
 		if (scheduleByDoctors.length === 0 || endHovering) {
+			return;
+		}
+		if (
+			editingSchedule &&
+			editingSchedule.status === ScheduleStatus.DONE &&
+			editingSchedule.startAt <= new Date()
+		) {
+			if (warningTimeout) {
+				clearTimeout(warningTimeout);
+				warningTimeout = undefined;
+			}
+
+			warningTimeout = setTimeout(() => {
+				allowWarning = true;
+			}, 5000);
+
+			if (allowWarning) {
+				allowWarning = false;
+				toast.warning('Khi lịch hẹn đã bắt đầu, chỉ có thể thay đổi thời gian kết thúc', {
+					duration: 5000
+				});
+			}
 			return;
 		}
 		if (e.button === 0 && !scheduleGrabing && canCreateSchedule) {
@@ -950,7 +974,7 @@
 								</div>
 							</div>
 							<div
-								class="w-4 h-16 py-0.5 absolute {selectedRange > 0 ? 'block' : 'hidden'}"
+								class="w-4 h-16 py-0.5 absolute z-[2] {selectedRange > 0 ? 'block' : 'hidden'}"
 								style="left: {selectedLeft}px; top: {selectedTop}px; width: {selectedWidth}px"
 							>
 								<div

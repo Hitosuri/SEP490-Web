@@ -240,7 +240,9 @@
 											? 'text-start'
 											: 'text-center'} {field.classes ?? ''}"
 								>
-									{#if field.href}
+									{#if typeof content === 'boolean'}
+										<input type="checkbox" value={content} disabled class="checkbox bg-white" />
+									{:else if field.href}
 										<a href={field.href(extendedItem.item)} class="hover:underline">
 											{content}
 										</a>
