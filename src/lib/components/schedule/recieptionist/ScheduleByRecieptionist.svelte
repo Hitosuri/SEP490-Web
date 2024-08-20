@@ -109,6 +109,8 @@
 	let scheduleHovering = false;
 	let quarterCount = 0;
 	let rowCount = 0;
+	$: console.log(rowCount);
+
 	let hoverHintTop = 0;
 	let preventNextContextMenu = false;
 	let timelineSelection = false;
@@ -606,6 +608,8 @@
 		selectedEnd =
 			schedule.endAt.getHours() / scheduleStepInHour +
 			schedule.endAt.getMinutes() / scheduleStepInMinute;
+		rowCount = scheduleByDoctors.findIndex((x) => x[0].id === schedule.doctor.id);
+		selectedTop = rowCount * 64;
 		sliderLower = Math.max(lowerLimit, Math.min(selectedStart, selectedEnd));
 		endSliderValue = Math.abs(Math.max(selectedEnd, selectedStart) - sliderLower) - 1;
 		timeChanged = false;
