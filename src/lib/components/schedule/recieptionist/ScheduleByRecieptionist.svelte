@@ -109,8 +109,6 @@
 	let scheduleHovering = false;
 	let quarterCount = 0;
 	let rowCount = 0;
-	$: console.log(rowCount);
-
 	let hoverHintTop = 0;
 	let preventNextContextMenu = false;
 	let timelineSelection = false;

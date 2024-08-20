@@ -262,8 +262,12 @@
 	</section>
 	<footer class="card-footer border-t p-4 text-sm text-center bg-surface-50/40 justify-center">
 		<span class="text-black/70 font-semibold">Chưa có tài khoản?</span>
-		<a href="#" class="font-semibold text-primary-500 hover:underline"
-			>Liên hệ với chúng tôi ngay.</a
+		<a
+			href="https://www.facebook.com/Nhakhoabacsytrinh.con"
+			class="font-semibold text-primary-500 hover:underline"
+			target="_blank"
 		>
+			Liên hệ với chúng tôi ngay.
+		</a>
 	</footer>
 </div>
