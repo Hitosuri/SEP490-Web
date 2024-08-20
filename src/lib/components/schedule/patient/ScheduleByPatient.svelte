@@ -105,7 +105,7 @@
 			const now = new Date();
 			return Math.max(
 				7 / scheduleStepInHour,
-				now.getHours() * 4 + Math.ceil(now.getMinutes() / 15)
+				now.getHours() * 4 + Math.ceil((now.getMinutes() + 1) / 15)
 			);
 		}
 	}

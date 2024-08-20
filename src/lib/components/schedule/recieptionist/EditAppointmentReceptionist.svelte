@@ -10,8 +10,8 @@
 	import { createEventDispatcher, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { Writable } from 'svelte/store';
-	import SuperDebug, { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
-	import { zod, zodClient } from 'sveltekit-superforms/adapters';
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 
 	export let editScheduleForm: SuperValidated<z.infer<typeof editScheduleSchema>>;
