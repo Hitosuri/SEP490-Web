@@ -113,46 +113,24 @@
 						<i class="fa-solid fa-bars-sort"></i>
 					</button>
 				{/if}
-				<a href="/" class="px-3">
-					<img class={inLandingPage ? 'h-10' : 'h-12'} src="/images/prodental.png" alt="" />
+				<a href="/" class="sm:px-3">
+					<img class={inLandingPage ? 'h-8 sm:h-10' : 'h-12'} src="/images/prodental.png" alt="" />
 				</a>
 			</svelte:fragment>
-			<!-- <a href="#" class="group pt-1">
-				<div class="flex flex-col h-8 justify-end">
-					<p
-						class="leading-5 text-sm group-hover:pb-1 font-bold text-black/60 group-hover:text-black transition-all duration-160 ease-out px-2 uppercase tracking-wider"
-					>
-						Dịch vụ
-					</p>
-					<div
-						class="bg-primary-500 h-1 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
-			<a href="#" class="group pt-1">
-				<div class="flex flex-col h-8 justify-end">
-					<p
-						class="leading-5 text-sm group-hover:pb-1 font-bold text-black/60 group-hover:text-black transition-all duration-160 ease-out px-2 uppercase tracking-wider"
-					>
-						Tư vấn
-					</p>
-					<div
-						class="bg-primary-500 h-1 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
-			<a href="#" class="group pt-1">
-				<div class="flex flex-col h-8 justify-end">
-					<p
-						class="leading-5 text-sm group-hover:pb-1 font-bold text-black/60 group-hover:text-black transition-all duration-160 ease-out px-2 uppercase tracking-wider"
-					>
-						Về chúng tôi
-					</p>
-					<div
-						class="bg-primary-500 h-1 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a> -->
+			{#if $userStore}
+				<a href="/schedule" class="group pt-1">
+					<div class="flex flex-col h-8 justify-end">
+						<p
+							class="leading-5 text-sm group-hover:pb-1 font-bold text-black/60 group-hover:text-black transition-all duration-160 ease-out px-2 uppercase tracking-wider"
+						>
+							Đặt lịch hẹn
+						</p>
+						<div
+							class="bg-primary-500 h-1 transition-all duration-200 ease-out w-0 group-hover:w-full"
+						></div>
+					</div>
+				</a>
+			{/if}
 			<svelte:fragment slot="trail">
 				{#if !$userStore && $page.url.pathname !== '/auth/login'}
 					<Dialog.Root
@@ -216,54 +194,32 @@
 	</Container>
 </div>
 {#if inLandingPage}
-	<div class="h-header w-full absolute top-0 z-0">
+	<div class="h-header w-full absolute top-0 z-[4] bg-gradient-to-b from-cyan-600">
 		<Container class="flex my-6 items-center gap-16 h-10">
 			<div class="px-3">
 				<img class="h-12" src="/images/prodental-white.png" alt="" />
 			</div>
-			<a href="#" class="group hover:drop-shadow-md">
-				<div class="flex flex-col h-8 justify-end relative">
-					<p
-						class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
-					>
-						Dịch vụ
-					</p>
-					<div
-						class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
-			<a href="#" class="group hover:drop-shadow-md">
-				<div class="flex flex-col h-8 justify-end relative">
-					<p
-						class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
-					>
-						Tư vấn
-					</p>
-					<div
-						class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
-			<a href="#" class="group hover:drop-shadow-md">
-				<div class="flex flex-col h-8 justify-end relative">
-					<p
-						class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
-					>
-						Về chúng tôi
-					</p>
-					<div
-						class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
-					></div>
-				</div>
-			</a>
+			{#if $userStore}
+				<a href="/schedule" class="group hover:drop-shadow-md">
+					<div class="flex flex-col h-8 justify-end relative">
+						<p
+							class="leading-5 text-white text-lg pb-1 font-medium transition-all duration-160 ease-out uppercase"
+						>
+							Đặt lịch hẹn
+						</p>
+						<div
+							class="bg-white h-0.5 transition-all duration-200 ease-out w-0 group-hover:w-full"
+						></div>
+					</div>
+				</a>
+			{/if}
 		</Container>
 		{#if $userStore}
 			<HeaderUserDropdown userAuth={$userStore} inLandingHeader on:logout={illegalLogout} />
 		{:else}
 			<button
 				type="button"
-				class="absolute shadow-md flex gap-2 right-0 btn rounded-r-none text-white text-lg top-1/2 -translate-y-1/2 bg-gradient-to-r from-sky-800 to-teal-800"
+				class="absolute origin-right shadow-md flex gap-2 right-0 btn rounded-r-none text-white text-lg top-1/2 -translate-y-1/2 bg-gradient-to-r from-sky-800 to-teal-800"
 				on:click={() => loginBtn?.click()}
 			>
 				<i class="fa-regular fa-right-to-bracket"></i>

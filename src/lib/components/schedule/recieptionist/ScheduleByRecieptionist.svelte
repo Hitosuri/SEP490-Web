@@ -173,6 +173,7 @@
 	$: selectedStartMinutes = (Math.min(selectedStart, selectedEnd) % 4) * 15;
 	$: selectedEndHours = Math.floor(Math.max(selectedStart, selectedEnd) / 4);
 	$: selectedEndMinutes = (Math.max(selectedStart, selectedEnd) % 4) * 15;
+	$: sliderLower = Math.max(lowerLimit, Math.min(selectedStart, selectedEnd));
 
 	onMount(() => {
 		MinuteTick.addEvent(calculateLowerLimitActive);
@@ -188,9 +189,9 @@
 		}
 
 		if (selectedEnd > selectedStart) {
-			selectedEnd = selectedStart + value + 1;
+			selectedEnd = sliderLower + value + 1;
 		} else {
-			selectedStart = selectedEnd + value + 1;
+			selectedStart = sliderLower + value + 1;
 		}
 	}
 
@@ -497,6 +498,9 @@
 	}
 
 	async function onSelectedDateChange(date: DateValue | DateValue[] | undefined) {
+		if (editingSchedule) {
+			selectedEnd = selectedStart = 0;
+		}
 		if (!date || (Array.isArray(date) && date.length === 0)) {
 			return;
 		}
@@ -602,7 +606,10 @@
 		selectedEnd =
 			schedule.endAt.getHours() / scheduleStepInHour +
 			schedule.endAt.getMinutes() / scheduleStepInMinute;
-		endSliderValue = Math.abs(selectedEnd - selectedStart) - 1;
+		rowCount = scheduleByDoctors.findIndex((x) => x[0].id === schedule.doctor.id);
+		selectedTop = rowCount * 64;
+		sliderLower = Math.max(lowerLimit, Math.min(selectedStart, selectedEnd));
+		endSliderValue = Math.abs(Math.max(selectedEnd, selectedStart) - sliderLower) - 1;
 		timeChanged = false;
 		rangeLimit = calculateRangeLimit();
 		selectionInDoctor = schedule.doctor;
@@ -939,7 +946,7 @@
 								);
 								if (timelineSelection) {
 									selectedEnd = Math.min(Math.max(quarterCount, rangeLimit[0]), rangeLimit[1]);
-									endSliderValue = Math.abs(selectedEnd - selectedStart) - 1;
+									endSliderValue = Math.abs(Math.max(selectedEnd, selectedStart) - sliderLower) - 1;
 									scheduleMenuTriggerLeft = (selectedEnd + 2) * stepWidth;
 								}
 							}}
@@ -974,7 +981,7 @@
 								</div>
 							</div>
 							<div
-								class="w-4 h-16 py-0.5 absolute z-[2] {selectedRange > 0 ? 'block' : 'hidden'}"
+								class="h-16 py-0.5 absolute z-[2] {selectedRange > 0 ? 'block' : 'hidden'}"
 								style="left: {selectedLeft}px; top: {selectedTop}px; width: {selectedWidth}px"
 							>
 								<div
@@ -994,18 +1001,17 @@
 							{#if editingSchedule}
 								<div
 									class="absolute z-50 h-16 flex items-center"
-									style="left: {selectedLeft +
+									style="left: {sliderLower * stepWidth +
+										40 +
 										stepWidth -
-										8}px; top: {selectedTop}px; width: {(rangeLimit[1] -
-										Math.min(selectedStart, selectedEnd) -
-										1) *
+										8}px; top: {selectedTop}px; width: {(rangeLimit[1] - sliderLower - 1) *
 										stepWidth +
 										12}px"
 								>
 									<input
 										type="range"
 										class="end-slider"
-										max={rangeLimit[1] - Math.min(selectedStart, selectedEnd) - 1}
+										max={rangeLimit[1] - sliderLower - 1}
 										bind:value={endSliderValue}
 										on:mouseenter={() => (endHovering = true)}
 										on:mouseleave={() => (endHovering = false)}

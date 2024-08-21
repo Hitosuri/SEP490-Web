@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 	import NumberInput from '$lib/components/common/NumberInput.svelte';
+	import { ScheduleStatus } from '$lib/constants/schedule-constant';
 	import endpoints from '$lib/endpoints';
 	import { editScheduleSchema } from '$lib/form-schemas/edit-schedule-schema';
 	import { formatCompactDate, formatFullDate, formatHourMinute } from '$lib/helpers/formatters';
@@ -33,14 +34,24 @@
 
 			toast.promise(
 				handleToastFetch(
-					fetch(endpoints.schedule.editByRecieptionist(schedule.id), {
-						method: 'PUT',
-						headers: {
-							'content-type': 'application/json',
-							Authorization: `Bearer ${$userStore.token}`
-						},
-						body: JSON.stringify(form.data)
-					}),
+					() => {
+						const { startAt, ...others } = form.data;
+						const rielForm: Record<string, unknown> = {
+							...others,
+							startAt:
+								schedule.status === ScheduleStatus.DONE && schedule.startAt <= new Date()
+									? null
+									: startAt
+						};
+						return fetch(endpoints.schedule.editByRecieptionist(schedule.id), {
+							method: 'PUT',
+							headers: {
+								'content-type': 'application/json',
+								Authorization: `Bearer ${$userStore.token}`
+							},
+							body: JSON.stringify(rielForm)
+						});
+					},
 					{ success: 'Cập nhật lịch hẹn thành công' },
 					() => {
 						dispatch('updated');

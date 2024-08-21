@@ -1,5 +1,9 @@
+<script>
+	import Container from '../common/Container.svelte';
+</script>
+
 <div class="bg-surface-900">
-	<div class="container mx-auto text-white">
+	<Container class="text-white">
 		<div class="border-b border-surface-600 py-12 flex justify-between items-start">
 			<div>
 				<img class="h-12" src="/images/prodental-white.png" alt="" />
@@ -16,10 +20,14 @@
 				<h4 class="text-lg uppercase font-medium">Liên hệ với chúng tôi</h4>
 				<div class="flex mt-6 justify-evenly">
 					<div class="size-16 bg-white rounded-full flex justify-center items-center">
-						<img src="/images/icons/facebook.svg" class="h-10" alt="Facebook" />
+						<a href="https://www.facebook.com/Nhakhoabacsytrinh.con" target="_blank">
+							<img src="/images/icons/facebook.svg" class="h-10" alt="Facebook" />
+						</a>
 					</div>
 					<div class="size-16 bg-white rounded-full flex justify-center items-center">
-						<img src="/images/icons/zalo.svg" class="h-10" alt="Facebook" />
+						<a href="https://zalo.me/0975094968" target="_blank">
+							<img src="/images/icons/zalo.svg" class="h-10" alt="Facebook" />
+						</a>
 					</div>
 				</div>
 			</div>
@@ -28,5 +36,5 @@
 			©2024,
 			<a href="/" title="nhakhoatrinh.com" class="hover:underline">nhakhoatrinh.com</a>
 		</p>
-	</div>
+	</Container>
 </div>
