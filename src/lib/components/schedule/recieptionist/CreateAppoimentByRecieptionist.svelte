@@ -172,7 +172,7 @@
 		</button>
 	</div>
 	<h1 class="font-semibold text-2xl mt-6">Tạo lịch hẹn</h1>
-	<p class="font-semibold text-surface-400 mb-6">Tạo lịch hẹn khám cho bệnh nhân</p>
+	<p class="font-semibold text-surface-400 mb-6">Tạo lịch hẹn khám cho khách hàng</p>
 	<form use:enhance method="post">
 		<fieldset disabled={requesting} class="grid grid-cols-2 gap-4">
 			<div>
@@ -203,7 +203,7 @@
 				<Field {form} name="patientId">
 					<Control let:attrs>
 						<Label class="font-semibold text-surface-500 select-none mb-1">
-							Bệnh nhân<sup class="text-red-500">*</sup>
+							Khách hàng<sup class="text-red-500">*</sup>
 						</Label>
 						<Combobox.Root
 							items={patients}

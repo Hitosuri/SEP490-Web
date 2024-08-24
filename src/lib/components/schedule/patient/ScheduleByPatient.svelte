@@ -21,7 +21,8 @@
 	import {
 		ScheduleStatus,
 		scheduleStepInHour,
-		scheduleStepInMinute
+		scheduleStepInMinute,
+		scheduleStatusInfo
 	} from '$lib/constants/schedule-constant';
 	import { handleToastFetch } from '$lib/helpers/utils';
 
@@ -38,6 +39,18 @@
 	const upperLimit = 23 / scheduleStepInHour;
 	const baseStepWidth = 32;
 	const doctorColumnWidth = 160;
+	const currentDate = new Date();
+	const utcDate = new Date(
+    Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        currentDate.getUTCDate(),
+        currentDate.getUTCHours(),
+        currentDate.getUTCMinutes(),
+        currentDate.getUTCSeconds(),
+        currentDate.getUTCMilliseconds()
+    )
+);
 	let scheduleListElement: HTMLDivElement;
 	let scheduleMenuOpened = false;
 	let scheduleGrabing = false;
@@ -59,7 +72,10 @@
 	$: lowerLimit = calculateLowerLimit(selectedDate);
 	$: blockPastWidth = lowerLimit * stepWidth;
 	$: selectedDateSchedules = allSchedule.filter((x) => x.startAt.getDate() === selectedDate.day);
-	$: waitConfirmSchedules = patientSchedules.filter((x) => x.status === ScheduleStatus.PENDING);
+	$: waitConfirmSchedules = patientSchedules.filter(
+		(x) =>
+			(x.status === ScheduleStatus.PENDING || x.status === ScheduleStatus.CONFIRMED) && (x.startAt >= utcDate || ((x.endAt ?? x.startAt)  >= utcDate))
+	);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
 	$: console.log(scheduleByDoctors);
 
@@ -411,6 +427,46 @@
 			});
 		}
 	}
+
+	function confirmNewSchedule(schedule: ScheduleFull) {
+		toast.promise(
+			handleToastFetch(
+				fetch(endpoints.schedule.confirmFromPatient(schedule.token, schedule.isPatientConfirm = true), {
+					method: 'PUT',
+					headers: {
+						'content-type': 'application/json'
+					}
+				}),
+				{ success: 'Xác nhận lịch hẹn thành công' },
+				() => filtering()
+			),
+			{
+				loading: 'Đang xử lý...',
+				success: (msg) => msg ?? 'Xác nhận lịch hẹn thành công',
+				error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình xác nhận lịch hẹn mới'
+			}
+		);
+	}
+
+	function rejectNewSchedule(schedule: ScheduleFull) {
+		toast.promise(
+			handleToastFetch(
+				fetch(endpoints.schedule.confirmFromPatient(schedule.token, schedule.isPatientConfirm = false), {
+					method: 'PUT',
+					headers: {
+						'content-type': 'application/json'
+					}
+				}),
+				{ success: 'Từ chối lịch hẹn thành công' },
+				() => filtering()
+			),
+			{
+				loading: 'Đang xử lý...',
+				success: (msg) => msg ?? 'Từ chối lịch hẹn thành công',
+				error: (msg) => String(msg ?? '') || 'Đã xảy ra lỗi trong quá trình từ chối lịch hẹn mới'
+			}
+		);
+	}
 </script>
 
 <svelte:head>
@@ -428,57 +484,88 @@
 			<div class="flex flex-wrap gap-4">
 				{#each waitConfirmSchedules as schedule (schedule.id)}
 					<div
-						class="bg-white border pr-1 sm:pr-3 py-2 sm:py-3 shadow-md rounded-md flex items-center gap-4 bg-"
+						class="bg-white border pr-1 py-2 sm:py-3 shadow-md rounded-md items-center gap-4 bg-"
 					>
-						<button
-							type="button"
-							class="font-bold text-success-800 rounded-r pr-2 pl-4 py-1 bg-slate-200 text-sm"
-							on:click={() => scrollToSchedule(schedule)}
-						>
-							{schedule.order + 1}
-						</button>
-						<div>
-							<p class="text-xs sm:text-sm font-bold text-surface-400">
-								{formatCompactDateTime(schedule.startAt)}
-							</p>
-							<p class="text-sm sm:text-base font-medium">Bs. {schedule.doctor.name}</p>
-						</div>
-						<div>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger class="btn-icon size-9 hover:variant-soft-primary">
-									<i class="fa-solid fa-ellipsis-vertical"></i>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content
-									transition={fly}
-									transitionConfig={{
-										duration: 200,
-										y: 30,
-										easing: cubicOut
-									}}
-									class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
+						<div class="flex justify-between gap-4 bg-">
+							<div class="flex items-center gap-4">
+								<button
+									type="button"
+									class="font-bold text-success-800 rounded-r pr-2 pl-4 py-1 bg-slate-200 text-sm"
+									on:click={() => scrollToSchedule(schedule)}
 								>
-									<DropdownMenu.Item
-										on:click={() => editAppointment(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+									{schedule.order + 1}
+								</button>
+								<div>
+									<p class="text-xs sm:text-sm font-bold text-surface-400">
+										{formatCompactDateTime(schedule.startAt)}
+									</p>
+									<p class="text-sm sm:text-base font-medium">Bs. {schedule.doctor.name}</p>
+								</div>
+							</div>
+
+							<div>
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger class="btn-icon size-9 hover:variant-soft-primary">
+										<i class="fa-solid fa-ellipsis-vertical"></i>
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content
+										transition={fly}
+										transitionConfig={{
+											duration: 200,
+											y: 30,
+											easing: cubicOut
+										}}
+										class="w-full max-w-40 rounded-md border border-surface-100 bg-white p-1 shadow-lg"
 									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-regular fa-calendar-lines-pen"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										disabled={schedule.startAt.getTime() < currentMinute.getTime()}
-										on:click={() => deleteSchedule(schedule)}
-										class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
-									>
-										<div class="size-4 text-center *:block">
-											<i class="fa-regular fa-calendar-circle-minus"></i>
-										</div>
-										<span class="font-semibold text-sm leading-4">Xoá lịch</span>
-									</DropdownMenu.Item>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
+										<DropdownMenu.Item
+											on:click={() => editAppointment(schedule)}
+											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+										>
+											<div class="size-4 text-center *:block">
+												<i class="fa-regular fa-calendar-lines-pen"></i>
+											</div>
+											<span class="font-semibold text-sm leading-4">Sửa lịch hẹn</span>
+										</DropdownMenu.Item>
+										<DropdownMenu.Item
+											disabled={schedule.startAt.getTime() < currentMinute.getTime()}
+											on:click={() => deleteSchedule(schedule)}
+											class="data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-500 data-[disabled]:pointer-events-none data-[disabled]:text-surface-300 px-4 py-3 rounded select-none flex gap-3 items-center cursor-pointer"
+										>
+											<div class="size-4 text-center *:block">
+												<i class="fa-regular fa-calendar-circle-minus"></i>
+											</div>
+											<span class="font-semibold text-sm leading-4">Xoá lịch</span>
+										</DropdownMenu.Item>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+							</div>
 						</div>
+						<div class="flex justify-center mt-3">
+							<div
+								class="{(scheduleStatusInfo[schedule.status]?.styleClasses ?? []).join(
+									' '
+								)} border px-2 py-1 rounded-full w-fit text-sm font-medium tracking-tight"
+							>
+								{scheduleStatusInfo[schedule.status]?.label ?? ''}
+							</div>
+						</div>
+						{#if !schedule.isPatientConfirm}
+							<div class="mt-3 pr-2 pl-2">
+								Thời gian khám đã được thay đổi vui lòng kiểm tra lại
+							</div>
+							<fieldset
+								class="flex gap-4 mt-4 ml-1 font-medium *:btn *:rounded-container-token *:flex-1"
+							>
+								<button type="button" class="variant-filled-error" on:click={() => rejectNewSchedule(schedule)}>
+									<i class="fa-solid fa-cancel"></i>
+									<span class="pl-1">Từ chối</span>
+								</button>
+								<button type="button" class="variant-filled-primary" on:click={() => confirmNewSchedule(schedule)}>
+									<i class="fa-solid fa-check"></i>
+									<span class="pl-1">Đồng ý</span>
+								</button>
+							</fieldset>
+						{/if}
 					</div>
 				{/each}
 			</div>

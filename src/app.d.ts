@@ -153,6 +153,7 @@ interface ScheduleFull {
 	description?: string;
 	order: number;
 	anotherPersonDto?: AnotherPerson;
+	token: string
 }
 
 interface RecordListItem {
