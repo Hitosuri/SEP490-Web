@@ -333,6 +333,10 @@
 				}
 			]}
 			on:sortField={(e) => selectSorting(e.detail)}
+			on:pageChange={(e) => {
+				currentPage = e.detail;
+				filtering(lastestFilterOption, e.detail, pageSize, true);
+			}}
 			let:fieldData
 			let:field
 		>
