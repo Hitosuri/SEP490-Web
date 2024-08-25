@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { error } from '@sveltejs/kit';
 	import endpoints from '$lib/endpoints';
 	import { editRecordSchema } from '$lib/form-schemas/edit-record-schema';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';

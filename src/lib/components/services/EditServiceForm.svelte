@@ -176,6 +176,7 @@
 						<input
 							{...attrs}
 							type="text"
+							maxlength={255}
 							placeholder="Nhập tên dịch vụ..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.name}

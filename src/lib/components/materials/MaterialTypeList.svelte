@@ -301,6 +301,7 @@
 						</Label>
 						<input
 							type="text"
+							maxlength={255}
 							placeholder="Nhập tên..."
 							class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 							{...attrs}
@@ -318,6 +319,7 @@
 						</Label>
 						<input
 							type="text"
+							maxlength={255}
 							placeholder="Nhập mã..."
 							class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 							{...attrs}

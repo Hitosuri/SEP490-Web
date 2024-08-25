@@ -275,6 +275,7 @@
 									<Control let:attrs>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập tên bệnh nhân..."
 											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 											{...attrs}
@@ -287,6 +288,7 @@
 									<Control let:attrs>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập số điện thoại..."
 											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 											{...attrs}
@@ -299,6 +301,7 @@
 									<Control let:attrs>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập email..."
 											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 											{...attrs}
@@ -311,6 +314,7 @@
 									<Control let:attrs>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập tên bác sĩ..."
 											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 											{...attrs}

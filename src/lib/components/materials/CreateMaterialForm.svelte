@@ -149,6 +149,7 @@
 							<input
 								{...attrs}
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên vật tư..."
 								class="input rounded-container-token mt-1"
 								bind:value={$formData.name}
@@ -227,6 +228,7 @@
 										class="textarea rounded-md bg-white"
 										{...attrs}
 										rows="3"
+										maxlength={255}
 										placeholder="Nhập liều dùng..."
 										bind:value={$formData.dosage}
 									></textarea>
@@ -244,6 +246,7 @@
 										class="textarea rounded-md bg-white"
 										{...attrs}
 										rows="3"
+										maxlength={255}
 										placeholder="Nhập cách dùng..."
 										bind:value={$formData.uses}
 									></textarea>
@@ -262,6 +265,7 @@
 							<input
 								{...attrs}
 								type="text"
+								maxlength={20}
 								placeholder="Gói, hộp, l, kg..."
 								class="input rounded-container-token mt-1"
 								bind:value={$formData.unit}
@@ -295,6 +299,7 @@
 							<input
 								{...attrs}
 								type="text"
+								maxlength={20}
 								placeholder="Viên, gói, ml, g..."
 								class="input rounded-container-token mt-1"
 								bind:value={$formData.smallestUnit}
@@ -358,6 +363,7 @@
 								class="textarea rounded-md bg-white"
 								{...attrs}
 								rows="3"
+								maxlength={255}
 								placeholder="Nhập mô tả..."
 								bind:value={$formData.description}
 							></textarea>

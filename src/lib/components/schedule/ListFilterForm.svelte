@@ -52,6 +52,7 @@
 				<input
 					{...attrs}
 					type="text"
+					maxlength={10}
 					class="input rounded-container-token mt-1"
 					placeholder="Số điện thoại bệnh nhân..."
 					bind:value={$formData.patientPhone}
@@ -67,6 +68,7 @@
 				<input
 					{...attrs}
 					type="text"
+					maxlength={255}
 					class="input rounded-container-token mt-1"
 					placeholder="Tên bác sĩ..."
 					bind:value={$formData.doctorName}

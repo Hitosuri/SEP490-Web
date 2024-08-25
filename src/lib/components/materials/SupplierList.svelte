@@ -195,6 +195,7 @@
 				</div>
 				<input
 					type="text"
+					maxlength={255}
 					placeholder="Nhập tên nhà cung cấp..."
 					class="border-none !focus:outline-0 rounded-none"
 					bind:value={nameValue}
@@ -206,6 +207,7 @@
 				</div>
 				<input
 					type="text"
+					maxlength={255}
 					placeholder="Nhập số điện thoại..."
 					class="border-none !focus:outline-0 rounded-none"
 					bind:value={phoneValue}
@@ -299,6 +301,7 @@
 						</Label>
 						<input
 							type="text"
+							maxlength={255}
 							placeholder="Nhập tên..."
 							class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 							{...attrs}
@@ -316,6 +319,7 @@
 						</Label>
 						<input
 							type="text"
+							maxlength={255}
 							placeholder="Nhập email..."
 							class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 							{...attrs}
@@ -333,6 +337,7 @@
 						</Label>
 						<input
 							type="text"
+							maxlength={10}
 							placeholder="Nhập số điện thoại..."
 							class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 							{...attrs}
@@ -350,6 +355,7 @@
 						</Label>
 						<input
 							type="text"
+							maxlength={255}
 							placeholder="Nhập địa chỉ..."
 							class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 							{...attrs}

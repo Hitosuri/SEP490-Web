@@ -404,6 +404,7 @@
 						<Control let:attrs>
 							<input
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên vật tư..."
 								class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 								{...attrs}
@@ -548,6 +549,7 @@
 						<Control let:attrs>
 							<input
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên nhà cung cấp..."
 								class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 								{...attrs}
@@ -637,6 +639,7 @@
 							<Label class="text-sm font-semibold text-surface-500 select-none">Tên vật tư</Label>
 							<input
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên vật tư..."
 								class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 								{...attrs}
@@ -789,6 +792,7 @@
 							<Label class="text-sm font-semibold text-surface-500 select-none">Nhà cung cấp</Label>
 							<input
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên nhà cung cấp..."
 								class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 								{...attrs}

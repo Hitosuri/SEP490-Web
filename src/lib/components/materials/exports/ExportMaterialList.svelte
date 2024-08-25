@@ -231,6 +231,7 @@
 		</div>
 		<input
 			type="text"
+			maxlength={255}
 			placeholder="Nhập tên người tạo..."
 			class="border-none !focus:outline-0 rounded-none"
 			bind:value={requesterName}
@@ -242,6 +243,7 @@
 		</div>
 		<input
 			type="text"
+			maxlength={255}
 			placeholder="Nhập tên nhà cung cấp..."
 			class="border-none !focus:outline-0 rounded-none"
 			bind:value={supplierName}

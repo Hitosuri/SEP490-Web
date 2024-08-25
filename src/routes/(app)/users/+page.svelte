@@ -476,6 +476,7 @@
 										>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập tên nhân viên..."
 											class="input rounded-md bg-white w-auto mt-1"
 											{...attrs}
@@ -490,6 +491,7 @@
 										<Label class="text-sm font-semibold text-surface-500 select-none">Email</Label>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập email nhân viên..."
 											class="input rounded-md bg-white w-auto mt-1"
 											{...attrs}
@@ -506,6 +508,7 @@
 										>
 										<input
 											type="text"
+											maxlength={10}
 											placeholder="Nhập sđt nhân viên..."
 											class="input rounded-md bg-white w-auto mt-1"
 											{...attrs}

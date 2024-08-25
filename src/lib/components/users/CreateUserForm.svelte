@@ -90,6 +90,7 @@
 						<input
 							{...attrs}
 							type="text"
+							maxlength={255}
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.name}
 						/>
@@ -106,6 +107,7 @@
 						<input
 							{...attrs}
 							type="email"
+							maxlength={255}
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.email}
 						/>
@@ -122,6 +124,7 @@
 						<input
 							{...attrs}
 							type="text"
+							maxlength={10}
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.phone}
 						/>
