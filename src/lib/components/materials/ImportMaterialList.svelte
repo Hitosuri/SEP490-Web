@@ -319,6 +319,7 @@
 							<Label class="text-sm font-semibold text-surface-500 select-none">Tên vật tư</Label>
 							<input
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên vật tư..."
 								class="input rounded-container-token bg-white/70 focus-within:bg-white/100 mt-1"
 								{...attrs}
@@ -335,6 +336,7 @@
 							</Label>
 							<input
 								type="text"
+								maxlength={255}
 								placeholder="Nhập tên người nhập..."
 								class="input rounded-container-token bg-white/70 focus-within:bg-white/100 mt-1"
 								{...attrs}

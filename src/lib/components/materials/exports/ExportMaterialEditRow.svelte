@@ -74,6 +74,7 @@
 	</td>
 	<td class="px-2 py-2 align-top">
 		<textarea
+			maxlength={255}
 			class="textarea rounded-md bg-white"
 			placeholder="Nhập ghi chú..."
 			bind:value={note}

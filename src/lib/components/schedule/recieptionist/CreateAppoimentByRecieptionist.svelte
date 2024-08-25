@@ -172,7 +172,7 @@
 		</button>
 	</div>
 	<h1 class="font-semibold text-2xl mt-6">Tạo lịch hẹn</h1>
-	<p class="font-semibold text-surface-400 mb-6">Tạo lịch hẹn khám cho khách hàng</p>
+	<p class="font-semibold text-surface-400 mb-6">Tạo lịch hẹn khám cho bệnh nhân</p>
 	<form use:enhance method="post">
 		<fieldset disabled={requesting} class="grid grid-cols-2 gap-4">
 			<div>
@@ -203,7 +203,7 @@
 				<Field {form} name="patientId">
 					<Control let:attrs>
 						<Label class="font-semibold text-surface-500 select-none mb-1">
-							Khách hàng<sup class="text-red-500">*</sup>
+							Bệnh nhân<sup class="text-red-500">*</sup>
 						</Label>
 						<Combobox.Root
 							items={patients}
@@ -294,6 +294,7 @@
 								<input
 									{...attrs}
 									type="text"
+									maxlength={255}
 									placeholder="Nhập tên bệnh nhân..."
 									class="input rounded-container-token bg-white/100"
 									bind:value={anotherPatient.createForPatientName}
@@ -308,7 +309,7 @@
 								<Label class="font-semibold text-surface-500 select-none mb-1">
 									Tuổi bệnh nhân<sup class="text-red-500">*</sup>
 								</Label>
-								<NumberInput bind:value={anotherPatient.createForPatientAge} />
+								<NumberInput max={200} bind:value={anotherPatient.createForPatientAge} />
 							</Control>
 							<FieldErrors class="text-sm mt-1" />
 						</Field>
@@ -322,6 +323,7 @@
 								<input
 									{...attrs}
 									type="text"
+									maxlength={255}
 									placeholder="Nhập ghi chú..."
 									class="input rounded-container-token bg-white/100"
 									bind:value={anotherPatient.noteForPatientCreatedBy}
@@ -340,6 +342,7 @@
 									{...attrs}
 									type="text"
 									placeholder="Bố, mẹ, ông, bà..."
+									maxlength={20}
 									class="input rounded-container-token bg-white/100"
 									bind:value={anotherPatient.relationWithCurrentPatient}
 								/>
