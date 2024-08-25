@@ -83,7 +83,7 @@
 				class="shadow-md text-sm z-20 px-4 py-3 border rounded-md bg-white leading-6"
 			>
 				<p>
-					<span>Bệnh nhân:</span>
+					<span>Khách hàng:</span>
 					<span class={!schedule.patient.name ? 'text-warning-500' : 'font-semibold tracking-wide'}
 						>{schedule.patient.name}</span
 					>
