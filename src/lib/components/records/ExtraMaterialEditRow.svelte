@@ -11,6 +11,7 @@
 	export let selectedMaterialId: number;
 	export let quantity: number;
 	export let isBasicUnit: boolean;
+	export let smallestUnitQuantity: number;
 	export let excludeIds: number[] = [];
 	export let initMaterial: Material | undefined = undefined;
 	export let initUnit: boolean | undefined = undefined;
@@ -29,10 +30,11 @@
 	let errors = getContext<Readable<Record<string | number, string[]>>>('material-errors');
 
 	$: selectedMaterialId = selectedMaterial?.value.id ?? 0;
+	$: smallestUnitQuantity = selectedMaterial?.value.smallestUnitQuantity ?? 0;
 	$: isBasicUnit = selectedUnit?.value ?? true;
 	$: onSelectedMaterialChanged(selectedMaterial);
 	$: onSelectedUnitChanged(selectedUnit);
-	$: errorList = $errors[index] ?? []
+	$: errorList = $errors[index] ?? [];
 
 	function onSelectedUnitChanged(selectedUnit: Selected<boolean> | undefined) {
 		if (

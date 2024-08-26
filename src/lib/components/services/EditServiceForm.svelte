@@ -14,6 +14,10 @@
 	import ExtraMaterialEditRow from '$lib/components/records/ExtraMaterialEditRow.svelte';
 	import { browser } from '$app/environment';
 
+	type UsedMaterial = z.infer<typeof createTreatmentSchema>['materials'][number] & {
+		smallestUnitQuantity: number;
+	};
+
 	export let editTreatmentForm: SuperValidated<z.infer<typeof createTreatmentSchema>>;
 	export let treatment: Treatment;
 
@@ -23,6 +27,45 @@
 		validators: zodClient(createTreatmentSchema),
 		resetForm: false,
 		SPA: true,
+		onChange: ({ paths, get }) => {
+			const path = paths[0] ?? '';
+			if (!path.endsWith('.quantity')) {
+				return;
+			}
+
+			const index = Number(path.split(/[[\].]+/).filter((x) => x)[1]);
+			const targetMaterial = usedMaterials[index];
+			const value = get(path);
+
+			if ((targetMaterial && !value) || (typeof value === 'number' && value < 0)) {
+				usedMaterials[index].quantity = 0;
+				return;
+			}
+
+			if (
+				targetMaterial &&
+				!targetMaterial.isBasicUnit &&
+				targetMaterial.quantity > 0 &&
+				targetMaterial.quantity % targetMaterial.smallestUnitQuantity !== 0
+			) {
+				errors.update((x) => {
+					if (!x.materials) {
+						x.materials = {};
+					}
+					if (!x.materials[index]) {
+						x.materials[index] = {};
+					}
+					if (!x.materials[index].quantity) {
+						x.materials[index].quantity = [];
+					}
+					x.materials[index].quantity = [
+						...x.materials[index].quantity,
+						`Số lượng xuất lẻ phải là số chia hết cho ${targetMaterial.smallestUnitQuantity}`
+					];
+					return x;
+				});
+			}
+		},
 		onUpdate: ({ form }) => {
 			if (!form.valid || !$userStore) {
 				return;
@@ -52,16 +95,18 @@
 	});
 	const { form: formData, enhance, errors } = form;
 	let requesting = false;
-	let usedMaterials: z.infer<typeof createTreatmentSchema>['materials'] = [
+	let extraMaterials: Material[] = [];
+	let usedMaterials: UsedMaterial[] = [
 		...treatment.materials.map((x) => ({
 			materialId: x.materialId,
 			quantity: x.quantity,
-			isBasicUnit: x.isBasicUnit
+			isBasicUnit: x.isBasicUnit,
+			smallestUnitQuantity:
+				extraMaterials.find((y) => y.id === x.materialId)?.smallestUnitQuantity ?? 1
 		}))
 	];
 	let loadStatus: 'init' | 'loading' | 'fail' | 'success' =
 		treatment.materials.length > 0 ? 'init' : 'success';
-	let extraMaterials: Material[] = [];
 	let materialErrors = derived(errors, (errors) => {
 		if (!errors.materials) {
 			return {} as Record<number | string, string[]>;
@@ -141,7 +186,8 @@
 			{
 				materialId: 0,
 				quantity: 0,
-				isBasicUnit: true
+				isBasicUnit: true,
+				smallestUnitQuantity: 0
 			}
 		];
 	}
@@ -256,6 +302,7 @@
 										bind:selectedMaterialId={material.materialId}
 										bind:quantity={material.quantity}
 										bind:isBasicUnit={material.isBasicUnit}
+										bind:smallestUnitQuantity={material.smallestUnitQuantity}
 										index={i}
 										excludeIds={allMaterialId}
 										initMaterial={foundInExtra}
@@ -268,6 +315,7 @@
 										bind:selectedMaterialId={material.materialId}
 										bind:quantity={material.quantity}
 										bind:isBasicUnit={material.isBasicUnit}
+										bind:smallestUnitQuantity={material.smallestUnitQuantity}
 										index={i}
 										excludeIds={allMaterialId}
 										on:remove={() => removeMaterial(i)}

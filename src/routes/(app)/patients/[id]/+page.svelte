@@ -324,7 +324,7 @@
 					{#each records as record (record.id)}
 						<tr class="border-t">
 							<td class="px-4 py-2">
-								{#if !$userStore?.roles.includes(Role.Recieptionist)}
+								{#if $userStore?.roles.includes(Role.Doctor)}
 									<Tooltip.Root openDelay={0}>
 										<Tooltip.Trigger asChild let:builder>
 											<a
@@ -357,7 +357,10 @@
 							<td class="text-start px-4 py-2">{record.reason}</td>
 							<td class="text-center px-4 py-2">{formatCompactDateTime(record.visitDate)}</td>
 							<td class="text-center px-4 py-2">
-								<span class="badge border {recordStatusInfo[record.status]?.styleClasses.join(' ') ?? ''}">
+								<span
+									class="badge border {recordStatusInfo[record.status]?.styleClasses.join(' ') ??
+										''}"
+								>
 									{recordStatusInfo[record.status]?.label}
 								</span>
 							</td>

@@ -12,7 +12,7 @@ export const editRecordSchema = z.object({
 					invalid_type_error: 'Số lượng chỉ bao gồm số'
 				})
 				.int('Số lượng phải là số nguyên')
-				.gt(0, 'Số lượng không được âm'),
+				.positive('Số lượng phải là số dương'),
 			isBasicUnit: z.boolean().default(false)
 		})
 		.array()
