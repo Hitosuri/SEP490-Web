@@ -87,7 +87,7 @@
 			</div>
 			<h3 class="text-center md:text-lg lg:text-xl font-medium">Bác sĩ tay nghề cao</h3>
 			<p class="text-center px-1 text-xs sm:text-sm italic">
-				Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+				Luôn đảm bảo cá y bác sĩ là người tận tâm.
 			</p>
 		</div>
 		<div class="bg-teal-600 hidden sm:block">
@@ -96,7 +96,7 @@
 			</div>
 			<h3 class="text-center md:text-lg lg:text-xl font-medium">Cấy ghép implant</h3>
 			<p class="text-center px-1 text-xs sm:text-sm italic">
-				Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+				Dịch vụ cấy ghép implant cao cấp.
 			</p>
 		</div>
 		<div class="bg-teal-500 hidden lg:block">
@@ -105,7 +105,7 @@
 			</div>
 			<h3 class="text-center md:text-lg lg:text-xl font-medium">Dịch vụ chất lượng</h3>
 			<p class="text-center px-1 text-xs sm:text-sm italic">
-				Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+				Luôn đảm bảo chất lượng dịch vụ.
 			</p>
 		</div>
 	</div>
