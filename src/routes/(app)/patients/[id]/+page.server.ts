@@ -1,4 +1,4 @@
-import { filterRoles, Role } from '$lib/helpers/authorization';
+import { filterRoles } from '$lib/helpers/authorization';
 import endpoints from '$lib/endpoints';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
@@ -6,9 +6,10 @@ import { editPatientSchema } from '$lib/form-schemas/edit-patient-schema';
 import { zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';
 import { handleFetch } from '$lib/helpers/utils';
+import { UserFeature, userFeatureDetails } from '$lib/constants/user-feature-constant';
 
 export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
-	filterRoles(locals, url, Role.Doctor);
+	filterRoles(locals, url, ...(userFeatureDetails[UserFeature.PATIENTS_MANAGEMENT].roles ?? []));
 	const patientId = Number(params.id);
 	if (!patientId) {
 		error(400, { message: 'Id của bệnh nhân phải là số' });
@@ -21,7 +22,7 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 					Authorization: `Bearer ${locals.user?.token}`
 				}
 			}),
-			{ 404: 'loop' }
+			{ 404: 'Bệnh nhân không tồn tại' }
 		).then<ApiResponse<Patient>>((x) => x.json()),
 		handleFetch(
 			fetch(endpoints.records.get(patientId), {

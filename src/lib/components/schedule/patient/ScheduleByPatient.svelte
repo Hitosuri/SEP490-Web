@@ -63,7 +63,7 @@
 	let mouseAnchor: { x: number; y: number };
 	let scheduleScroll: { x: number; y: number };
 	let selectedDate: DateValue = today(getLocalTimeZone());
-	let addingDoctor: Selected<UserMinimal> | undefined;
+	let addingDoctor: Selected<User> | undefined;
 	let selectionInDoctor: UserMinimal | undefined;
 	let scheduleHovering = false;
 	let quarterCount = 0;
@@ -229,7 +229,7 @@
 		return Object.values(doctors);
 	}
 
-	async function searchDoctorFn(keyword: string): Promise<Selected<UserMinimal>[] | undefined> {
+	async function searchDoctorFn(keyword: string): Promise<Selected<User>[] | undefined> {
 		if (!$userStore) {
 			return;
 		}
@@ -249,7 +249,7 @@
 			return;
 		}
 
-		const data: ApiResponse<UserMinimal[]> = await response.json();
+		const data: ApiResponse<User[]> = await response.json();
 
 		if (!data.body) {
 			return;
@@ -633,7 +633,12 @@
 											regionInput="border-none bg-white w-full py-2 text-sm sm:text-base"
 											bind:selected={addingDoctor}
 											let:itemData
-										></SearchCombobox>
+										>
+											<div>
+												<p>{itemData.label}</p>
+												<p class="text-xs font-medium text-surface-400">{itemData.value.email}</p>
+											</div>
+										</SearchCombobox>
 									{/key}
 									<button
 										disabled={!addingDoctor}

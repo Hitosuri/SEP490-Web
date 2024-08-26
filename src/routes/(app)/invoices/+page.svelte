@@ -450,9 +450,10 @@
 			{#if field?.name === 'status'}
 				<td class="text-center">
 					{#if fieldData.status === RecordStatus.WAITTINGPAYMENT}
-						<span class="badge variant-soft-warning">Chưa thanh toán</span>
+						<span class="badge variant-soft-warning border border-warning-400">Chưa thanh toán</span
+						>
 					{:else if fieldData.status === RecordStatus.END}
-						<span class="badge variant-soft-success">Đã thanh toán</span>
+						<span class="badge variant-soft-success border border-success-400">Đã thanh toán</span>
 					{/if}
 				</td>
 			{:else if field?.name === 'examinationDate'}

@@ -15,9 +15,10 @@
 	import { type Writable } from 'svelte/store';
 	import { Tooltip } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
-	import { recordStatusInfo } from '$lib/constants/record-constant';
+	import { RecordStatus, recordStatusInfo } from '$lib/constants/record-constant';
 	import Container from '$lib/components/common/Container.svelte';
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
+	import { Role } from '$lib/helpers/authorization';
 
 	export let data: PageData;
 
@@ -323,38 +324,44 @@
 					{#each records as record (record.id)}
 						<tr class="border-t">
 							<td class="px-4 py-2">
-								<Tooltip.Root openDelay={0}>
-									<Tooltip.Trigger asChild let:builder>
-										<a
-											use:builder.action
-											{...builder}
-											href="/records/{record.id}"
-											class="btn-icon variant-outline-surface rounded-xl hover:variant-ghost-tertiary"
+								{#if !$userStore?.roles.includes(Role.Recieptionist)}
+									<Tooltip.Root openDelay={0}>
+										<Tooltip.Trigger asChild let:builder>
+											<a
+												use:builder.action
+												{...builder}
+												href="/records/{record.id}"
+												class="btn-icon variant-outline-surface rounded-xl hover:variant-ghost-tertiary"
+											>
+												<i class="fa-solid fa-circle-info"></i>
+											</a>
+										</Tooltip.Trigger>
+										<Tooltip.Content
+											transition={fly}
+											transitionConfig={{
+												duration: 200,
+												y: 30,
+												easing: cubicOut
+											}}
+											sideOffset={8}
+											class="shadow-md font-semibold px-4 py-3 border rounded-md bg-white"
 										>
-											<i class="fa-solid fa-circle-info"></i>
-										</a>
-									</Tooltip.Trigger>
-									<Tooltip.Content
-										transition={fly}
-										transitionConfig={{
-											duration: 200,
-											y: 30,
-											easing: cubicOut
-										}}
-										sideOffset={8}
-										class="shadow-md font-semibold px-4 py-3 border rounded-md bg-white"
-									>
-										Chi tiết
-										<Tooltip.Arrow class="border-l border-t" />
-									</Tooltip.Content>
-								</Tooltip.Root>
+											Chi tiết
+											<Tooltip.Arrow class="border-l border-t" />
+										</Tooltip.Content>
+									</Tooltip.Root>
+								{/if}
 							</td>
-							<td class="text-start px-4">{record.doctorName}</td>
-							<td class="text-end px-4">{record.doctorPhone}</td>
-							<td class="text-start px-4">{record.reason}</td>
-							<td class="text-center px-4">{formatCompactDateTime(record.visitDate)}</td>
-							<td class="text-center px-4">{recordStatusInfo[record.status]?.label}</td>
-							<td class="text-center px-4">
+							<td class="text-start px-4 py-2">{record.doctorName}</td>
+							<td class="text-end px-4 py-2">{record.doctorPhone}</td>
+							<td class="text-start px-4 py-2">{record.reason}</td>
+							<td class="text-center px-4 py-2">{formatCompactDateTime(record.visitDate)}</td>
+							<td class="text-center px-4 py-2">
+								<span class="badge border {recordStatusInfo[record.status]?.styleClasses.join(' ') ?? ''}">
+									{recordStatusInfo[record.status]?.label}
+								</span>
+							</td>
+							<td class="text-center px-4 py-2">
 								<input
 									type="checkbox"
 									disabled
