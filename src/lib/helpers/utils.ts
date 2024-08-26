@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { scheduleStepInHour, scheduleStepInMinute } from '$lib/constants/schedule-constant';
 import { Role } from '$lib/helpers/authorization';
 import { error, isHttpError } from '@sveltejs/kit';
 import { setError, type SuperValidated } from 'sveltekit-superforms';
@@ -172,4 +173,20 @@ export function downloadFile(blob: Blob, fileName: string) {
 	anchorElement.click();
 
 	URL.revokeObjectURL(href);
+}
+
+export function getDayValue(time: Date | undefined | null) {
+	if (!time) {
+		return 0;
+	}
+	return time.getFullYear() * 10000 + time.getMonth() * 100 + time.getDate();
+}
+
+export function normalizeStartEnd(start: Date, end: Date | undefined | null): [number, number] {
+	const normalizedStart = normalizeTime(start);
+	return [normalizedStart, end ? normalizeTime(end) : normalizedStart + 1];
+}
+
+export function normalizeTime(time: Date) {
+	return time.getHours() / scheduleStepInHour + time.getMinutes() / scheduleStepInMinute;
 }

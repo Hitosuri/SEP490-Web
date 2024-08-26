@@ -128,11 +128,14 @@ export default {
 		exportMaterial: `${env.PUBLIC_API_HOST}/api/statistics/export-material-statistic`
 	},
 	application: {
-		getByAdmin: `${env.PUBLIC_API_HOST}/api/Applications/GetListApplicationByAdmin`,
+		getByEmployee: `${env.PUBLIC_API_HOST}/api/Applications/GetListApplicationByEmployee`,
 		getByUser: `${env.PUBLIC_API_HOST}/api/Applications/GetListApplicationByUser`,
 		create: `${env.PUBLIC_API_HOST}/api/Applications/CreateApplications`,
-		edit: `${env.PUBLIC_API_HOST}/api/Applications/UpdateApplication`,
-		confirm: `${env.PUBLIC_API_HOST}/api/Applications/ConfirmApplicationById`,
-		delete: `${env.PUBLIC_API_HOST}/api/Applications/DeletedScheduleByPatient`
+		edit: (id: number) =>
+			`${env.PUBLIC_API_HOST}/api/Applications/UpdateApplication?applicationId=${id}`,
+		confirm: (id: number) =>
+			`${env.PUBLIC_API_HOST}/api/Applications/ConfirmApplicationById?applicationsId=${id}`,
+		delete: (id: number) =>
+			`${env.PUBLIC_API_HOST}/api/Applications/DeletedScheduleByPatient?applicationsId=${id}`
 	}
 };

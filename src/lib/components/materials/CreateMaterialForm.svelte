@@ -72,7 +72,9 @@
 						body: JSON.stringify(rielForm)
 					}),
 					{ success: 'Tạo vật tư thành công' },
-					() => dispatch('finish'),
+					() => {
+						dispatch('finish');
+					},
 					form
 				),
 				{

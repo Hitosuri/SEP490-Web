@@ -24,11 +24,16 @@
 		scheduleStepInMinute,
 		scheduleStatusInfo
 	} from '$lib/constants/schedule-constant';
-	import { handleToastFetch } from '$lib/helpers/utils';
+	import {
+		getDayValue,
+		handleToastFetch,
+		normalizeStartEnd,
+		normalizeTime
+	} from '$lib/helpers/utils';
 
 	export let allSchedule: ScheduleByPatient[];
 	export let patientSchedules: ScheduleFull[];
-
+	export let applications: Application[];
 	export let currentMonthValue: number;
 	export let createAppointmentByPatientForm: SuperValidated<
 		z.infer<typeof createAppointmentPatientSchema>
@@ -41,16 +46,16 @@
 	const doctorColumnWidth = 160;
 	const currentDate = new Date();
 	const utcDate = new Date(
-    Date.UTC(
-        currentDate.getUTCFullYear(),
-        currentDate.getUTCMonth(),
-        currentDate.getUTCDate(),
-        currentDate.getUTCHours(),
-        currentDate.getUTCMinutes(),
-        currentDate.getUTCSeconds(),
-        currentDate.getUTCMilliseconds()
-    )
-);
+		Date.UTC(
+			currentDate.getUTCFullYear(),
+			currentDate.getUTCMonth(),
+			currentDate.getUTCDate(),
+			currentDate.getUTCHours(),
+			currentDate.getUTCMinutes(),
+			currentDate.getUTCSeconds(),
+			currentDate.getUTCMilliseconds()
+		)
+	);
 	let scheduleListElement: HTMLDivElement;
 	let scheduleMenuOpened = false;
 	let scheduleGrabing = false;
@@ -74,20 +79,14 @@
 	$: selectedDateSchedules = allSchedule.filter((x) => x.startAt.getDate() === selectedDate.day);
 	$: waitConfirmSchedules = patientSchedules.filter(
 		(x) =>
-			(x.status === ScheduleStatus.PENDING || x.status === ScheduleStatus.CONFIRMED) && (x.startAt >= utcDate || ((x.endAt ?? x.startAt)  >= utcDate))
+			(x.status === ScheduleStatus.PENDING || x.status === ScheduleStatus.CONFIRMED) &&
+			(x.startAt >= utcDate || (x.endAt ?? x.startAt) >= utcDate)
 	);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
-	$: console.log(scheduleByDoctors);
-
-	$: blockRangeByDoctors = scheduleByDoctors.map((x) =>
-		x[1].map(
-			(y) =>
-				[
-					y.startAt.getHours() * 4 + y.startAt.getMinutes() / 15,
-					y.endAt.getHours() * 4 + y.endAt.getMinutes() / 15
-				] as [number, number]
-		)
-	);
+	$: ({ 1: blockRangeByDoctors, 2: blockRangeByApplications } = calculateBlockRange(
+		scheduleByDoctors,
+		applications
+	));
 	$: canCreateSchedule =
 		quarterCount >= lowerLimit &&
 		quarterCount < upperLimit &&
@@ -104,6 +103,46 @@
 	onDestroy(() => {
 		MinuteTick.removeEvent(calculateLowerLimitActive);
 	});
+
+	function calculateBlockRange(
+		scheduleByDoctors: [UserMinimal, ScheduleByPatient[]][],
+		applications: Application[]
+	) {
+		const g = scheduleByDoctors.map((x) => {
+			const currentDayValue = getDayValue(new Date());
+			const doctorApplications: [number, number][] = [];
+			applications
+				.filter((y) => y.userId === x[0].id)
+				.forEach((y) => {
+					const startDayValue = getDayValue(y.startAt);
+					const endDayValue = getDayValue(y.endAt);
+
+					if (startDayValue === currentDayValue && endDayValue === currentDayValue) {
+						doctorApplications.push(normalizeStartEnd(y.startAt, y.endAt));
+					} else if (startDayValue === currentDayValue) {
+						doctorApplications.push([normalizeTime(y.startAt), 24 / scheduleStepInHour]);
+					} else if (endDayValue === currentDayValue) {
+						doctorApplications.push([0, normalizeTime(y.startAt)]);
+					}
+				});
+
+			return {
+				1: x[0].id,
+				2: x[1].map((y) => normalizeStartEnd(y.startAt, y.endAt)).concat(doctorApplications),
+				3: doctorApplications
+			};
+		});
+		return {
+			1: g.map((x) => x[2]),
+			2: g.reduce(
+				(prev, curr) => {
+					prev[curr[1]] = curr[3];
+					return prev;
+				},
+				{} as Record<number, [number, number][]>
+			)
+		};
+	}
 
 	function calculateLowerLimitActive(time: Date) {
 		currentMinute = time;
@@ -431,7 +470,7 @@
 	function confirmNewSchedule(schedule: ScheduleFull) {
 		toast.promise(
 			handleToastFetch(
-				fetch(endpoints.schedule.confirmFromPatient(schedule.token, schedule.isPatientConfirm = true), {
+				fetch(endpoints.schedule.confirmFromPatient(schedule.token, true), {
 					method: 'PUT',
 					headers: {
 						'content-type': 'application/json'
@@ -451,7 +490,7 @@
 	function rejectNewSchedule(schedule: ScheduleFull) {
 		toast.promise(
 			handleToastFetch(
-				fetch(endpoints.schedule.confirmFromPatient(schedule.token, schedule.isPatientConfirm = false), {
+				fetch(endpoints.schedule.confirmFromPatient(schedule.token, false), {
 					method: 'PUT',
 					headers: {
 						'content-type': 'application/json'
@@ -556,11 +595,19 @@
 							<fieldset
 								class="flex gap-4 mt-4 ml-1 font-medium *:btn *:rounded-container-token *:flex-1"
 							>
-								<button type="button" class="variant-filled-error" on:click={() => rejectNewSchedule(schedule)}>
+								<button
+									type="button"
+									class="variant-filled-error"
+									on:click={() => rejectNewSchedule(schedule)}
+								>
 									<i class="fa-solid fa-cancel"></i>
 									<span class="pl-1">Từ chối</span>
 								</button>
-								<button type="button" class="variant-filled-primary" on:click={() => confirmNewSchedule(schedule)}>
+								<button
+									type="button"
+									class="variant-filled-primary"
+									on:click={() => confirmNewSchedule(schedule)}
+								>
 									<i class="fa-solid fa-check"></i>
 									<span class="pl-1">Đồng ý</span>
 								</button>
@@ -828,6 +875,7 @@
 								<div class="w-0 ml-auto" bind:this={limitEndElement}></div>
 							</div>
 							{#each scheduleByDoctors as pair (pair[0].id)}
+								{@const doctorApplications = blockRangeByApplications[pair[0].id]}
 								<div class="h-16 w-full border-b border-dashed relative">
 									{#each pair[1] as schedule (schedule.id)}
 										{@const leftOffset =
@@ -852,6 +900,16 @@
 											<TimelineItem schedule={ownSchedule} {stepWidth} />
 										{/if}
 									{/each}
+									{#if doctorApplications}
+										{#each doctorApplications as application}
+											{@const leftOffset = application[0] * stepWidth}
+											{@const width = Math.max(application[1] * stepWidth - leftOffset, 0)}
+											<div
+												class="h-full bg-red-400 absolute top-0 overflow-hidden untouchable"
+												style="left: {leftOffset}px; width: {width}px"
+											></div>
+										{/each}
+									{/if}
 								</div>
 							{/each}
 							<div class="h-[42px] border-b"></div>

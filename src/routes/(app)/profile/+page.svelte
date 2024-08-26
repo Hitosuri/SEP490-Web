@@ -17,6 +17,8 @@
 	import { formatCompactDateTime } from '$lib/helpers/formatters';
 	import { recordStatusInfo } from '$lib/constants/record-constant';
 	import Container from '$lib/components/common/Container.svelte';
+	import DataTable from '$lib/components/common/DataTable.svelte';
+	import PersonalApplicationList from '$lib/components/profile/PersonalApplicationList.svelte';
 
 	export let data: PageData;
 
@@ -131,6 +133,12 @@
 			</div>
 		</div>
 	</div>
+	{#if !$userStore?.isPatient && data.applicationFilterForm && data.createApplicationForm}
+		<PersonalApplicationList
+			applicationFilterForm={data.applicationFilterForm}
+			createApplicationForm={data.createApplicationForm}
+		/>
+	{/if}
 	{#if $userStore?.isPatient && data.records}
 		<div class="rounded-lg shadow-lg overflow-hidden border mt-8 bg-white">
 			<div class="py-4 px-6 border-b">

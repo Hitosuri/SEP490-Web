@@ -14,12 +14,11 @@
 	import { fly } from 'svelte/transition';
 	import { Control, Field, Label } from 'formsnap';
 	import DataTable from '$lib/components/common/DataTable.svelte';
-	import { formatCompactDate, formatCompactDateTime } from '$lib/helpers/formatters';
-	import { RecordStatus } from '$lib/constants/record-constant';
+	import { formatCompactDateTime } from '$lib/helpers/formatters';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import InvoiceDetail from '$lib/components/invoices/InvoiceDetail.svelte';
 	import { applicationFilterSchema } from '$lib/form-schemas/application-filter-schema';
 	import DateRangePicker from '$lib/components/common/DateRangePicker.svelte';
+	import ApplicationDetail from '$lib/components/profile/ApplicationDetail.svelte';
 
 	export let data: PageData;
 
@@ -163,7 +162,7 @@
 					}
 					searchParams.set(key, value instanceof Date ? value.toISOString() : String(value));
 				}
-				const url = `${endpoints.application.getByAdmin}?${searchParams}`;
+				const url = `${endpoints.application.getByEmployee}?${searchParams}`;
 
 				try {
 					const response = await fetch(url, {
@@ -232,6 +231,25 @@
 			$formData.endAt = e.detail[1];
 		}
 	}
+
+	function showDetail(application: Application, showAsConfirm = false) {
+		const modalSetting: ModalSettings = {
+			type: 'component',
+			component: {
+				ref: ApplicationDetail,
+				props: {
+					application,
+					showAsConfirm
+				}
+			},
+			response: (r) => {
+				if (r) {
+					filtering(lastestFilterOption, currentPage, pageSize, true, true);
+				}
+			}
+		};
+		modalStore.trigger(modalSetting);
+	}
 </script>
 
 <svelte:head>
@@ -263,7 +281,7 @@
 				</DropdownSelect>
 				{#if !advancedFilterOpen}
 					<form method="post" use:enhance transition:fly={{ x: 30, duration: 200 }}>
-						<fieldset class="flex gap-1 items-center" disabled={advancedFilterOpen}>
+						<fieldset class="flex gap-1 items-center h-full" disabled={advancedFilterOpen}>
 							{#if selectedSingleFilterType.value === 'userName'}
 								<Field {form} name="userName">
 									<Control let:attrs>
@@ -285,32 +303,33 @@
 										granularity="minute"
 									/>
 								{/key}
-								<!-- {:else if selectedSingleFilterType.value === 'email'}
-								<Field {form} name="patientName">
+							{:else if selectedSingleFilterType.value === 'isConfirm'}
+								<Field {form} name="isConfirm">
 									<Control let:attrs>
-										<input
-											type="text"
-											maxlength={255}
-											placeholder="Nhập email..."
-											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
-											{...attrs}
-											bind:value={$formData.email}
-										/>
+										<div class="flex gap-3 ml-4">
+											<Label
+												class="text-sm font-semibold {$formData.isConfirm
+													? 'text-primary-500'
+													: 'text-surface-500'} select-none"
+											>
+												Đã xác nhận
+											</Label>
+											<input
+												type="checkbox"
+												class="checkbox bg-white"
+												{...attrs}
+												bind:checked={$formData.isConfirm}
+											/>
+											<Label
+												class="text-sm font-semibold {$formData.isConfirm
+													? 'text-surface-500'
+													: 'text-primary-500'} select-none"
+											>
+												Chưa xác nhận
+											</Label>
+										</div>
 									</Control>
 								</Field>
-							{:else if selectedSingleFilterType.value === 'doctorName'}
-								<Field {form} name="patientName">
-									<Control let:attrs>
-										<input
-											type="text"
-											maxlength={255}
-											placeholder="Nhập tên bác sĩ..."
-											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
-											{...attrs}
-											bind:value={$formData.doctorName}
-										/>
-									</Control>
-								</Field> -->
 							{/if}
 						</fieldset>
 					</form>
@@ -332,69 +351,59 @@
 			>
 				<div class="overflow-hidden">
 					<form method="post" use:enhance class="p-6 pt-8">
-						<div class="grid grid-cols-3 gap-x-8 gap-y-6 flex-wrap">
-							<!-- <div>
-								<Field {form} name="patientName">
+						<div class="grid grid-cols-12 gap-x-8 gap-y-6 flex-wrap">
+							<div class="col-span-4">
+								<Field {form} name="userName">
 									<Control let:attrs>
 										<Label class="text-sm font-semibold text-surface-500 select-none">
-											Tên bệnh nhân
+											Tên nhân viên
 										</Label>
 										<input
 											type="text"
-											placeholder="Nhập tên bệnh nhân..."
+											placeholder="Nhập tên nhân viên..."
 											class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
 											{...attrs}
-											bind:value={$formData.patientName}
+											bind:value={$formData.userName}
 										/>
 									</Control>
 								</Field>
 							</div>
-							<div>
-								<Field {form} name="phoneNumber">
+							<div class="col-span-8 2xl:col-span-6">
+								{#key refreshTrigger}
+									<p class="text-sm font-semibold text-surface-500 select-none mb-1">
+										Thời gian nghỉ
+									</p>
+									<DateRangePicker
+										regionInput="!bg-white"
+										on:valueChange={onDateChange}
+										granularity="minute"
+									/>
+								{/key}
+							</div>
+							<div class="col-span-12 2xl:col-span-2">
+								<Field {form} name="userName">
 									<Control let:attrs>
-										<Label class="text-sm font-semibold text-surface-500 select-none">
-											Số điện thoại
+										<Label class="text-sm font-semibold text-surface-500 select-none mb-1">
+											Trạng thái xác nhận
 										</Label>
-										<input
-											type="text"
-											placeholder="Nhập số điện thoại..."
-											class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
-											{...attrs}
-											bind:value={$formData.phoneNumber}
-										/>
+										<div class="flex h-[42px] items-center">
+											<input
+												type="checkbox"
+												class="checkbox bg-white mx-2"
+												{...attrs}
+												bind:checked={$formData.isConfirm}
+											/>
+											<Label
+												class="text-sm font-semibold {$formData.isConfirm
+													? 'text-primary-500'
+													: 'text-surface-500'} select-none"
+											>
+												{$formData.isConfirm ? 'Đã xác nhận' : 'Chưa xác nhận'}
+											</Label>
+										</div>
 									</Control>
 								</Field>
 							</div>
-							<div>
-								<Field {form} name="email">
-									<Control let:attrs>
-										<Label class="text-sm font-semibold text-surface-500 select-none">Email</Label>
-										<input
-											type="text"
-											placeholder="Nhập email..."
-											class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
-											{...attrs}
-											bind:value={$formData.email}
-										/>
-									</Control>
-								</Field>
-							</div>
-							<div>
-								<Field {form} name="doctorName">
-									<Control let:attrs>
-										<Label class="text-sm font-semibold text-surface-500 select-none">
-											Tên bác sĩ
-										</Label>
-										<input
-											type="text"
-											placeholder="Nhập tên bác sĩ..."
-											class="input rounded-md bg-white/70 focus-within:bg-white/100 mt-1"
-											{...attrs}
-											bind:value={$formData.doctorName}
-										/>
-									</Control>
-								</Field>
-							</div> -->
 						</div>
 						<button type="submit" class="btn variant-filled-primary ml-auto mt-4 block">
 							<i class="fa-solid fa-magnifying-glass"></i>
@@ -420,8 +429,26 @@
 				filtering(lastestFilterOption, e.detail, pageSize, true);
 			}}
 			on:sortField={(e) => selectSorting(e.detail)}
-			let:field
-			let:fieldData
-		></DataTable>
+		>
+			<svelte:fragment slot="action-cell" let:item>
+				{#if item.isConfirm}
+					<button
+						type="button"
+						class="btn btn-sm variant-soft-tertiary font-medium"
+						on:click={() => showDetail(item)}
+					>
+						Chi tiết
+					</button>
+				{:else}
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-primary font-medium"
+						on:click={() => showDetail(item, true)}
+					>
+						Xác nhận
+					</button>
+				{/if}
+			</svelte:fragment>
+		</DataTable>
 	</div>
 </Container>

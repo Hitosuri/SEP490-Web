@@ -9,6 +9,7 @@
 
 {#if data.roleFor === Role.Recieptionist}
 	<ScheduleByRecieptionist
+		applications={data.applications.data}
 		schedules={data.schedules.data}
 		createAppointmentForm={data.createAppointmentForm}
 		scheduleFilterForm={data.scheduleFilterForm}
@@ -16,6 +17,7 @@
 	/>
 {:else if data.roleFor === Role.Patient}
 	<ScheduleByPatient
+		applications={data.applications.data}
 		allSchedule={data.allSchedule}
 		patientSchedules={data.patientSchedule}
 		currentMonthValue={data.currentMonthValue}

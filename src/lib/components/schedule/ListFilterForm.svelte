@@ -78,8 +78,8 @@
 	</div>
 	<div>
 		<Field {form} name="status">
-			<Control let:attrs>
-				<Label class="text-sm font-semibold text-surface-500 select-none">Trạng thái</Label>
+			<Control>
+				<p class="text-sm font-semibold text-surface-500 select-none">Trạng thái</p>
 				<DropdownSelect
 					items={statusList}
 					let:ValueComponent
@@ -97,8 +97,8 @@
 	</div>
 	<div>
 		<Field {form} name="isPatientConfirm">
-			<Control let:attrs>
-				<Label class="text-sm font-semibold text-surface-500 select-none">Đã xác nhận</Label>
+			<Control>
+				<p class="text-sm font-semibold text-surface-500 select-none">Đã xác nhận</p>
 				<div class="mt-1 h-[42px] flex items-center ml-4">
 					<Checkbox.Root
 						class="checkbox {isPatientConfirm

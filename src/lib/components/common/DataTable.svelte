@@ -28,6 +28,11 @@
 	export let groupFn: ((item: T) => K) | undefined = undefined;
 	export let shadow = true;
 	export let showSelection = false;
+	export let rounded = true;
+	export let padding = true;
+	export let grid = false;
+	export let alternativeRow = true;
+	export let alwaysPagination = false;
 
 	const dispatch = createEventDispatcher<{
 		pageChange: number;
@@ -101,7 +106,9 @@
 
 <div class="relative">
 	<div
-		class="bg-white p-2 rounded-xl overflow-x-auto {shadow
+		class="bg-white {padding ? 'p-2' : 'p-0'} {rounded
+			? 'rounded-xl'
+			: 'rounded-none'} overflow-x-auto {shadow
 			? 'shadow-md'
 			: ''} relative transition-all duration-200 {loading ? 'blur-[2px]' : 'blur-0'}"
 	>
@@ -109,7 +116,11 @@
 			<thead>
 				<tr class="text-sm *:bg-slate-100 *:font-semibold *:text-surface-400">
 					{#if showSelection}
-						<th class="text-[0] table-cell-fit rounded-tl-lg rounded-bl-lg !pl-6">
+						<th
+							class="{rounded ? 'rounded-tl-lg rounded-bl-lg' : 'rounded-none'} {grid
+								? 'border-r'
+								: ''} text-[0] table-cell-fit !pl-6"
+						>
 							<Checkbox.Root
 								class="checkbox {selectedAllState
 									? 'bg-primary-500 border-none'
@@ -131,16 +142,20 @@
 							</Checkbox.Root>
 						</th>
 					{:else}
-						<th class="table-cell-fit rounded-tl-lg rounded-bl-lg !pl-6 text-start">#</th>
+						<th
+							class="table-cell-fit {rounded ? 'rounded-tl-lg rounded-bl-lg' : 'rounded-none'} {grid
+								? 'border-r'
+								: ''} !pl-6 text-start">#</th
+						>
 					{/if}
 					{#each fields as field}
 						{#if field.sortable}
 							<th
-								class={field.align === 'right'
+								class="{field.align === 'right'
 									? 'text-end'
 									: field.align === 'left'
 										? 'text-start'
-										: 'text-center'}
+										: 'text-center'} {grid ? 'border-r' : ''}"
 							>
 								<button
 									class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
@@ -165,7 +180,7 @@
 							</th>
 						{:else}
 							<th
-								class="select-none px-4 py-2 {field.align === 'right'
+								class="select-none px-4 py-2 {grid ? 'border-r' : ''} {field.align === 'right'
 									? 'text-end'
 									: field.align === 'left'
 										? 'text-start'
@@ -173,7 +188,7 @@
 							>
 						{/if}
 					{/each}
-					<th class="rounded-tr-lg rounded-br-lg w-0">
+					<th class="{rounded ? 'rounded-tr-lg rounded-br-lg' : 'rounded-none'} w-0">
 						<button
 							class="btn btn-sm px-4 py-2 hover:text-surface-700 h-9"
 							on:click={() => dispatch('sortField', undefined)}
@@ -184,6 +199,7 @@
 				</tr>
 			</thead>
 			<tbody>
+				<slot name="first-row" />
 				{#each extendedItems as extendedItem, i (extendedItem.id)}
 					{@const group = topGroupItem?.get(extendedItem.item)}
 					{#if group && !sortingField}
@@ -204,9 +220,17 @@
 					{/if}
 					{@const href =
 						showDetail && !detailEmitEvent ? { detailUrl: showDetail(extendedItem.item) } : {}}
-					<tr class="*:even:bg-slate-100 *:py-4 *:px-4 group">
+					<tr
+						class="{alternativeRow ? '*:even:bg-slate-100' : ''} {grid
+							? 'border-b'
+							: ''} *:py-4 *:px-4 group"
+					>
 						{#if showSelection}
-							<td class="rounded-tl-lg rounded-bl-lg text-[0] relative overflow-hidden !pl-6">
+							<td
+								class="{rounded ? 'rounded-tl-lg rounded-bl-lg' : 'rounded-none'} {grid
+									? 'border-r'
+									: ''} text-[0] relative overflow-hidden !pl-6"
+							>
 								<input
 									class="checkbox bg-white size-4"
 									type="checkbox"
@@ -221,7 +245,9 @@
 							</td>
 						{:else}
 							<td
-								class="rounded-tl-lg rounded-bl-lg relative overflow-hidden !pl-6 text-surface-400 font-semibold"
+								class="{rounded ? 'rounded-tl-lg rounded-bl-lg' : 'rounded-none'} {grid
+									? 'border-r'
+									: ''} relative overflow-hidden !pl-6 text-surface-400 font-semibold"
 							>
 								{i + 1}
 							</td>
@@ -234,7 +260,9 @@
 							<slot fieldData={extendedItem.item} {field}>
 								<td
 									title={String(content)}
-									class="{field.ellipsis ? 'cell-ellipsis' : ''} {field.align === 'right'
+									class="{field.ellipsis ? 'cell-ellipsis' : ''} {grid
+										? 'border-r'
+										: ''} {field.align === 'right'
 										? 'text-end'
 										: field.align === 'left'
 											? 'text-start'
@@ -252,7 +280,7 @@
 								</td>
 							</slot>
 						{/each}
-						<td class="rounded-tr-lg rounded-br-lg !py-0">
+						<td class="{rounded ? 'rounded-tr-lg rounded-br-lg' : 'rounded-none'} !py-0">
 							<slot name="action-cell" item={extendedItem.item}>
 								{#if showDetail || detailEmitEvent || showEdit || showDelete || actionMenu.filter( (x) => (!x.showWhen ? true : x.showWhen(extendedItem.item)) ).length > 0}
 									<DropdownMenu.Root preventScroll={false}>
@@ -383,7 +411,7 @@
 		</div>
 	{/if}
 </div>
-{#if totalItems > pageSize}
+{#if alwaysPagination || totalItems > pageSize}
 	<CustomPagination {totalItems} {pageSize} bind:currentPage on:pageChange />
 {/if}
 {#if openBatchMenu}

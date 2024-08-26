@@ -7,14 +7,14 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { applicationFilterSchema } from '$lib/form-schemas/application-filter-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
-	filterRoles(locals, url, Role.All);
+	filterRoles(locals, url, Role.Admin);
 
-	const searhcParams = new URLSearchParams();
-	searhcParams.set('page', '1');
-	searhcParams.set('size', '10');
+	const searchParams = new URLSearchParams();
+	searchParams.set('page', '1');
+	searchParams.set('size', '10');
 
 	const r = await handleFetch(
-		fetch(`${endpoints.application.getByAdmin}?${searhcParams}`, {
+		fetch(`${endpoints.application.getByEmployee}?${searchParams}`, {
 			headers: {
 				Authorization: `Bearer ${locals.user?.token}`
 			}

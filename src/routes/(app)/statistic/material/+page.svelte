@@ -56,6 +56,7 @@
 		dayList.find((x) => x.value === $materialStatisticStore.query.day) ?? dayList[0];
 	let materialStatistics: MaterialStatistic[] = [];
 	let materialName = $materialStatisticStore.query.materialName ?? '';
+	let forceFilter = false;
 
 	$: dayList = getDayList(selectedYear.value, selectedMonth.value);
 	$: selectedDay = dayList.find((x) => x.value === selectedDay?.value) ?? dayList[0];
@@ -64,7 +65,8 @@
 		selectedYear.value,
 		selectedMonth.value,
 		selectedDay.value,
-		materialName
+		materialName,
+		forceFilter
 	);
 
 	onMount(async () => {
@@ -92,6 +94,7 @@
 		selectedDay = monthList[0];
 		selectedFilterType = filterTypes[0];
 		materialName = '';
+		forceFilter = true;
 	}
 
 	async function filtering(
@@ -118,6 +121,7 @@
 		if (!forceFilter && isEqual(lastestFilterOption, filterOptions)) {
 			return;
 		}
+		forceFilter = false;
 
 		if (lastestFilterOption && lastestFilterOption.materialName !== filterOptions.materialName) {
 			delay = 1000;
