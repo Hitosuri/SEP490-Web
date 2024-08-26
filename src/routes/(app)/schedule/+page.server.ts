@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 				})
 			).then<Pagination<ScheduleFull[]>>((r) => r.json()),
 			handleFetch(
-				fetch(`${endpoints.application.getByUser}?${searchParams}&isConfirm=true`, {
+				fetch(`${endpoints.application.getByEmployee}?${searchParams}&isConfirm=true`, {
 					headers: {
 						Authorization: `Bearer ${locals.user?.token}`
 					}
@@ -78,7 +78,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 				})
 			).then<Pagination<ScheduleFull[]>>((x) => x.json()),
 			handleFetch(
-				fetch(`${endpoints.application.getByUser}?${searchParams}&isConfirm=true`, {
+				fetch(`${endpoints.application.getByEmployee}?${searchParams}&isConfirm=true`, {
 					headers: {
 						Authorization: `Bearer ${locals.user?.token}`
 					}

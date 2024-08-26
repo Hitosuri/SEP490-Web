@@ -86,7 +86,8 @@
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
 	$: ({ 1: blockRangeByDoctors, 2: blockRangeByApplications } = calculateBlockRange(
 		scheduleByDoctors,
-		applications
+		applications,
+		selectedDate
 	));
 	$: canCreateSchedule =
 		quarterCount >= lowerLimit &&
@@ -107,10 +108,11 @@
 
 	function calculateBlockRange(
 		scheduleByDoctors: [UserMinimal, ScheduleByPatient[]][],
-		applications: Application[]
+		applications: Application[],
+		selectedDate: DateValue
 	) {
 		const g = scheduleByDoctors.map((x) => {
-			const currentDayValue = getDayValue(new Date());
+			const currentDayValue = getDayValue(selectedDate.toDate(getLocalTimeZone()));
 			const doctorApplications: [number, number][] = [];
 			applications
 				.filter((y) => y.userId === x[0].id)
@@ -313,7 +315,7 @@
 		});
 
 		try {
-			const [allScheduleData, scheduleOfPatientData] = await Promise.all([
+			const [allScheduleData, scheduleOfPatientData, applicationsResponse] = await Promise.all([
 				fetch(`${endpoints.schedule.getByPatient}?${searchParams}`, {
 					headers: {
 						Authorization: `Bearer ${$userStore.token}`
@@ -323,7 +325,12 @@
 					headers: {
 						Authorization: `Bearer ${$userStore.token}`
 					}
-				}).then<Pagination<ScheduleFull[]> | undefined>((x) => (x.ok ? x.json() : undefined))
+				}).then<Pagination<ScheduleFull[]> | undefined>((x) => (x.ok ? x.json() : undefined)),
+				fetch(`${endpoints.application.getByEmployee}?${searchParams}&isConfirm=true`, {
+					headers: {
+						Authorization: `Bearer ${$userStore.token}`
+					}
+				}).then<Pagination<Application[]> | undefined>((x) => (x.ok ? x.json() : undefined))
 			]);
 
 			let pendingSchedules: number[] = [];
@@ -350,8 +357,18 @@
 				allSchedule = allScheduleData.data;
 			}
 
+			if (applicationsResponse) {
+				applicationsResponse.data.forEach((x) => {
+					x.startAt = new Date(x.startAt);
+					x.endAt = new Date(x.endAt);
+				});
+
+				applications = applicationsResponse.data;
+			}
+
 			currentMonthValue = currentMonthValueTmp;
 		} catch (error) {
+			toast.error('Xuất hiện lỗi khi tải dữ liệu lịch hẹn');
 			console.log(error);
 		}
 	}
