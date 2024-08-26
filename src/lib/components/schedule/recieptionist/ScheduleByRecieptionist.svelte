@@ -260,7 +260,7 @@
 						Authorization: `Bearer ${$userStore.token}`
 					}
 				}).then<Pagination<ScheduleFull[]>>((r) => r.json()),
-				fetch(`${endpoints.application.getByUser}?${searchParams}&isConfirm=true`, {
+				fetch(`${endpoints.application.getByEmployee}?${searchParams}&isConfirm=true`, {
 					headers: {
 						Authorization: `Bearer ${$userStore.token}`
 					}
@@ -282,6 +282,7 @@
 			lastFilterOptions = filterOptions;
 			currentMonthValue = currentMonthValueTmp;
 		} catch (error) {
+			toast.error('Xuất hiện lỗi khi tải dữ liệu lịch hẹn');
 			console.log(error);
 		}
 	}
