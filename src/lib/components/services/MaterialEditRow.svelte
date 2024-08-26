@@ -14,6 +14,7 @@
 	export let selectedMaterialId: number;
 	export let quantity: number;
 	export let isBasicUnit: boolean;
+	export let smallestUnitQuantity: number;
 	export let excludeIds: number[] = [];
 	export let errors: SuperForm<z.infer<typeof createTreatmentSchema>>['errors'];
 
@@ -26,6 +27,7 @@
 	let errorList: string[] = [];
 
 	$: selectedMaterialId = selectedMaterial?.value.id ?? 0;
+	$: smallestUnitQuantity = selectedMaterial?.value.smallestUnitQuantity ?? 0;
 	$: isBasicUnit = selectedUnit?.value ?? true;
 	$: onSelectedMaterialChanged(selectedMaterial);
 	$: onSelectedUnitChanged(selectedUnit);

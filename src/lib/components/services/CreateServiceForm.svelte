@@ -5,12 +5,16 @@
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
-	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
 	import MaterialEditRow from './MaterialEditRow.svelte';
 	import { toast } from 'svelte-sonner';
-	import { handleToastFetch, pascalToCamelcase } from '$lib/helpers/utils';
+	import { handleToastFetch } from '$lib/helpers/utils';
+
+	type UsedMaterial = z.infer<typeof createTreatmentSchema>['materials'][number] & {
+		smallestUnitQuantity: number;
+	};
 
 	export let createTreatmentForm: SuperValidated<z.infer<typeof createTreatmentSchema>>;
 
@@ -20,6 +24,45 @@
 		validators: zodClient(createTreatmentSchema),
 		resetForm: false,
 		SPA: true,
+		onChange: ({ paths, get }) => {
+			const path = paths[0] ?? '';
+			if (!path.endsWith('.quantity')) {
+				return;
+			}
+
+			const index = Number(path.split(/[[\].]+/).filter((x) => x)[1]);
+			const targetMaterial = usedMaterials[index];
+			const value = get(path);
+
+			if ((targetMaterial && !value) || (typeof value === 'number' && value < 0)) {
+				usedMaterials[index].quantity = 0;
+				return;
+			}
+
+			if (
+				targetMaterial &&
+				!targetMaterial.isBasicUnit &&
+				targetMaterial.quantity > 0 &&
+				targetMaterial.quantity % targetMaterial.smallestUnitQuantity !== 0
+			) {
+				errors.update((x) => {
+					if (!x.materials) {
+						x.materials = {};
+					}
+					if (!x.materials[index]) {
+						x.materials[index] = {};
+					}
+					if (!x.materials[index].quantity) {
+						x.materials[index].quantity = [];
+					}
+					x.materials[index].quantity = [
+						...x.materials[index].quantity,
+						`Số lượng xuất lẻ phải là số chia hết cho ${targetMaterial.smallestUnitQuantity}`
+					];
+					return x;
+				});
+			}
+		},
 		onUpdate: ({ form }) => {
 			if (!form.valid || !$userStore) {
 				return;
@@ -51,11 +94,7 @@
 	});
 	const { form: formData, enhance, errors } = form;
 	let requesting = false;
-	let usedMaterials: {
-		materialId: number;
-		quantity: number;
-		isBasicUnit: boolean;
-	}[] = [];
+	let usedMaterials: UsedMaterial[] = [];
 
 	$: allMaterialId = usedMaterials.map((x) => x.materialId).filter((x) => x > 0);
 	$: $formData.materials = [...usedMaterials];
@@ -71,7 +110,8 @@
 			{
 				materialId: 0,
 				quantity: 0,
-				isBasicUnit: true
+				isBasicUnit: true,
+				smallestUnitQuantity: 0
 			}
 		];
 	}
@@ -157,6 +197,7 @@
 								bind:selectedMaterialId={material.materialId}
 								bind:quantity={material.quantity}
 								bind:isBasicUnit={material.isBasicUnit}
+								bind:smallestUnitQuantity={material.smallestUnitQuantity}
 								{errors}
 								index={i}
 								excludeIds={allMaterialId}

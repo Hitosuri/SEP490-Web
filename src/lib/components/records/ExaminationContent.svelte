@@ -5,7 +5,7 @@
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { createEventDispatcher, getContext, setContext } from 'svelte';
 	import { derived, type Writable } from 'svelte/store';
-	import { superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
 	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
@@ -16,6 +16,10 @@
 	import ExtraMaterialEditRow from '$lib/components/records/ExtraMaterialEditRow.svelte';
 	import { formatCurrency } from '$lib/helpers/formatters';
 	import { handleToastFetch } from '$lib/helpers/utils';
+
+	type UsedMaterial = z.infer<typeof editRecordSchema>['recordExtraMaterialRequests'][number] & {
+		smallestUnitQuantity: number;
+	};
 
 	export let editRecordForm: SuperValidated<z.infer<typeof editRecordSchema>>;
 	export let record: RecordPatient;
@@ -31,17 +35,44 @@
 		validators: zodClient(editRecordSchema),
 		resetForm: false,
 		SPA: true,
-		onChange: ({ paths, get, set }) => {
+		onChange: ({ paths, get }) => {
 			dataChanged = true;
 			const path = paths[0] ?? '';
 			if (!path.endsWith('.quantity')) {
 				return;
 			}
 
+			const index = Number(path.split(/[[\].]+/).filter((x) => x)[1]);
+			const targetMaterial = usedMaterials[index];
 			const value = get(path);
 
-			if (!value || (typeof value === 'number' && value < 1)) {
-				set(path, 1);
+			if ((targetMaterial && !value) || (typeof value === 'number' && value < 0)) {
+				usedMaterials[index].quantity = 0;
+				return;
+			}
+
+			if (
+				targetMaterial &&
+				!targetMaterial.isBasicUnit &&
+				targetMaterial.quantity > 0 &&
+				targetMaterial.quantity % targetMaterial.smallestUnitQuantity !== 0
+			) {
+				errors.update((x) => {
+					if (!x.recordExtraMaterialRequests) {
+						x.recordExtraMaterialRequests = {};
+					}
+					if (!x.recordExtraMaterialRequests[index]) {
+						x.recordExtraMaterialRequests[index] = {};
+					}
+					if (!x.recordExtraMaterialRequests[index].quantity) {
+						x.recordExtraMaterialRequests[index].quantity = [];
+					}
+					x.recordExtraMaterialRequests[index].quantity = [
+						...x.recordExtraMaterialRequests[index].quantity,
+						`Số lượng xuất lẻ phải là số chia hết cho ${targetMaterial.smallestUnitQuantity}`
+					];
+					return x;
+				});
 			}
 		},
 		onUpdate: async ({ form }) => {
@@ -92,11 +123,13 @@
 			}
 		])
 	);
-	let usedMaterials: z.infer<typeof editRecordSchema>['recordExtraMaterialRequests'] = [
+	let usedMaterials: UsedMaterial[] = [
 		...record.extraMaterials.map((x) => ({
 			materialId: x.materialId,
 			quantity: x.quantity,
-			isBasicUnit: x.isBasicUnit
+			isBasicUnit: x.isBasicUnit,
+			smallestUnitQuantity:
+				extraMaterials.find((y) => y.id === x.materialId)?.smallestUnitQuantity ?? 1
 		}))
 	];
 	let materialErrors = derived(errors, (errors) => {
@@ -190,7 +223,8 @@
 			{
 				materialId: 0,
 				quantity: 0,
-				isBasicUnit: true
+				isBasicUnit: true,
+				smallestUnitQuantity: 0
 			}
 		];
 	}
@@ -357,7 +391,7 @@
 			</div>
 			<div>
 				<Field {form} name="treatmentId">
-					<Control let:attrs>
+					<Control>
 						<Label class="font-semibold text-surface-500 select-none text-lg mb-1">
 							Vật tư được sử dụng thêm
 						</Label>
@@ -394,6 +428,7 @@
 												bind:selectedMaterialId={material.materialId}
 												bind:quantity={material.quantity}
 												bind:isBasicUnit={material.isBasicUnit}
+												bind:smallestUnitQuantity={material.smallestUnitQuantity}
 												index={i}
 												excludeIds={allMaterialId}
 												initMaterial={foundInExtra}
@@ -406,6 +441,7 @@
 												bind:selectedMaterialId={material.materialId}
 												bind:quantity={material.quantity}
 												bind:isBasicUnit={material.isBasicUnit}
+												bind:smallestUnitQuantity={material.smallestUnitQuantity}
 												index={i}
 												excludeIds={allMaterialId}
 												on:remove={() => removeMaterial(i)}
