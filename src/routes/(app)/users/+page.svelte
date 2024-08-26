@@ -665,7 +665,7 @@
 					</div>
 				</td>
 			{:else if field.name === 'status'}
-				{@const status = fieldData.status === 1 ? 'Bình thường' : 'Bị ban'}
+				{@const status = fieldData.status === 1 ? 'Bình thường' : 'Bị cấm'}
 				<td title={status} class="text-center w-0">
 					<span
 						class="badge {fieldData.status === 1 ? 'variant-soft-success' : 'variant-soft-error'}"

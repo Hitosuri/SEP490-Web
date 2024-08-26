@@ -15,6 +15,7 @@
 	import { autoHeightTextArea } from '$lib/actions/auto-height-textarea';
 	import ExtraMaterialEditRow from '$lib/components/records/ExtraMaterialEditRow.svelte';
 	import { formatCurrency } from '$lib/helpers/formatters';
+	import { handleToastFetch } from '$lib/helpers/utils';
 
 	export let editRecordForm: SuperValidated<z.infer<typeof editRecordSchema>>;
 	export let record: RecordPatient;
@@ -48,24 +49,31 @@
 				return;
 			}
 
-			const response = await fetch(endpoints.records.detail(recordId), {
-				method: 'PUT',
-				headers: {
-					'content-type': 'application/json',
-					Authorization: `Bearer ${$userStore.token}`
-				},
-				body: JSON.stringify({
-					...form.data
-				})
-			});
-
-			if (response.ok) {
-				dispatch('finishUpdate');
-				resetValue();
-				dataChanged = false;
-			} else {
-				toast.error('Không lưu được hồ sơ');
-			}
+			toast.promise(
+				handleToastFetch(
+					fetch(endpoints.records.detail(recordId), {
+						method: 'PUT',
+						headers: {
+							'content-type': 'application/json',
+							Authorization: `Bearer ${$userStore.token}`
+						},
+						body: JSON.stringify({
+							...form.data
+						})
+					}),
+					{ success: 'Lưu hồ sơ thành công' },
+					() => {
+						dispatch('finishUpdate');
+						resetValue();
+						dataChanged = false;
+					}
+				),
+				{
+					loading: 'Đang xử lý...',
+					success: (msg) => msg ?? 'Lưu hồ sơ thành công',
+					error: (msg) => String(msg ?? '') || 'Không lưu được hồ sơ'
+				}
+			);
 		}
 	});
 	const { form: formData, enhance, errors } = form;

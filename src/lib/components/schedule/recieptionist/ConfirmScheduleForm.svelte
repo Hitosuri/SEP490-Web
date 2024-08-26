@@ -16,7 +16,6 @@
 
 	export let editScheduleForm: SuperValidated<z.infer<typeof editScheduleSchema>>;
 	export let schedule: ScheduleFull;
-
 	export let maxStep: number;
 
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
@@ -186,7 +185,7 @@
 			class="flex gap-4 mt-8 font-medium *:btn *:rounded-container-token *:flex-1"
 		>
 			<button type="button" class="variant-soft-surface" on:click={() => closeModal()}>
-				<i class="fa-regular fa-door-closed"></i>
+				<i class="fa-solid fa-delete-left"></i>
 				<span class="pl-1">Huỷ</span>
 			</button>
 			<button type="submit" class="variant-filled-primary">

@@ -373,7 +373,7 @@
 
 	function updateScheduleList() {
 		cancelSelection();
-		filtering(lastFilterOptions);
+		filtering(lastFilterOptions, selectedDate.month);
 	}
 
 	function calculateRangeLimit(): [number, number] {
@@ -559,22 +559,17 @@
 			return;
 		}
 
-		const startStep =
-			schedule.startAt.getHours() / scheduleStepInHour +
-			schedule.startAt.getMinutes() / scheduleStepInMinute;
+		const startStep = normalizeTime(schedule.startAt);
 		const endLimitStep =
 			schedules
 				.filter(
 					(x) =>
 						x.doctor.id === schedule.doctor.id && x.startAt.getDate() === schedule.startAt.getDate()
 				)
-				.map(
-					(x) =>
-						x.startAt.getHours() / scheduleStepInHour +
-						x.startAt.getMinutes() / scheduleStepInMinute
-				)
+				.map((x) => normalizeTime(x.startAt))
+				.concat((blockRangeByApplications[schedule.doctor.id] ?? []).map((x) => x[0]))
 				.sort((a, b) => a - b)
-				.find((x) => x > startStep) ?? 24 / scheduleStepInHour;
+				.find((x) => x > startStep) ?? 23 / scheduleStepInHour;
 
 		const modelSettings: ModalSettings = {
 			type: 'component',
@@ -758,7 +753,7 @@
 		<ListFilterForm
 			{form}
 			on:reset={() => {
-				filtering({});
+				filtering(lastFilterOptions);
 			}}
 		/>
 		<div class="flex gap-4">

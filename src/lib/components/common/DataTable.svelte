@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends Record<string, any>, K">
-	import { Checkbox, DropdownMenu, Pagination } from 'bits-ui';
+	import { Checkbox, DropdownMenu } from 'bits-ui';
 	import { cubicOut } from 'svelte/easing';
 	import { fade, fly } from 'svelte/transition';
 	import { createEventDispatcher } from 'svelte';
@@ -269,7 +269,7 @@
 											: 'text-center'} {field.classes ?? ''}"
 								>
 									{#if typeof content === 'boolean'}
-										<input type="checkbox" value={content} disabled class="checkbox bg-white" />
+										<input type="checkbox" checked={content} disabled class="checkbox bg-white" />
 									{:else if field.href}
 										<a href={field.href(extendedItem.item)} class="hover:underline">
 											{content}
