@@ -14,7 +14,9 @@ export const load: PageServerLoad = async ({ locals, url, params, fetch }) => {
 	filterRoles(
 		locals,
 		url,
-		...(userFeatureDetails[UserFeature.PATIENTS_MANAGEMENT].roles ?? []),
+		...(userFeatureDetails[UserFeature.PATIENTS_MANAGEMENT].roles?.filter(
+			(x) => x !== Role.Recieptionist
+		) ?? []),
 		Role.Patient
 	);
 
