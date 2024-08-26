@@ -73,8 +73,6 @@
 	});
 
 	function onDateChange(e: ComponentEvents<DateRangePicker>['valueChange']) {
-		console.log(e.detail);
-
 		if (e.detail?.[0] && e.detail?.[1]) {
 			$formData.startAt = e.detail[0];
 			$formData.endAt = e.detail[1];

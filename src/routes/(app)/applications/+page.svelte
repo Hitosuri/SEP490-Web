@@ -434,7 +434,7 @@
 				{#if item.isConfirm}
 					<button
 						type="button"
-						class="btn btn-sm variant-soft-tertiary font-medium"
+						class="btn btn-sm variant-soft-tertiary font-medium mx-auto block"
 						on:click={() => showDetail(item)}
 					>
 						Chi tiết
@@ -442,7 +442,7 @@
 				{:else}
 					<button
 						type="button"
-						class="btn btn-sm variant-filled-primary font-medium"
+						class="btn btn-sm variant-filled-primary font-medium mx-auto block"
 						on:click={() => showDetail(item, true)}
 					>
 						Xác nhận
