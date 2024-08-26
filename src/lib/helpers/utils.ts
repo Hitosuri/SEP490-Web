@@ -150,7 +150,7 @@ export async function handleToastFetch<T extends Record<string, unknown>>(
 		.then((r) => afterSuccess?.(r))
 		.then(() => messages['success'] ?? 'Thành công')
 		.catch((err) => {
-			if (err?.cause?.code === 'ECONNREFUSED') {
+			if (err instanceof TypeError && err?.message === 'Failed to fetch') {
 				return Promise.reject(
 					'Không kết nối được tới máy chú, vui lòng kiểm tra kết nối mạng hoặc thử lại sau'
 				);
