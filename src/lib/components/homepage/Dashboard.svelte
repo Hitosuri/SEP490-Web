@@ -16,10 +16,10 @@
 
 	const modalStore = getModalStore();
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
-	// const stepInMiliseconds = 1000 * 60 * scheduleStepInMinute;
+	const allFeature = Object.values(userFeatureDetails);
 	let patientQueue: QueueItem[] | undefined = undefined;
 	let lastDataTime: Date = new Date();
-	const allFeature = Object.values(userFeatureDetails);
+	let loadStatus: 'init' | 'loading' | 'fail' | 'success' = 'init';
 
 	$: timeToNextPatient =
 		!patientQueue || patientQueue.length === 0
@@ -40,6 +40,7 @@
 	});
 
 	async function getPatientQueue() {
+		loadStatus = 'loading';
 		const r = await fetch(endpoints.queue.get, {
 			headers: {
 				Authorization: `Bearer ${$userStore?.token}`
@@ -47,18 +48,21 @@
 		});
 
 		if (!r.ok && r.status !== 404) {
+			loadStatus = 'fail';
 			return;
 		}
 
 		if (r.status === 404) {
 			patientQueue = [];
 			lastDataTime = new Date();
+			loadStatus = 'success';
 			return;
 		}
 
 		const data: ApiResponse<QueueItem[]> = await r.json();
 
 		if (!data.body) {
+			loadStatus = 'fail';
 			return;
 		}
 
@@ -70,6 +74,7 @@
 
 		patientQueue = data.body;
 		lastDataTime = new Date();
+		loadStatus = 'success';
 	}
 
 	function pullSchedule() {
@@ -137,13 +142,22 @@
 			<div class="border rounded-xl bg-white h-fit overflow-hidden">
 				<div class="py-4 px-6 bg-tertiary-500 flex justify-between items-center">
 					<span class="text-2xl font-semibold text-white">Danh sách chờ khám</span>
-					{#if canPullSchedule}
+					<div class="flex gap-4">
+						{#if canPullSchedule}
+							<button
+								type="button"
+								class="btn ring-4 ring-white py-1.5 px-3 text-white font-bold hover:bg-white/10"
+								on:click={pullSchedule}>Gọi bệnh nhân tiếp theo</button
+							>
+						{/if}
 						<button
 							type="button"
-							class="btn ring-4 ring-white py-1.5 px-3 text-white font-bold hover:bg-white/10"
-							on:click={pullSchedule}>Gọi bệnh nhân tiếp theo</button
+							class="btn-icon ring-4 size-9 ring-white py-1.5 px-3 text-white font-bold hover:bg-white/10"
+							on:click={getPatientQueue}
 						>
-					{/if}
+							<i class="fa-solid fa-rotate"></i>
+						</button>
+					</div>
 				</div>
 				<div>
 					<table class="w-full">
@@ -156,7 +170,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#if patientQueue}
+							{#if loadStatus === 'success' && patientQueue}
 								{#each patientQueue as queueItem, i (queueItem.id)}
 									{@const showLink = i === 0 && firstPatientReady}
 									{@const elementTag = showLink ? 'a' : 'div'}
@@ -220,12 +234,12 @@
 							{/if}
 						</tbody>
 					</table>
-					{#if !patientQueue}
+					{#if loadStatus === 'loading'}
 						<h3 class="h3 font-semibold text-center text-surface-400 py-4 border-t">
 							Đang tải thông tin
 						</h3>
 					{/if}
-					{#if patientQueue?.length === 0}
+					{#if loadStatus === 'success' && patientQueue?.length === 0}
 						<h3 class="h3 font-semibold text-center text-tertiary-500 py-4 border-t">
 							Danh sách trống
 						</h3>
