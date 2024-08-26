@@ -381,13 +381,18 @@
 				</tr>
 			</svelte:fragment>
 			<svelte:fragment slot="action-cell" let:item>
-				<div class="flex gap-x-1">
+				<div class="flex gap-x-1 justify-center">
 					<button
 						type="button"
-						class="btn-icon btn-icon-sm variant-filled-tertiary font-medium"
+						class="{item.isConfirm
+							? 'btn btn-sm'
+							: 'btn-icon btn-icon-sm'} variant-filled-tertiary font-medium"
 						on:click={() => showDetail(item)}
 					>
 						<i class="fa-regular fa-circle-info"></i>
+						{#if item.isConfirm}
+							<span class="ml-1">Chi tiết</span>
+						{/if}
 					</button>
 					{#if !item.isConfirm}
 						<button

@@ -151,7 +151,8 @@
 	$: ({ 1: blockRangeByDoctors, 2: blockRangeByApplications } = calculateBlockRange(
 		scheduleByDoctors,
 		editingSchedule,
-		applications
+		applications,
+		selectedDate
 	));
 	$: canCreateSchedule =
 		quarterCount >= lowerLimit &&
@@ -252,26 +253,34 @@
 		const url = `${endpoints.schedule.getByRecieptionist}?${searchParams}`;
 
 		try {
-			const response = await fetch(url, {
-				method: 'GET',
-				headers: {
-					Authorization: `Bearer ${$userStore.token}`
-				}
+			const [schedulesResponse, applicationsResponse] = await Promise.all([
+				fetch(url, {
+					method: 'GET',
+					headers: {
+						Authorization: `Bearer ${$userStore.token}`
+					}
+				}).then<Pagination<ScheduleFull[]>>((r) => r.json()),
+				fetch(`${endpoints.application.getByUser}?${searchParams}&isConfirm=true`, {
+					headers: {
+						Authorization: `Bearer ${$userStore.token}`
+					}
+				}).then<Pagination<Application[]>>((r) => r.json())
+			]);
+
+			schedulesResponse.data.forEach((x, i) => {
+				x.startAt = new Date(x.startAt);
+				x.endAt = x.endAt ? new Date(x.endAt) : undefined;
+				x.order = i;
+			});
+			applicationsResponse.data.forEach((x) => {
+				x.startAt = new Date(x.startAt);
+				x.endAt = new Date(x.endAt);
 			});
 
-			if (response.ok) {
-				const result: Pagination<ScheduleFull[]> = await response.json();
-
-				result.data.forEach((x, i) => {
-					x.startAt = new Date(x.startAt);
-					x.endAt = x.endAt ? new Date(x.endAt) : undefined;
-					x.order = i;
-				});
-
-				schedules = result.data;
-				lastFilterOptions = filterOptions;
-				currentMonthValue = currentMonthValueTmp;
-			}
+			schedules = schedulesResponse.data;
+			applications = applicationsResponse.data;
+			lastFilterOptions = filterOptions;
+			currentMonthValue = currentMonthValueTmp;
 		} catch (error) {
 			console.log(error);
 		}
@@ -280,10 +289,11 @@
 	function calculateBlockRange(
 		scheduleByDoctors: [UserMinimal, ScheduleFull[]][],
 		editingSchedule: ScheduleFull | undefined | null,
-		applications: Application[]
+		applications: Application[],
+		selectedDate: DateValue
 	) {
 		const g = scheduleByDoctors.map((x) => {
-			const currentDayValue = getDayValue(new Date());
+			const currentDayValue = getDayValue(selectedDate.toDate(getLocalTimeZone()));
 			const doctorApplications: [number, number][] = [];
 			applications
 				.filter((y) => y.userId === x[0].id)
