@@ -219,7 +219,7 @@
 			sortingAscending = !sortingAscending;
 		}
 
-		filtering(lastestFilterOption, currentPage, pageSize, true);
+		filtering(lastestFilterOption, currentPage, pageSize, true, true);
 	}
 
 	function onDateChange(e: ComponentEvents<DateRangePicker>['valueChange']) {

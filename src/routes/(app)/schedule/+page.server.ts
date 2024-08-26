@@ -52,7 +52,6 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 			x.startAt = new Date(x.startAt);
 			x.endAt = new Date(x.endAt);
 		});
-		console.log(applications);
 
 		return {
 			roleFor: Role.Recieptionist,

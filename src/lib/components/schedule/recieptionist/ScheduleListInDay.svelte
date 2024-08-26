@@ -41,7 +41,7 @@
 		<span class="text-center">BN đã xác nhận</span>
 		<span></span>
 	</div>
-	<div class="grid overflow-y-scroll flex-1 items-center content-start">
+	<div class="grid overflow-y-auto flex-1 items-center content-start">
 		{#each selectedDateSchedules as schedule, i (schedule.id)}
 			{@const odd = i % 2 === 0}
 			{@const firstAction = actions.find((x) => x.availableWhen(schedule, currentMinute))}
@@ -88,7 +88,7 @@
 				<span
 					class="{(scheduleStatusInfo[schedule.status]?.styleClasses ?? []).join(
 						' '
-					)} border px-2 py-1 rounded-full w-fit text-sm font-medium tracking-tight"
+					)} badge border tracking-tight block"
 				>
 					{scheduleStatusInfo[schedule.status]?.label ?? ''}
 				</span>

@@ -7,7 +7,8 @@ export enum UserFeature {
 	PATIENTS_MANAGEMENT = 4,
 	SCHEDULE_MANAGEMENT = 5,
 	PAYMENT_MANAGEMENT = 6,
-	STATISTIC = 7
+	STATISTIC = 7,
+	APPLICATION = 8
 }
 
 export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
@@ -76,6 +77,17 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		class: 'from-teal-400 to-cyan-400',
 		routes: ['/(app)/invoices'],
 		roles: [Role.Recieptionist, Role.Accountant]
+	},
+	[UserFeature.APPLICATION]: {
+		id: UserFeature.APPLICATION,
+		title: 'Đơn nghỉ',
+		faIcon: 'fa-file-exclamation',
+		hasDuotone: true,
+		url: '/applications',
+		lottieAnim: '/images/animations/application.lottie',
+		class: 'from-yellow-400 to-lime-400',
+		routes: ['/(app)/applications'],
+		roles: [Role.Admin]
 	},
 	[UserFeature.STATISTIC]: {
 		id: UserFeature.STATISTIC,
