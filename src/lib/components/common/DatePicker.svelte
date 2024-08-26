@@ -4,7 +4,7 @@
 	import { type DateValue } from '@internationalized/date';
 	import { twMerge } from 'tailwind-merge';
 	import { createEventDispatcher } from 'svelte';
-	import { CalendarDate } from '@internationalized/date';
+	import { CalendarDateTime } from '@internationalized/date';
 
 	interface $$Props
 		extends Omit<
@@ -35,7 +35,15 @@
 		fixedWeeks: true,
 		locale: 'vi',
 		value: initValue
-			? new CalendarDate(initValue.getFullYear(), initValue.getMonth() + 1, initValue.getDate())
+			? new CalendarDateTime(
+					initValue.getFullYear(),
+					initValue.getMonth() + 1,
+					initValue.getDate(),
+					initValue.getHours(),
+					initValue.getMinutes(),
+					initValue.getSeconds(),
+					initValue.getMilliseconds()
+				)
 			: undefined,
 		...$$restProps
 	};

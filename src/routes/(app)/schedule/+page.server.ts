@@ -26,30 +26,44 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	searchParams.set('endAt', `${today.getFullYear()}-${today.getMonth() + 2}-1`);
 
 	if (locals.user?.roles.includes(Role.Recieptionist)) {
-		const r = await handleFetch(
-			fetch(`${endpoints.schedule.getByRecieptionist}?${searchParams}`, {
-				headers: {
-					Authorization: `Bearer ${locals.user?.token}`
-				}
-			})
-		);
+		const [schedules, applications] = await Promise.all([
+			handleFetch(
+				fetch(`${endpoints.schedule.getByRecieptionist}?${searchParams}`, {
+					headers: {
+						Authorization: `Bearer ${locals.user?.token}`
+					}
+				})
+			).then<Pagination<ScheduleFull[]>>((r) => r.json()),
+			handleFetch(
+				fetch(`${endpoints.application.getByUser}?${searchParams}&isConfirm=true`, {
+					headers: {
+						Authorization: `Bearer ${locals.user?.token}`
+					}
+				})
+			).then<Pagination<Application[]>>((r) => r.json())
+		]);
 
-		const schedules: Pagination<ScheduleFull[]> = await r.json();
 		schedules.data.forEach((x, i) => {
 			x.startAt = new Date(x.startAt);
 			x.endAt = x.endAt ? new Date(x.endAt) : undefined;
 			x.order = i;
 		});
+		applications.data.forEach((x) => {
+			x.startAt = new Date(x.startAt);
+			x.endAt = new Date(x.endAt);
+		});
+		console.log(applications);
 
 		return {
 			roleFor: Role.Recieptionist,
 			createAppointmentForm: await superValidate(zod(createAppointmentSchema)),
 			scheduleFilterForm: await superValidate(zod(scheduleFilterSchema)),
 			editScheduleForm: await superValidate(zod(editScheduleSchema)),
-			schedules: schedules
+			schedules: schedules,
+			applications: applications
 		} as const;
 	} else if (locals.user?.roles.includes(Role.Patient)) {
-		const [allSchedule, scheduleOfPatient] = await Promise.all([
+		const [allSchedule, scheduleOfPatient, applications] = await Promise.all([
 			handleFetch(
 				fetch(`${endpoints.schedule.getByPatient}?${searchParams}`, {
 					headers: {
@@ -63,7 +77,14 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 						Authorization: `Bearer ${locals.user?.token}`
 					}
 				})
-			).then<Pagination<ScheduleFull[]>>((x) => x.json())
+			).then<Pagination<ScheduleFull[]>>((x) => x.json()),
+			handleFetch(
+				fetch(`${endpoints.application.getByUser}?${searchParams}&isConfirm=true`, {
+					headers: {
+						Authorization: `Bearer ${locals.user?.token}`
+					}
+				})
+			).then<Pagination<Application[]>>((r) => r.json())
 		]);
 
 		scheduleOfPatient.data.forEach((x, i) => {
@@ -71,7 +92,10 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 			x.startAt = new Date(x.startAt);
 			x.endAt = x.endAt ? new Date(x.endAt) : undefined;
 		});
-
+		applications.data.forEach((x) => {
+			x.startAt = new Date(x.startAt);
+			x.endAt = new Date(x.endAt);
+		});
 		allSchedule.data.forEach((x) => {
 			x.startAt = new Date(x.startAt);
 			if (x.endAt) {
@@ -86,6 +110,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 			roleFor: Role.Patient,
 			allSchedule: allSchedule.data,
 			patientSchedule: scheduleOfPatient.data,
+			applications: applications,
 			createAppointmentByPatientForm: await superValidate(zod(createAppointmentPatientSchema)),
 			currentMonthValue: today.getFullYear() * 100 + today.getMonth() + 1
 		} as const;

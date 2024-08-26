@@ -362,6 +362,7 @@
 									<Control let:attrs>
 										<input
 											type="text"
+											maxlength={255}
 											placeholder="Nhập tên dịch vụ..."
 											class="input rounded-md bg-white/70 focus-within:bg-white/100 w-auto"
 											{...attrs}

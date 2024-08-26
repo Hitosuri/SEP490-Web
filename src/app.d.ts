@@ -153,6 +153,7 @@ interface ScheduleFull {
 	description?: string;
 	order: number;
 	anotherPersonDto?: AnotherPerson;
+	token: string;
 }
 
 interface RecordListItem {
@@ -456,6 +457,7 @@ interface ScheduleMenuItem {
 interface Application {
 	id: number;
 	userName: string;
+	userId: number;
 	startAt: Date;
 	endAt: Date;
 	reason: string;

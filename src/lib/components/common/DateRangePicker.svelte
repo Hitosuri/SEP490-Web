@@ -3,7 +3,7 @@
 	import { fly } from 'svelte/transition';
 	import { twMerge } from 'tailwind-merge';
 	import { createEventDispatcher } from 'svelte';
-	import { CalendarDate, type DateValue } from '@internationalized/date';
+	import { type DateValue, CalendarDateTime, getLocalTimeZone } from '@internationalized/date';
 
 	interface $$Props
 		extends Omit<
@@ -36,23 +36,32 @@
 		value: initValue
 			? {
 					start: initValue[0]
-						? new CalendarDate(
+						? new CalendarDateTime(
 								initValue[0].getFullYear(),
 								initValue[0].getMonth() + 1,
-								initValue[0].getDate()
+								initValue[0].getDate(),
+								initValue[0].getHours(),
+								initValue[0].getMinutes(),
+								initValue[0].getSeconds(),
+								initValue[0].getMilliseconds()
 							)
 						: undefined,
 					end: initValue[1]
-						? new CalendarDate(
+						? new CalendarDateTime(
 								initValue[1].getFullYear(),
 								initValue[1].getMonth() + 1,
-								initValue[1].getDate()
+								initValue[1].getDate(),
+								initValue[1].getHours(),
+								initValue[1].getMinutes(),
+								initValue[1].getSeconds(),
+								initValue[1].getMilliseconds()
 							)
 						: undefined
 				}
 			: undefined,
 		...$$restProps
 	};
+
 	const cRegionInput = 'input flex h-[42px] select-none items-center p-2 rounded-container-token';
 	const cRegionTrigger = 'ml-auto hover:variant-soft-surface p-1.5 btn text-lg';
 	const cRegionSegment =
@@ -70,9 +79,9 @@
 			date
 				? [
 						date.start
-							? new Date(date.start.year, date.start.month - 1, date.start.day)
+							? date.start.toDate(getLocalTimeZone())
 							: undefined,
-						date.end ? new Date(date.end.year, date.end.month - 1, date.end.day) : undefined
+						date.end ? date.end.toDate(getLocalTimeZone()) : undefined
 					]
 				: undefined
 		);

@@ -3,6 +3,10 @@ import endpoints from '$lib/endpoints';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { handleFetch } from '$lib/helpers/utils';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { applicationFilterSchema } from '$lib/form-schemas/application-filter-schema';
+import { createApplicationSchema } from '$lib/form-schemas/create-application-schema';
 
 export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 	filterRoles(locals, url, Role.All);
@@ -54,6 +58,12 @@ export const load: PageServerLoad = async ({ locals, url, fetch }) => {
 
 	return {
 		profile,
-		records
+		records,
+		applicationFilterForm: locals.user?.isPatient
+			? undefined
+			: await superValidate(zod(applicationFilterSchema)),
+		createApplicationForm: locals.user?.isPatient
+			? undefined
+			: await superValidate(zod(createApplicationSchema))
 	};
 };

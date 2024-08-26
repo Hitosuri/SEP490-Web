@@ -117,7 +117,7 @@
 					<img class={inLandingPage ? 'h-8 sm:h-10' : 'h-12'} src="/images/prodental.png" alt="" />
 				</a>
 			</svelte:fragment>
-			{#if $userStore}
+			{#if $userStore?.isPatient}
 				<a href="/schedule" class="group pt-1">
 					<div class="flex flex-col h-8 justify-end">
 						<p

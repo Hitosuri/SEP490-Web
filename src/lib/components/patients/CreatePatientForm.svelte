@@ -92,6 +92,7 @@
 						<input
 							{...attrs}
 							type="text"
+							maxlength={10}
 							placeholder="Nhập số điện thoại..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.phone}
@@ -107,6 +108,7 @@
 						<input
 							{...attrs}
 							type="email"
+							maxlength={255}
 							placeholder="Nhập email..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.email}
@@ -122,6 +124,7 @@
 						<input
 							{...attrs}
 							type="text"
+							maxlength={255}
 							placeholder="Nhập tên bệnh nhân..."
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.name}

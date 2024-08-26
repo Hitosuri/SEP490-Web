@@ -58,6 +58,7 @@
 		newPatientsCount: 0,
 		patientFrequencies: []
 	};
+	let forceFilter = false;
 
 	$: dayList = getDayList(selectedYear.value, selectedMonth.value);
 	$: selectedDay = dayList.find((x) => x.value === selectedDay?.value) ?? dayList[0];
@@ -65,7 +66,8 @@
 		selectedFilterType.value,
 		selectedYear.value,
 		selectedMonth.value,
-		selectedDay.value
+		selectedDay.value,
+		forceFilter
 	);
 	$: patientStatisticChanged(patientStatistic);
 
@@ -136,6 +138,7 @@
 		selectedMonth = monthList[0];
 		selectedDay = monthList[0];
 		selectedFilterType = filterTypes[0];
+		forceFilter = true;
 	}
 
 	async function filtering(
@@ -159,6 +162,7 @@
 		if (!forceFilter && isEqual(lastestFilterOption, filterOptions)) {
 			return;
 		}
+		forceFilter = false;
 
 		filterTimer = setTimeout(async () => {
 			if (!$userStore) {

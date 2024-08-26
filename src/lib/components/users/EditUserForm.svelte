@@ -128,6 +128,7 @@
 						<input
 							{...attrs}
 							type="text"
+							maxlength={10}
 							class="input rounded-container-token mt-1"
 							bind:value={$formData.phone}
 						/>
