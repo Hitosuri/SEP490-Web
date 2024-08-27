@@ -17,7 +17,6 @@
 	import { formatCompactDateTime } from '$lib/helpers/formatters';
 	import { recordStatusInfo } from '$lib/constants/record-constant';
 	import Container from '$lib/components/common/Container.svelte';
-	import DataTable from '$lib/components/common/DataTable.svelte';
 	import PersonalApplicationList from '$lib/components/profile/PersonalApplicationList.svelte';
 
 	export let data: PageData;
@@ -154,7 +153,7 @@
 							<th class="text-start px-4 whitespace-nowrap">Lý do</th>
 							<th class="px-4 whitespace-nowrap">Thời gian khám</th>
 							<th class="px-4 whitespace-nowrap">Trạng thái</th>
-							<th class="px-4 whitespace-nowrap">Tái khám</th>
+							<!-- <th class="px-4 whitespace-nowrap">Tái khám</th> -->
 						</tr>
 					</thead>
 					<tbody>
@@ -192,14 +191,14 @@
 								<td class="text-start px-4">{record.reason}</td>
 								<td class="text-center px-4">{formatCompactDateTime(record.visitDate)}</td>
 								<td class="text-center px-4">{recordStatusInfo[record.status]?.label}</td>
-								<td class="text-center px-4">
+								<!-- <td class="text-center px-4">
 									<input
 										type="checkbox"
 										disabled
 										checked={record.isReVisit}
 										class="checkbox bg-white"
 									/>
-								</td>
+								</td> -->
 							</tr>
 						{/each}
 					</tbody>
