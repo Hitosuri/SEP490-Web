@@ -165,7 +165,14 @@
 	}
 
 	function removeMaterial(index: number) {
-		extraMaterials.splice(index, 1);
+		if (usedMaterials[index]) {
+			usedMaterials[index] = {
+				materialId: usedMaterials[index].materialId,
+				smallestUnitQuantity: usedMaterials[index].smallestUnitQuantity,
+				isBasicUnit: true,
+				quantity: 0
+			};
+		}
 		usedMaterials = usedMaterials.filter((_, i) => i !== index);
 	}
 
