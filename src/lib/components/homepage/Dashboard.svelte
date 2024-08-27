@@ -239,6 +239,19 @@
 							Đang tải thông tin
 						</h3>
 					{/if}
+					{#if loadStatus === 'fail'}
+						<div class="flex justify-center gap-4 py-4 items-center border-t">
+							<span class="text-lg font-medium">Tải danh sách thất bại.</span>
+							<button
+								type="button"
+								class="btn btn-sm variant-filled-primary"
+								on:click={getPatientQueue}
+							>
+								<i class="fa-solid fa-rotate"></i>
+								<span class="ml-1">Thử lại?</span>
+							</button>
+						</div>
+					{/if}
 					{#if loadStatus === 'success' && patientQueue?.length === 0}
 						<h3 class="h3 font-semibold text-center text-tertiary-500 py-4 border-t">
 							Danh sách trống
