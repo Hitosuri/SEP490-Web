@@ -197,6 +197,7 @@ interface RecordPatient {
 		actionAt: Date;
 		number: number;
 		defaultMaterials: MaterialInRelation[];
+		price: number;
 	}[];
 	extraMaterials: MaterialInRelation[];
 	anotherPersonDto?: AnotherPerson;

@@ -87,7 +87,7 @@
 			</div>
 			<h3 class="text-center md:text-lg lg:text-xl font-medium">Bác sĩ tay nghề cao</h3>
 			<p class="text-center px-1 text-xs sm:text-sm italic">
-				Luôn đảm bảo cá y bác sĩ là người tận tâm.
+				Luôn đảm bảo các y bác sĩ là người tận tâm.
 			</p>
 		</div>
 		<div class="bg-teal-600 hidden sm:block">
