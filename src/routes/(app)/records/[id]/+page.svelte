@@ -160,7 +160,7 @@
 		editRecordForm={data.editRecordForm}
 		recordId={data.recordId}
 		record={data.record}
-		extraMaterials={data.prefetchExtraMaterials}
+		initExtraMaterials={data.prefetchExtraMaterials}
 	/>
 	{#if prescription}
 		<PrescriptionInRecord

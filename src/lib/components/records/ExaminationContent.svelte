@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { error } from '@sveltejs/kit';
 	import endpoints from '$lib/endpoints';
 	import { editRecordSchema } from '$lib/form-schemas/edit-record-schema';
 	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import { createEventDispatcher, getContext, setContext } from 'svelte';
 	import { derived, type Writable } from 'svelte/store';
-	import { setError, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
 	import SearchCombobox from '$lib/components/common/SearchCombobox.svelte';
@@ -24,8 +23,9 @@
 	export let editRecordForm: SuperValidated<z.infer<typeof editRecordSchema>>;
 	export let record: RecordPatient;
 	export let recordId: number;
-	export let extraMaterials: Material[] = [];
+	export let initExtraMaterials: Material[];
 
+	let extraMaterials: Material[] = [...initExtraMaterials];
 	const userStore = getContext<Writable<UserBasic | undefined>>('user-store');
 	const dispatch = createEventDispatcher<{
 		finishUpdate: undefined;
@@ -118,7 +118,7 @@
 				id: x.treatmentId,
 				name: x.treatmentName,
 				deleted: false,
-				price: 0,
+				price: x.price,
 				materials: [...x.defaultMaterials]
 			}
 		])
@@ -165,9 +165,8 @@
 	}
 
 	function removeMaterial(index: number) {
-		const m = usedMaterials[index];
+		extraMaterials.splice(index, 1);
 		usedMaterials = usedMaterials.filter((_, i) => i !== index);
-		extraMaterials = extraMaterials.filter((x) => x.id === m.materialId);
 	}
 
 	async function searchTreatmentsFn(keyword: string): Promise<Selected<Treatment>[] | undefined> {
