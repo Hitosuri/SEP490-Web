@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { scheduleFilterSchema } from '$lib/form-schemas/schedule-filter-schema';
-	import { Checkbox, type Selected } from 'bits-ui';
+	import { type Selected } from 'bits-ui';
 	import { Control, Field, Label } from 'formsnap';
 	import type { SuperForm } from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import DropdownSelect from '../common/DropdownSelect.svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { scheduleStatusInfo } from '$lib/constants/schedule-constant';
+	import Checkbox from '$lib/components/common/Checkbox.svelte';
 
 	export let form: SuperForm<z.infer<typeof scheduleFilterSchema>>;
 
@@ -34,11 +35,8 @@
 	];
 	let selectedStatus: Selected<z.infer<typeof scheduleFilterSchema>['status'] | undefined> =
 		statusList[0];
-	let isPatientConfirm: boolean | 'indeterminate' = 'indeterminate';
 
 	$: $formData.status = selectedStatus?.value;
-	$: $formData.isPatientConfirm =
-		isPatientConfirm === 'indeterminate' ? undefined : isPatientConfirm;
 </script>
 
 <form use:enhance method="post" class="flex gap-4 items-end">
@@ -100,24 +98,7 @@
 			<Control>
 				<p class="text-sm font-semibold text-surface-500 select-none">Đã xác nhận</p>
 				<div class="mt-1 h-[42px] flex items-center ml-4">
-					<Checkbox.Root
-						class="checkbox {isPatientConfirm
-							? 'bg-primary-500 border-none'
-							: 'bg-white'} -translate-x-[2px] block"
-						bind:checked={isPatientConfirm}
-					>
-						<Checkbox.Indicator
-							let:isChecked
-							let:isIndeterminate
-							class="*:block text-white text-sm"
-						>
-							{#if isChecked}
-								<i class="fa-solid fa-check"></i>
-							{:else if isIndeterminate}
-								<i class="fa-solid fa-minus"></i>
-							{/if}
-						</Checkbox.Indicator>
-					</Checkbox.Root>
+					<Checkbox bind:value={$formData.isPatientConfirm} indeterminate />
 				</div>
 			</Control>
 		</Field>
@@ -132,7 +113,6 @@
 		on:click={() => {
 			form.reset();
 			selectedStatus = statusList[0];
-			isPatientConfirm = 'indeterminate';
 			dispatch('reset');
 		}}
 	>

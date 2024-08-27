@@ -37,7 +37,7 @@
 	} from '$lib/helpers/utils';
 
 	export let scheduleFilterForm: SuperValidated<z.infer<typeof scheduleFilterSchema>>;
-	export let schedules: ScheduleFull[];
+	export let initialSchedule: ScheduleFull[];
 	export let createAppointmentForm: SuperValidated<z.infer<typeof createAppointmentSchema>>;
 	export let editScheduleForm: SuperValidated<z.infer<typeof editScheduleSchema>>;
 	export let applications: Application[];
@@ -108,6 +108,7 @@
 			click: (schedule) => deleteSchedule(schedule)
 		}
 	];
+	let schedules = [...initialSchedule];
 	let currentMinute = new Date();
 	let scheduleGrabing = false;
 	let mouseAnchor: { x: number; y: number };
@@ -144,7 +145,7 @@
 
 	$: onEndSliderValueChanged(endSliderValue);
 	$: hourWidth = stepWidth * 4;
-	$: lowerLimit = calculateLowerLimit(selectedDate);
+	$: lowerLimit = calculateLowerLimit(selectedDate, currentMinute);
 	$: blockPastWidth = lowerLimit * stepWidth;
 	$: selectedDateSchedules = schedules.filter((x) => x.startAt.getDate() === selectedDate.day);
 	$: scheduleByDoctors = extractScheduleByDoctor(selectedDateSchedules);
@@ -205,10 +206,10 @@
 
 	function calculateLowerLimitActive(time: Date) {
 		currentMinute = time;
-		lowerLimit = calculateLowerLimit(selectedDate);
+		lowerLimit = calculateLowerLimit(selectedDate, currentMinute);
 	}
 
-	function calculateLowerLimit(date: DateValue): number {
+	function calculateLowerLimit(date: DateValue, currentMinute: Date): number {
 		const result = date.compare(today(getLocalTimeZone()));
 
 		if (result < 0) {
@@ -216,10 +217,9 @@
 		} else if (result > 0) {
 			return 7 / scheduleStepInHour;
 		} else {
-			const now = new Date();
 			return Math.max(
 				7 / scheduleStepInHour,
-				now.getHours() * 4 + Math.ceil((now.getMinutes() + 1) / 15)
+				currentMinute.getHours() * 4 + Math.ceil((currentMinute.getMinutes() + 1) / 15)
 			);
 		}
 	}
@@ -303,11 +303,17 @@
 					const endDayValue = getDayValue(y.endAt);
 
 					if (startDayValue === currentDayValue && endDayValue === currentDayValue) {
-						doctorApplications.push(normalizeStartEnd(y.startAt, y.endAt));
+						const values = normalizeStartEnd(y.startAt, y.endAt);
+						values[0] = Math.floor(values[0]);
+						values[1] = Math.ceil(values[1]);
+						doctorApplications.push(values);
 					} else if (startDayValue === currentDayValue) {
-						doctorApplications.push([normalizeTime(y.startAt), 24 / scheduleStepInHour]);
+						doctorApplications.push([
+							Math.floor(normalizeTime(y.startAt)),
+							24 / scheduleStepInHour
+						]);
 					} else if (endDayValue === currentDayValue) {
-						doctorApplications.push([0, normalizeTime(y.startAt)]);
+						doctorApplications.push([0, Math.ceil(normalizeTime(y.startAt))]);
 					}
 				});
 

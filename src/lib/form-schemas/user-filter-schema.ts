@@ -6,6 +6,6 @@ export const userFilterSchema = z.object({
 	email: z.string().trim(),
 	phone: z.string().transform((val) => val.replace(/\D+/g, '')),
 	fromSalary: z.number().min(0).default(0),
-	toSalary: z.number().min(0).default(100000000),
+	toSalary: z.number().min(0).default(0),
 	roles: z.array(z.enum(userRoles)).default([...userRoles])
 });

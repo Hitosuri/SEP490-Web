@@ -54,7 +54,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		lottieAnim: '/images/animations/patient.lottie',
 		class: 'from-pink-400 to-red-400',
 		routes: ['/(app)/patients', '/(app)/records/[id]'],
-		roles: [Role.Doctor, Role.Recieptionist]
+		roles: [Role.Doctor, Role.Recieptionist, Role.Nurse]
 	},
 	[UserFeature.SCHEDULE_MANAGEMENT]: {
 		id: UserFeature.SCHEDULE_MANAGEMENT,

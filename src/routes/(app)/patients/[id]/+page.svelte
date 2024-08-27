@@ -260,7 +260,7 @@
 								Cập nhật
 							</button>
 						</div>
-					{:else}
+					{:else if $userStore?.roles.includes(Role.Nurse) || $userStore?.roles.includes(Role.Recieptionist)}
 						<div
 							class="p-4 flex gap-2 justify-end font-medium absolute left-0 bottom-0 w-full"
 							transition:fly={{ duration: 300, x: -80 }}
@@ -317,7 +317,7 @@
 						<th class="text-start px-4">Lý do</th>
 						<th class="px-4">Thời gian khám</th>
 						<th class="px-4">Trạng thái</th>
-						<th class="px-4">Tái khám</th>
+						<!-- <th class="px-4">Tái khám</th> -->
 					</tr>
 				</thead>
 				<tbody>
@@ -364,14 +364,14 @@
 									{recordStatusInfo[record.status]?.label}
 								</span>
 							</td>
-							<td class="text-center px-4 py-2">
+							<!-- <td class="text-center px-4 py-2">
 								<input
 									type="checkbox"
 									disabled
 									checked={record.isReVisit}
 									class="checkbox bg-white"
 								/>
-							</td>
+							</td> -->
 						</tr>
 					{/each}
 				</tbody>
