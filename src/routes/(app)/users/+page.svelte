@@ -13,7 +13,12 @@
 	import endpoints from '$lib/endpoints';
 	import { isEqual } from 'lodash-es';
 	import CreateUserForm from '$lib/components/users/CreateUserForm.svelte';
-	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import {
+		getModalStore,
+		popup,
+		type ModalSettings,
+		type PopupSettings
+	} from '@skeletonlabs/skeleton';
 	import EditUserForm from '$lib/components/users/EditUserForm.svelte';
 	import DropdownSelect from '$lib/components/common/DropdownSelect.svelte';
 	import DataTable from '$lib/components/common/DataTable.svelte';
@@ -48,8 +53,17 @@
 					break;
 				case 'fromSalary':
 				case 'toSalary':
-					inputData.fromSalary = get('fromSalary');
-					inputData.toSalary = get('toSalary');
+					const fromSalaryValue = get('fromSalary');
+					const toSalaryValue = get('toSalary');
+
+					if (fromSalaryValue > 0) {
+						inputData.fromSalary = fromSalaryValue;
+					}
+
+					if (toSalaryValue > 0) {
+						inputData.toSalary = toSalaryValue;
+					}
+
 					break;
 			}
 
@@ -113,6 +127,22 @@
 			value: 'salary'
 		}
 	];
+	const salaryFromPopupSetting: PopupSettings = {
+		event: 'focus-blur',
+		target: 'salaryPopup-from',
+		placement: 'top',
+		middleware: {
+			offset: 12
+		}
+	};
+	const salaryToPopupSetting: PopupSettings = {
+		event: 'focus-blur',
+		target: 'salaryPopup-to',
+		placement: 'top',
+		middleware: {
+			offset: 12
+		}
+	};
 	let users = data.userListPage.data;
 	let pageSize = data.userListPage.pageSize || 10;
 	let currentPage = data.userListPage.pageNumber || 1;
@@ -467,7 +497,7 @@
 			>
 				<div class="overflow-hidden">
 					<form method="post" use:enhance class="p-6 pt-8">
-						<div class="flex justify-between gap-x-8 gap-y-6 flex-wrap">
+						<div class="grid grid-cols-3 gap-x-8 gap-y-6">
 							<div>
 								<Field {form} name="name">
 									<Control let:attrs>
@@ -478,7 +508,7 @@
 											type="text"
 											maxlength={255}
 											placeholder="Nhập tên nhân viên..."
-											class="input rounded-md bg-white w-auto mt-1"
+											class="input rounded-md bg-white mt-1"
 											{...attrs}
 											bind:value={$formData.name}
 										/>
@@ -493,7 +523,7 @@
 											type="text"
 											maxlength={255}
 											placeholder="Nhập email nhân viên..."
-											class="input rounded-md bg-white w-auto mt-1"
+											class="input rounded-md bg-white mt-1"
 											{...attrs}
 											bind:value={$formData.email}
 										/>
@@ -510,7 +540,7 @@
 											type="text"
 											maxlength={10}
 											placeholder="Nhập sđt nhân viên..."
-											class="input rounded-md bg-white w-auto mt-1"
+											class="input rounded-md bg-white mt-1"
 											{...attrs}
 											bind:value={$formData.phone}
 										/>
@@ -518,26 +548,55 @@
 								</Field>
 							</div>
 							<div>
+								{#each ['from', 'to'] as t}
+									<div
+										class="rounded-md shadow-md border border-surface-100 bg-white px-4 py-2 select-none {$formData.fromSalary >
+											0 || $formData.toSalary > 0
+											? ''
+											: '!hidden'}"
+										data-popup="salaryPopup-{t}"
+									>
+										<p>
+											{#if $formData.fromSalary > 0 && $formData.toSalary <= 0}
+												Giá lớn hơn hoặc bằng
+												<span class="font-semibold">{formatCurrency($formData.fromSalary)}</span>
+											{:else if $formData.fromSalary <= 0 && $formData.toSalary > 0}
+												Giá nhỏ hơn hoặc bằng
+												<span class="font-semibold">{formatCurrency($formData.toSalary)}</span>
+											{:else if $formData.fromSalary > 0 && $formData.toSalary > 0}
+												Giá trong khoảng từ
+												<span class="font-semibold">{formatCurrency($formData.fromSalary)}</span>
+												tới
+												<span class="font-semibold">{formatCurrency($formData.toSalary)}</span>
+											{/if}
+										</p>
+										<div class="arrow border-r border-b border-surface-100 bg-white" />
+									</div>
+								{/each}
 								<p class="text-sm font-semibold text-surface-500 select-none">Khoảng lương</p>
-								<div class="flex gap-1 items-center mt-1">
+								<div class="flex input-group border-surface-500/25 rounded-md w-full mt-1">
 									<Field {form} name="fromSalary">
 										<Control let:attrs>
 											<input
+												use:popup={salaryFromPopupSetting}
 												type="number"
+												class="flex-1 min-w-0 text-center !bg-white"
 												placeholder="Từ..."
-												class="input rounded-md bg-white w-28 text-center"
 												{...attrs}
 												bind:value={$formData.fromSalary}
 											/>
 										</Control>
 									</Field>
-									<div class="border-t-2 border-surface-900 border-dashed w-14"></div>
+									<div class="input-group-shim bg-slate-200">
+										<i class="fa-regular fa-dash"></i>
+									</div>
 									<Field {form} name="toSalary">
 										<Control let:attrs>
 											<input
+												use:popup={salaryToPopupSetting}
 												type="number"
-												placeholder="đến..."
-												class="input rounded-md bg-white w-28 text-center"
+												class="flex-1 min-w-0 text-center !bg-white"
+												placeholder="Đến..."
 												{...attrs}
 												bind:value={$formData.toSalary}
 											/>
@@ -545,7 +604,7 @@
 									</Field>
 								</div>
 							</div>
-							<div>
+							<div class="col-span-2">
 								<p class="text-sm font-semibold text-surface-500 select-none">Vai trò</p>
 								<div class="flex gap-2 items-center mt-1">
 									<ToggleGroup.Root

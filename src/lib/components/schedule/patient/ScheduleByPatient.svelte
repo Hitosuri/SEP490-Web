@@ -45,18 +45,6 @@
 	const upperLimit = 23 / scheduleStepInHour;
 	const baseStepWidth = 32;
 	const doctorColumnWidth = 160;
-	const currentDate = new Date();
-	const utcDate = new Date(
-		Date.UTC(
-			currentDate.getUTCFullYear(),
-			currentDate.getUTCMonth(),
-			currentDate.getUTCDate(),
-			currentDate.getUTCHours(),
-			currentDate.getUTCMinutes(),
-			currentDate.getUTCSeconds(),
-			currentDate.getUTCMilliseconds()
-		)
-	);
 	let scheduleListElement: HTMLDivElement;
 	let scheduleMenuOpened = false;
 	let scheduleGrabing = false;
@@ -348,7 +336,6 @@
 			}
 
 			if (allScheduleData) {
-				allScheduleData.data = allScheduleData.data.filter((x) => !pendingSchedules.includes(x.id));
 				allScheduleData.data.forEach((x) => {
 					x.startAt = new Date(x.startAt);
 					x.endAt = new Date(x.endAt);

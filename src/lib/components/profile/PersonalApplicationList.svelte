@@ -1,8 +1,4 @@
 <script lang="ts">
-	import Breadcrumb from '$lib/components/common/Breadcrumb.svelte';
-	import Container from '$lib/components/common/Container.svelte';
-	import { Checkbox, type Selected } from 'bits-ui';
-	import DropdownSelect from '$lib/components/common/DropdownSelect.svelte';
 	import { superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { getContext, onMount, type ComponentEvents } from 'svelte';
@@ -10,12 +6,9 @@
 	import { z } from 'zod';
 	import endpoints from '$lib/endpoints';
 	import isEqual from 'lodash-es/isEqual';
-	import { fly } from 'svelte/transition';
-	import { Control, Field, FieldErrors, Label } from 'formsnap';
 	import DataTable from '$lib/components/common/DataTable.svelte';
 	import { formatCompactDateTime } from '$lib/helpers/formatters';
 	import { applicationFilterSchema } from '$lib/form-schemas/application-filter-schema';
-	import DateRangePicker from '$lib/components/common/DateRangePicker.svelte';
 	import { createApplicationSchema } from '$lib/form-schemas/create-application-schema';
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import ApplicationForm from './ApplicationForm.svelte';
@@ -23,6 +16,7 @@
 	import { toast } from 'svelte-sonner';
 	import { handleToastFetch } from '$lib/helpers/utils';
 	import ApplicationDetail from './ApplicationDetail.svelte';
+	import Checkbox from '$lib/components/common/Checkbox.svelte';
 
 	export let applicationFilterForm: SuperValidated<z.infer<typeof applicationFilterSchema>>;
 	export let createApplicationForm: SuperValidated<z.infer<typeof createApplicationSchema>>;
@@ -105,8 +99,6 @@
 	let lastestFilterOptionExtended: Record<string, string | Date | boolean> = {};
 	let loading = false;
 	let refreshTrigger = Math.random();
-	let isPatientConfirm: 0 | 1 | 2 = 2;
-	let checboxState: [true, false, 'indeterminate'] = [true, false, 'indeterminate'];
 
 	onMount(() => {
 		resetPage();
@@ -353,28 +345,7 @@
 					</td>
 					<td class="border-r align-middle">
 						<div class="flex justify-center items-center">
-							<button
-								type="button"
-								class="checkbox text-sm text-white {checboxState[isPatientConfirm]
-									? 'bg-primary-500 border-none'
-									: 'bg-white'}"
-								on:click={() => {
-									isPatientConfirm = (isPatientConfirm + 1) % 3;
-
-									const state = checboxState[isPatientConfirm];
-									if (state === 'indeterminate') {
-										$formData.isConfirm = undefined;
-									} else {
-										$formData.isConfirm = state;
-									}
-								}}
-							>
-								{#if checboxState[isPatientConfirm] === 'indeterminate'}
-									<i class="fa-solid fa-minus"></i>
-								{:else if checboxState[isPatientConfirm]}
-									<i class="fa-solid fa-check"></i>
-								{/if}
-							</button>
+							<Checkbox bind:value={$formData.isConfirm} indeterminate />
 						</div>
 					</td>
 					<td></td>

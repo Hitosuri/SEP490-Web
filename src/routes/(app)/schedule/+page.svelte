@@ -10,7 +10,7 @@
 {#if data.roleFor === Role.Recieptionist}
 	<ScheduleByRecieptionist
 		applications={data.applications.data}
-		schedules={data.schedules.data}
+		initialSchedule={data.schedules.data}
 		createAppointmentForm={data.createAppointmentForm}
 		scheduleFilterForm={data.scheduleFilterForm}
 		editScheduleForm={data.editScheduleForm}

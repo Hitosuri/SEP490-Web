@@ -54,7 +54,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		lottieAnim: '/images/animations/patient.lottie',
 		class: 'from-pink-400 to-red-400',
 		routes: ['/(app)/patients', '/(app)/records/[id]'],
-		roles: [Role.Doctor, Role.Recieptionist]
+		roles: [Role.Doctor, Role.Recieptionist, Role.Nurse]
 	},
 	[UserFeature.SCHEDULE_MANAGEMENT]: {
 		id: UserFeature.SCHEDULE_MANAGEMENT,
@@ -63,7 +63,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/schedule',
 		lottieAnim: '/images/animations/schedule.lottie',
-		class: 'from-indigo-400 to-purple-400',
+		class: 'from-violet-400 to-indigo-400',
 		routes: ['/(app)/schedule'],
 		roles: [Role.Recieptionist, Role.Patient]
 	},
@@ -85,7 +85,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/applications',
 		lottieAnim: '/images/animations/application.lottie',
-		class: 'from-yellow-400 to-lime-400',
+		class: 'from-fuchsia-400 to-purple-400',
 		routes: ['/(app)/applications'],
 		roles: [Role.Admin]
 	},
@@ -96,7 +96,7 @@ export const userFeatureDetails: Record<UserFeature, UserFeatureDetail> = {
 		hasDuotone: true,
 		url: '/statistic',
 		lottieAnim: '/images/animations/statistic.lottie',
-		class: 'from-yellow-400 to-lime-400',
+		class: 'from-lime-400 to-yellow-400',
 		routes: ['/(app)/statistic'],
 		roles: [Role.Admin, Role.Accountant]
 	}
