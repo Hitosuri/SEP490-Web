@@ -11,6 +11,7 @@
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import Container from '$lib/components/common/Container.svelte';
 	import usingSubFeature from '$lib/stores/using-subfeature-store';
+	import { cloneDeep } from 'lodash-es';
 
 	export let data: PageData;
 
@@ -159,7 +160,7 @@
 	<ExaminationContent
 		editRecordForm={data.editRecordForm}
 		recordId={data.recordId}
-		record={data.record}
+		record={cloneDeep(data.record)}
 		initExtraMaterials={data.prefetchExtraMaterials}
 	/>
 	{#if prescription}
